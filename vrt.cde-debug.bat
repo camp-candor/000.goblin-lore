@@ -1,3 +1,3 @@
 cd..
 cd vcode-debug
-start Code.exe ../goblin-lore
+start Code.exe ../000.goblin-lore
