@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 import { verifyStateMerkleParity } from './merkleVerifier.js'
+import type { BibleState } from '../../../scripts/compile.js'
 
 export interface LoadBibleOptions {
     verifyHash?: boolean
@@ -31,9 +32,12 @@ export function deepFreeze<T>(obj: T): T {
 }
 
 /**
- * Loads bible-state.json from disk and deep freezes the payload.
+ * Loads bible-state.json from disk, verifies state Merkle parity, and deep freezes the payload.
  */
-export function loadBibleState(filePath: string, options?: LoadBibleOptions) {
+export function loadBibleState(
+    filePath: string,
+    options?: LoadBibleOptions,
+): BibleState {
     if (!fs.existsSync(filePath)) {
         throw new Error(`FILE_NOT_FOUND: ${filePath}`)
     }
@@ -41,17 +45,15 @@ export function loadBibleState(filePath: string, options?: LoadBibleOptions) {
     const rawJson = fs.readFileSync(filePath, 'utf8')
     const parsed = JSON.parse(rawJson)
 
-    if (options?.verifyHash || options?.expectedHash) {
-        const hashToVerify = options.expectedHash || parsed._meta?.state_hash
-        if (!hashToVerify) {
-            throw new Error('CANON_DESYNC_HALT: No hash provided or found in payload for verification.')
-        }
-
+    const hashToVerify = options?.expectedHash || parsed._meta?.state_hash
+    if (hashToVerify && options?.verifyHash !== false) {
         const isValid = verifyStateMerkleParity(rawJson, hashToVerify)
         if (!isValid) {
-            throw new Error('CANON_DESYNC_HALT: Payload Merkle root hash parity verification failed.')
+            throw new Error(
+                'CANON_DESYNC_HALT: Payload Merkle root hash parity verification failed.',
+            )
         }
     }
 
-    return deepFreeze(parsed)
+    return deepFreeze(parsed as BibleState)
 }

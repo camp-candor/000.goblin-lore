@@ -16,7 +16,9 @@ export function canonicalizeJson(obj: unknown): string {
     }
     if (typeof obj === 'number') {
         if (!Number.isFinite(obj)) {
-            throw new TypeError('Non-finite numbers (NaN, Infinity) are rejected')
+            throw new TypeError(
+                'Non-finite numbers (NaN, Infinity) are rejected',
+            )
         }
         return JSON.stringify(obj)
     }
@@ -53,13 +55,19 @@ export function canonicalizeJson(obj: unknown): string {
  * Calculates a 64-character lowercase hexadecimal SHA-256 digest
  */
 export function computeMerkleRoot(canonicalPayload: string): string {
-    return crypto.createHash('sha256').update(canonicalPayload, 'utf8').digest('hex')
+    return crypto
+        .createHash('sha256')
+        .update(canonicalPayload, 'utf8')
+        .digest('hex')
 }
 
 /**
  * Strips volatile root _meta.state_hash before verifying canonical byte parity
  */
-export function verifyStateMerkleParity(rawStateJson: string, expectedHash: string): boolean {
+export function verifyStateMerkleParity(
+    rawStateJson: string,
+    expectedHash: string,
+): boolean {
     const obj = JSON.parse(rawStateJson)
     if (obj && obj._meta && obj._meta.state_hash) {
         delete obj._meta.state_hash

@@ -19,6 +19,7 @@
         "worker:dev": "npm run dev --workspace=@camp_candor/agent",
         "//__ BUILD & TYPES ________________________": "",
         "build": "npm run build --workspaces --if-present",
+        "compile": "npm run compile --workspace=@camp_candor/001.lore --if-present",
         "check": "npm run check:all",
         "check:all": "npm run check:types && npm run prettier:check && npm run lint:check",
         "check:types": "tsc -b",

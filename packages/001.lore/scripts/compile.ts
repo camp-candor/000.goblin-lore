@@ -1,6 +1,9 @@
 import fs from 'node:fs'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import matter from 'gray-matter'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 import {
     CharacterSchema,
     LocationSchema,
@@ -13,15 +16,33 @@ import { GrievanceSchema, Grievance } from '../src/schemas/grievance.js'
 import { evaluateSomaticSAT } from '../src/scaffolder/satSolver.js'
 import { validateReciprocalSpatialTopology } from '../src/scaffolder/spatialGraph.js'
 import { FarceGate } from '../src/health/farceGate.js'
-import { computeMerkleRoot, canonicalizeJson } from '../src/core/canon/merkleVerifier.js'
+import {
+    computeMerkleRoot,
+    canonicalizeJson,
+} from '../src/core/canon/merkleVerifier.js'
+
+export interface BibleState {
+    characters: Record<string, Character>
+    locations: Record<string, Location>
+    possessions: Record<string, Possession>
+    grievances: Record<string, Grievance>
+    _meta: {
+        version: string
+        state_hash?: string
+    }
+}
 
 export class ThreePassCompiler {
-    private characters: Map<string, Character> = new Map()
-    private locations: Map<string, Location> = new Map()
-    private possessions: Map<string, Possession> = new Map()
-    private grievances: Map<string, Grievance> = new Map()
+    public characters: Map<string, Character> = new Map()
+    public locations: Map<string, Location> = new Map()
+    public possessions: Map<string, Possession> = new Map()
+    public grievances: Map<string, Grievance> = new Map()
 
-    constructor(private readonly dataDir: string) {}
+    constructor(private readonly dataDir: string = '') {}
+
+    public executePass1(): void {
+        this.pass1_parseAndValidate()
+    }
 
     public pass1_parseAndValidate(): void {
         this.parseDirectory(
@@ -30,9 +51,13 @@ export class ThreePassCompiler {
             this.characters,
             (parsed) => {
                 const char = parsed as Character
-                for (const prop of Object.values(char.epistemic.leverage_strings)) {
+                for (const prop of Object.values(
+                    char.epistemic.leverage_strings,
+                )) {
                     if (prop < 0 || prop > 10000) {
-                        throw new Error(`Basis points must be between 0 and 10000. Found: ${prop}`)
+                        throw new Error(
+                            `Basis points must be between 0 and 10000. Found: ${prop}`,
+                        )
                     }
                 }
             },
@@ -43,10 +68,15 @@ export class ThreePassCompiler {
             this.locations,
             (parsed) => {
                 const loc = parsed as Location
-                if (loc.acoustic_damping_bp < 0 || loc.acoustic_damping_bp > 10000) {
-                    throw new Error(`Basis points must be between 0 and 10000. Found: ${loc.acoustic_damping_bp}`)
+                if (
+                    loc.acoustic_damping_bp < 0 ||
+                    loc.acoustic_damping_bp > 10000
+                ) {
+                    throw new Error(
+                        `Basis points must be between 0 and 10000. Found: ${loc.acoustic_damping_bp}`,
+                    )
                 }
-            }
+            },
         )
         this.parseDirectory('possessions', PossessionSchema, this.possessions)
         this.parseDirectory('grievances', GrievanceSchema, this.grievances)
@@ -55,7 +85,9 @@ export class ThreePassCompiler {
         for (const character of this.characters.values()) {
             const satResult = evaluateSomaticSAT(character, this.possessions)
             if (!satResult.passed) {
-                throw new Error(`COMPILER_SAT_ERROR: ${satResult.code} - ${satResult.message}`)
+                throw new Error(
+                    `COMPILER_SAT_ERROR: ${satResult.code} - ${satResult.message}`,
+                )
             }
         }
     }
@@ -66,6 +98,7 @@ export class ThreePassCompiler {
         storage: Map<string, T>,
         additionalValidation?: (parsed: T) => void,
     ) {
+        if (!this.dataDir) return
         const fullDir = path.join(this.dataDir, dirName)
         if (!fs.existsSync(fullDir)) return
 
@@ -83,34 +116,54 @@ export class ThreePassCompiler {
         }
     }
 
+    public executePass2(): void {
+        this.pass2_relationalIntegrity()
+    }
+
     public pass2_relationalIntegrity(): void {
         // FK sweep: Characters
         for (const [id, char] of this.characters) {
             if (char.location && !this.locations.has(char.location)) {
-                throw new Error(`COMPILER_FK_ERROR: Character '${id}' references unknown location '${char.location}'.`)
+                throw new Error(
+                    `COMPILER_FK_ERROR: Character '${id}' references unknown location '${char.location}'.`,
+                )
             }
             for (const item of char.logistical.worn) {
-                if (!this.possessions.has(item)) throw new Error(`COMPILER_FK_ERROR: Character '${id}' worn item '${item}' missing.`)
+                if (!this.possessions.has(item))
+                    throw new Error(
+                        `COMPILER_FK_ERROR: Character '${id}' worn item '${item}' missing.`,
+                    )
             }
             for (const item of char.logistical.held) {
-                if (!this.possessions.has(item)) throw new Error(`COMPILER_FK_ERROR: Character '${id}' held item '${item}' missing.`)
+                if (!this.possessions.has(item))
+                    throw new Error(
+                        `COMPILER_FK_ERROR: Character '${id}' held item '${item}' missing.`,
+                    )
             }
             for (const grv of char.linked_grievances) {
-                if (!this.grievances.has(grv)) throw new Error(`COMPILER_FK_ERROR: Character '${id}' linked grievance '${grv}' missing.`)
+                if (!this.grievances.has(grv))
+                    throw new Error(
+                        `COMPILER_FK_ERROR: Character '${id}' linked grievance '${grv}' missing.`,
+                    )
             }
         }
 
         // FK sweep: Locations
         for (const [id, loc] of this.locations) {
             for (const target of loc.connected_locations) {
-                if (!this.locations.has(target)) throw new Error(`COMPILER_FK_ERROR: Location '${id}' connected to unknown location '${target}'.`)
+                if (!this.locations.has(target))
+                    throw new Error(
+                        `COMPILER_FK_ERROR: Location '${id}' connected to unknown location '${target}'.`,
+                    )
             }
         }
 
         // Validate reciprocal spatial topology
         const spatialRes = validateReciprocalSpatialTopology(this.locations)
         if (!spatialRes.valid) {
-            throw new Error(`COMPILER_TOPOLOGY_ERROR: ${spatialRes.errors[0].message}`)
+            throw new Error(
+                `COMPILER_SPATIAL_ERROR: ${spatialRes.errors[0].message}`,
+            )
         }
 
         // 3-Color DFS for DAG acyclicity
@@ -118,14 +171,20 @@ export class ThreePassCompiler {
 
         // Audits farce invariants
         const farceGate = new FarceGate()
-        const farceRes = farceGate.auditFarceInvariants(Array.from(this.grievances.values()))
+        const farceRes = farceGate.auditFarceInvariants(
+            Array.from(this.grievances.values()),
+        )
         if (!farceRes.passed) {
-            throw new Error(`COMPILER_FARCE_ERROR: ${farceRes.violations[0].code} - ${farceRes.violations[0].message}`)
+            throw new Error(
+                `COMPILER_FARCE_ERROR: ${farceRes.violations[0].code} - ${farceRes.violations[0].message}`,
+            )
         }
     }
 
     private verifyGrievanceDAG(): void {
-        const WHITE = 0, GRAY = 1, BLACK = 2
+        const WHITE = 0,
+            GRAY = 1,
+            BLACK = 2
         const state = new Map<string, number>()
 
         for (const key of this.grievances.keys()) {
@@ -138,11 +197,15 @@ export class ThreePassCompiler {
             if (node) {
                 for (const childId of node.spawns_on_max_escalation) {
                     if (!this.grievances.has(childId)) {
-                        throw new Error(`COMPILER_FK_ERROR: Grievance '${nodeId}' spawns unknown grievance '${childId}'.`)
+                        throw new Error(
+                            `COMPILER_FK_ERROR: Grievance '${nodeId}' spawns unknown grievance '${childId}'.`,
+                        )
                     }
                     const childState = state.get(childId)
                     if (childState === GRAY) {
-                        throw new Error(`COMPILER_DAG_CYCLE: Circular deadlock detected at grievance '${childId}'.`)
+                        throw new Error(
+                            `COMPILER_DAG_CYCLE: Circular grievance escalation detected at grievance '${childId}'.`,
+                        )
                     }
                     if (childState === WHITE) {
                         dfs(childId)
@@ -159,6 +222,13 @@ export class ThreePassCompiler {
         }
     }
 
+    public executePass3(outputDir?: string, seriesSlug?: string): void {
+        const rootLoreDir = path.resolve(__dirname, '..')
+        const targetOutput = outputDir || path.resolve(rootLoreDir, 'compiled')
+        const targetSlug = seriesSlug || 'canon'
+        this.pass3_normalizeAndSeal(targetOutput, targetSlug)
+    }
+
     public pass3_normalizeAndSeal(outputDir: string, seriesSlug: string): void {
         const payload: any = {
             characters: Object.fromEntries(this.characters),
@@ -167,7 +237,7 @@ export class ThreePassCompiler {
             grievances: Object.fromEntries(this.grievances),
             _meta: {
                 version: '1.0.0',
-            }
+            },
         }
 
         // Ensure canonical form is used to calculate hash
@@ -176,7 +246,7 @@ export class ThreePassCompiler {
 
         payload._meta.state_hash = hash
 
-        const finalJson = JSON.stringify(payload, null, 2)
+        const finalJson = JSON.stringify(payload, null, 4) + '\n'
 
         const targetDir = path.join(outputDir, seriesSlug)
         if (!fs.existsSync(targetDir)) {
@@ -199,4 +269,24 @@ export class ThreePassCompiler {
         // Write WORM archive
         fs.writeFileSync(wormPath, finalJson, 'utf8')
     }
+}
+
+// CLI Execution Support
+if (
+    process.argv[1] &&
+    (process.argv[1].endsWith('compile.ts') ||
+        process.argv[1].endsWith('compile.js'))
+) {
+    const rootLoreDir = path.resolve(__dirname, '..')
+    const dataPath = path.resolve(rootLoreDir, 'data')
+    const compiler = new ThreePassCompiler(
+        fs.existsSync(dataPath) ? dataPath : '',
+    )
+    compiler.executePass1()
+    compiler.executePass2()
+    const outDir = path.resolve(rootLoreDir, 'compiled')
+    compiler.executePass3(outDir, 'canon')
+    console.log(
+        '[COMPILER] [OK] Canon compilation and Merkle sealing complete.',
+    )
 }
