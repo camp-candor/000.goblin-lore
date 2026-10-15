@@ -132,17 +132,16 @@ describe('Phase 4: JCS Canonicalization, Compiler Gauntlet & Merkle Sealing', ()
             const compiler = new ThreePassCompiler()
 
             const ghostChar: Character = {
+                type: 'character',
+                status: 'active',
+                historical_reference: false,
+                linked_possessions: [],
+                somatic: { somatic_capability_mask: 0xffffffff, available_arms: 2, locomotion_baseline: 'bipedal_standard', conditions: [], motor_limitations: [], signature_tics: [], banned_kinetic_verbs: [] },
                 id: 'char_ghost_walker',
                 name: 'Ghost Walker',
-                role: 'Drifter',
-                biology: {
-                    handedness: 'AMBIDEXTROUS',
-                    limbs: { functional_arms: 2, functional_legs: 2 },
-                    banned_kinetic_verbs: [],
-                },
                 location: 'loc_ghost_room', // Unknown location
-                logistical: { worn: [], held: [] },
-                epistemic: { leverage_strings: {} },
+                logistical: { worn: [], held: [], carried: [], cached: [] },
+                epistemic: { escalation_ceiling: 3, leverage_strings: {}, relationship_defaults: {}, strings_held_over: [], known_secret_ids: [], banned_attenuation_tokens: [] },
                 linked_grievances: [],
             }
 
@@ -155,12 +154,26 @@ describe('Phase 4: JCS Canonicalization, Compiler Gauntlet & Merkle Sealing', ()
             const compiler = new ThreePassCompiler()
 
             const locA: Location = {
+                type: 'location',
+                status: 'active',
+                historical_reference: false,
+                linked_grievances: [],
+                linked_possessions: [],
+                participants: [],
+                lighting_level: 'dim',
                 id: 'loc_room_a',
                 name: 'Room A',
                 acoustic_damping_bp: 1000,
                 connected_locations: ['loc_room_b'],
             }
             const locB: Location = {
+                type: 'location',
+                status: 'active',
+                historical_reference: false,
+                linked_grievances: [],
+                linked_possessions: [],
+                participants: [],
+                lighting_level: 'dim',
                 id: 'loc_room_b',
                 name: 'Room B',
                 acoustic_damping_bp: 1000,
@@ -201,17 +214,16 @@ describe('Phase 4: JCS Canonicalization, Compiler Gauntlet & Merkle Sealing', ()
         it('Trap 6: Runtime State Mutation Trap (deepFreeze Immutability)', () => {
             const compiler = new ThreePassCompiler()
             const charBog: Character = {
+                type: 'character',
+                status: 'active',
+                historical_reference: false,
+                linked_possessions: [],
+                somatic: { somatic_capability_mask: 0xffffffff, available_arms: 2, locomotion_baseline: 'bipedal_standard', conditions: [], motor_limitations: [], signature_tics: [], banned_kinetic_verbs: [] },
                 id: 'char_bog',
                 name: 'Bog',
-                role: 'Forager',
-                biology: {
-                    handedness: 'RIGHT',
-                    limbs: { functional_arms: 2, functional_legs: 2 },
-                    banned_kinetic_verbs: [],
-                },
                 location: undefined,
-                logistical: { worn: [], held: [] },
-                epistemic: { leverage_strings: {} },
+                logistical: { worn: [], held: [], carried: [], cached: [] },
+                epistemic: { escalation_ceiling: 3, leverage_strings: {}, relationship_defaults: {}, strings_held_over: [], known_secret_ids: [], banned_attenuation_tokens: [] },
                 linked_grievances: [],
             }
             compiler.characters.set(charBog.id, charBog)
