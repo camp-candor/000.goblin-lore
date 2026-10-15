@@ -131,4 +131,43 @@ describe('Phase 1: Byte-0 & Tri-Partite Vector Invariants', () => {
         expect(sat.armsDemanded).toBe(2)
         expect(sat.armsAvailable).toBe(0) // 1 baseline arm - 1 arm condition penalty = 0
     })
+
+    it('detects motor limitation mismatch when banned kinetic verb is missing', () => {
+        const character: Character = {
+            id: 'char_limiter',
+            name: 'Limiter Actor',
+            type: 'character',
+            status: 'active',
+            historical_reference: false,
+            somatic: {
+                somatic_capability_mask: 0xffffffff,
+                available_arms: 2,
+                locomotion_baseline: 'bipedal_standard',
+                banned_kinetic_verbs: [],
+                conditions: [],
+                motor_limitations: ['NO_SPRINT'],
+                signature_tics: [],
+            },
+            logistical: {
+                worn: [],
+                held: [],
+                carried: [],
+                cached: [],
+            },
+            epistemic: {
+                escalation_ceiling: 3,
+                leverage_strings: {},
+                relationship_defaults: {},
+                strings_held_over: [],
+                known_secret_ids: [],
+                banned_attenuation_tokens: [],
+            },
+            linked_grievances: [],
+            linked_possessions: [],
+        }
+
+        const sat = evaluateSomaticSAT(character, new Map())
+        expect(sat.passed).toBe(false)
+        expect(sat.code).toBe('MOTOR_LIMITATION_MISMATCH')
+    })
 })
