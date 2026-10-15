@@ -155,10 +155,10 @@ const init = async () => {
                 ? JSON.parse(fs.readFileSync(libPkgPath, 'utf8'))
                 : { version: '1.0.12' }
             logWidget.logLines = [
-                '----------------',
+                '-----------',
                 `${identity.name} ${identity.version}`,
                 `LIBRARY V${libPkg.version}`,
-                '----------------',
+                '-----------',
             ]
             logWidget.setItems(logWidget.logLines)
             if (logWidget.screen) logWidget.screen.render()
@@ -189,8 +189,6 @@ const init = async () => {
                 )
             }
         }
-
-        let targetAction: (() => Promise<void>) | null = null
 
         for (const pkg of existingPackages) {
             try {
@@ -238,36 +236,24 @@ const init = async () => {
 
                 const MENU_ACTION = require(menuActionPath)
 
-                const routeFnc = async () => {
-                    await new Promise<void>((resolve) => {
-                        ;(global as any)[pkg.globalKey].hunt(
-                            MENU_ACTION.INIT_MENU,
-                            {
-                                slv: resolve,
-                            },
-                        )
-                    })
-                    await LIBRARY.hunt(MENU_ACTION_LIBRARY.OPEN_MENU, {
-                        src: '',
-                    })
-                }
-
                 // Mount sub-menu into root Blessed navigation
                 await LIBRARY.hunt(MENU_ACTION_LIBRARY.ROUTE_MENU, {
                     idx: pkg.menuTitle,
                     src: pkg.menuDesc,
-                    fnc: routeFnc,
+                    fnc: async () => {
+                        await new Promise<void>((resolve) => {
+                            ;(global as any)[pkg.globalKey].hunt(
+                                MENU_ACTION.INIT_MENU,
+                                {
+                                    slv: resolve,
+                                },
+                            )
+                        })
+                        await LIBRARY.hunt(MENU_ACTION_LIBRARY.OPEN_MENU, {
+                            src: '',
+                        })
+                    },
                 })
-
-                if (
-                    idx &&
-                    (pkg.name.toLowerCase() === idx.toLowerCase() ||
-                        pkg.globalKey.toLowerCase() === idx.toLowerCase() ||
-                        pkg.name.toLowerCase().endsWith('.' + idx.toLowerCase()) ||
-                        pkg.menuTitle.toLowerCase().includes(idx.toLowerCase()))
-                ) {
-                    targetAction = routeFnc
-                }
 
                 await LIBRARY.hunt(CONSOLE_ACTION_LIBRARY.UPDATE_CONSOLE, {
                     idx: 'cns00',
@@ -281,32 +267,59 @@ const init = async () => {
             }
         }
 
-        if (logWidget && Array.isArray(logWidget.logLines)) {
-            const libPkgPath = path.resolve(
-                import.meta.dirname,
-                './package.json',
+        // Direct target dispatch if specified via -t / --separator
+        if (idx) {
+            const target = existingPackages.find(
+                (p) =>
+                    p.name.toLowerCase() === idx.toLowerCase() ||
+                    p.globalKey.toLowerCase() === idx.toLowerCase() ||
+                    p.menuTitle.toLowerCase() === idx.toLowerCase() ||
+                    p.name.endsWith(`.${idx.toLowerCase()}`) ||
+                    p.name.split('.')[1]?.toLowerCase() === idx.toLowerCase(),
             )
-            const libPkg = fs.existsSync(libPkgPath)
-                ? JSON.parse(fs.readFileSync(libPkgPath, 'utf8'))
-                : { version: '1.0.12' }
-            logWidget.logLines = [
-                '----------------',
-                `${identity.name} ${identity.version}`,
-                `LIBRARY V${libPkg.version}`,
-                '----------------',
-            ]
-            logWidget.setItems(logWidget.logLines)
-            if (typeof logWidget.scrollTo === 'function') {
-                logWidget.scrollTo(0)
+            if (target) {
+                let pkgDistPath = path.resolve(
+                    import.meta.dirname,
+                    `../../packages/dist/${target.name}`,
+                )
+                if (!fs.existsSync(pkgDistPath)) {
+                    const localDist = path.resolve(
+                        import.meta.dirname,
+                        `../../packages/${target.name}/dist`,
+                    )
+                    if (fs.existsSync(localDist)) {
+                        pkgDistPath = localDist
+                    } else {
+                        pkgDistPath = target.targetDir
+                    }
+                }
+                const menuActionPath = path.join(
+                    pkgDistPath,
+                    '98.menu.unit/menu.action',
+                )
+                if (
+                    fs.existsSync(menuActionPath + '.js') ||
+                    fs.existsSync(menuActionPath + '.ts') ||
+                    fs.existsSync(menuActionPath)
+                ) {
+                    const TARGET_ACTION = require(menuActionPath)
+                    await (global as any)[target.globalKey].hunt(
+                        TARGET_ACTION.INIT_MENU,
+                        {
+                            slv: async () => {
+                                await LIBRARY.hunt(
+                                    MENU_ACTION_LIBRARY.OPEN_MENU,
+                                    { src: '' },
+                                )
+                            },
+                        },
+                    )
+                    return
+                }
             }
-            if (logWidget.screen) logWidget.screen.render()
         }
 
-        if (targetAction) {
-            await targetAction()
-        } else {
-            await LIBRARY.hunt(MENU_ACTION_LIBRARY.OPEN_MENU, { src: '' })
-        }
+        await LIBRARY.hunt(MENU_ACTION_LIBRARY.OPEN_MENU, { src: '' })
     } catch (err: any) {
         console.error(':: [FAIL] Terminal Runtime Panic:', err)
         process.exit(1)
