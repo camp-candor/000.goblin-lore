@@ -39,21 +39,40 @@ export class TrieClueDisjointnessSolver {
         lemma?: string
     } {
         const normalized = clueToken.trim().toLowerCase()
-        let current = this.root
 
-        for (const char of normalized) {
-            if (!current.children.has(char)) {
-                return { collision: false }
+        const checkFrom = (str: string) => {
+            let current = this.root
+            for (const char of str) {
+                if (current.isEndOfWord) {
+                    return {
+                        collision: true,
+                        topicId: current.topicId,
+                        lemma: current.lemma,
+                    }
+                }
+                if (!current.children.has(char)) {
+                    return { collision: false }
+                }
+                current = current.children.get(char)!
             }
-            current = current.children.get(char)!
+            if (current.isEndOfWord) {
+                return {
+                    collision: true,
+                    topicId: current.topicId,
+                    lemma: current.lemma,
+                }
+            }
+            return { collision: false }
         }
 
-        if (current.isEndOfWord) {
-            return {
-                collision: true,
-                topicId: current.topicId,
-                lemma: current.lemma,
-            }
+        const direct = checkFrom(normalized)
+        if (direct.collision) return direct
+
+        const parts = normalized.split(/[_ ]+/)
+        for (let p = 1; p < parts.length; p++) {
+            const sub = parts.slice(p).join('_')
+            const res = checkFrom(sub)
+            if (res.collision) return res
         }
 
         return { collision: false }
@@ -61,7 +80,7 @@ export class TrieClueDisjointnessSolver {
 
     /**
      * Enforces the Epistemic Clue Disjointness Invariant:
-     * P_clues ∩ (⋃ T_lemmas) == ∅
+     * P_clues INTERSECT (UNION T_lemmas) == EMPTY
      */
     public static verifyDisjointness(
         mysteries: Array<{

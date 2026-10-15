@@ -119,4 +119,90 @@ describe('Phase 2: Epistemic Firewall & Lexical Gate Battery', () => {
         )
         expect(resultBreach.errorVector?.offending_tokens).toContain('sprint')
     })
+
+    it('executes Level 3 Synthetic Mutation Traps 1 through 6', () => {
+        const gate = new LexicalGate(ontologyPath)
+
+        // Trap 1: Clue-Disjointness Collision Trap (P_clues INTERSECT UNION T_lemmas != EMPTY)
+        const trap1Result = TrieClueDisjointnessSolver.verifyDisjointness([
+            {
+                topic_id: 'mystery_poison_flask',
+                permitted_clue_tokens: ['arsenic_vial', 'tin_cup'],
+                trigger_lemma_sets: [['arsenic', 'poison']],
+            },
+        ])
+        expect(trap1Result.valid).toBe(false)
+        expect(trap1Result.collisions.length).toBeGreaterThan(0)
+        expect(trap1Result.collisions[0].clue).toBe('arsenic_vial')
+        expect(trap1Result.collisions[0].topicId).toBe('mystery_poison_flask')
+        expect(trap1Result.collisions[0].lemma).toBe('arsenic')
+
+        // Trap 2: Legacy Single-Parenthetical AST Trap
+        const trap2Payload = {
+            id: 'line_01',
+            speaker_id: 'char_bog',
+            dialogue_text: '...',
+            parenthetical: 'legacy channel',
+        }
+        const trap2Parsed = DialogueLineASTSchema.safeParse(trap2Payload)
+        expect(trap2Parsed.success).toBe(false)
+
+        // Trap 3: Un-Negated Physical Motor Violation Trap
+        const trap3Line: DialogueLineAST = {
+            id: 'line_03',
+            speaker_id: 'char_silas',
+            dialogue_text: 'Watch me go.',
+            camera_parenthetical: '',
+            observable_parenthetical: 'Silas sprints across the open yard',
+            extracted_motor_actions: [],
+            speech_act: 'ASSERT',
+        }
+        const trap3Result = gate.auditDialogueLine(trap3Line, ['sprint'])
+        expect(trap3Result.passed).toBe(false)
+        expect(trap3Result.errorVector?.rule_id).toBe(
+            'FATAL_SOMATIC_PROSE_LEAK',
+        )
+        expect(trap3Result.errorVector?.offending_tokens).toContain('sprint')
+
+        // Trap 4: Negation Bypass Control (False Positive Immunity)
+        const trap4Line: DialogueLineAST = {
+            id: 'line_04',
+            speaker_id: 'char_silas',
+            dialogue_text: 'I cannot make it.',
+            camera_parenthetical: '',
+            observable_parenthetical:
+                'Silas was unable to sprint across the yard',
+            extracted_motor_actions: [],
+            speech_act: 'ASSERT',
+        }
+        const trap4Result = gate.auditDialogueLine(trap4Line, ['sprint'])
+        expect(trap4Result.passed).toBe(true)
+
+        // Trap 5: Abstract Metaphor Bypass Control (False Positive Immunity)
+        const trap5Line: DialogueLineAST = {
+            id: 'line_05',
+            speaker_id: 'char_silas',
+            dialogue_text: 'The outcome is sealed.',
+            camera_parenthetical: 'Silas clutches fate in his hands',
+            observable_parenthetical: '',
+            extracted_motor_actions: [],
+            speech_act: 'ASSERT',
+        }
+        const trap5Result = gate.auditDialogueLine(trap5Line, ['clutch'])
+        expect(trap5Result.passed).toBe(true)
+
+        // Trap 6: Machine-Rail Discrepancy Trap (Untrusted AST Deception)
+        const trap6Line: DialogueLineAST = {
+            id: 'line_06',
+            speaker_id: 'char_silas',
+            dialogue_text: 'I stood motionless.',
+            camera_parenthetical: '',
+            observable_parenthetical: '',
+            extracted_motor_actions: ['SPRINT'],
+            speech_act: 'ASSERT',
+        }
+        const trap6Result = gate.auditDialogueLine(trap6Line, ['sprint'])
+        expect(trap6Result.passed).toBe(false)
+        expect(trap6Result.errorVector?.rule_id).toBe('FATAL_SOMATIC_BREACH')
+    })
 })

@@ -130,7 +130,7 @@ export class LexicalGate {
     }
 
     /**
-     * Dual-Field Cross-Check: Evaluates CombinedActions ∩ BannedVerbs(Subject)
+     * Dual-Field Cross-Check: Evaluates CombinedActions INTERSECT BannedVerbs(Subject)
      */
     public auditDialogueLine(
         line: DialogueLineAST,
