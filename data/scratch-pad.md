@@ -20,21 +20,21 @@
  ├── [TASK-GL-1.2] Entity Dossier Scaffolder (SCAFFOLD_ENTITY) & Refusal Vector Contract
  └── [TASK-GL-1.3] Trust Graph Ontology, Authority Levels & Three-Part Lock Enforcement
 
-PHASE 2: EPISTEMIC FIREWALL, ACTION ONTOLOGY & CLUE-DISJOINTNESS KERNELS
+-PHASE 2: EPISTEMIC FIREWALL, ACTION ONTOLOGY & CLUE-DISJOINTNESS KERNELS
  ├── [TASK-GL-2.1] Canonical Action Ontology (verb_families.json) & Dual-Field Lexical Gate
  ├── [TASK-GL-2.2] Multi-Valued Epistemic Horizons & O(L) Trie Clue-Disjointness Verifier
  └── [TASK-GL-2.3] Split Parenthetical AST Contract, Blind Probe Schemas & Pacing Manifests
 
-PHASE 3: CREATIVE INGESTION FUNNEL, GRIEVANCE DAG & FARCE CAP GOVERNANCE
+-PHASE 3: CREATIVE INGESTION FUNNEL, GRIEVANCE DAG & FARCE CAP GOVERNANCE
  ├── [TASK-GL-3.1] 4-Tier Creative Ingestion Funnel (vault/ingest/) & HDBSCAN Resonance Audit
  └── [TASK-GL-3.2] Tier 4 Proposal Gate (!PitchGrievance), Farce Cap Linter & Reciprocal Spatial Links
 
-PHASE 4: THE 3-PASS OFFLINE COMPILER (T_0 = $0.00) & CRYPTOGRAPHIC H_root SEALING
+-PHASE 4: THE 3-PASS OFFLINE COMPILER (T_0 = $0.00) & CRYPTOGRAPHIC H_root SEALING
  ├── [TASK-GL-4.1] 3-Pass Offline Canon Compiler (scripts/compile.ts) & Integer Basis-Point Math
  ├── [TASK-GL-4.2] RFC 8785 Canonicalization, Atomic POSIX Swap & Merkle Root (H_root) Sealing
  └── [TASK-GL-4.3] Read-Only Runtime Ingestion Client (bibleLoader.ts) & Recursive deepFreeze<T>()
 
-PHASE 5: CANON LIFECYCLE STANDING, HARVEST RATIFICATION & APPEND-ONLY ERRATA
+-PHASE 5: CANON LIFECYCLE STANDING, HARVEST RATIFICATION & APPEND-ONLY ERRATA
  ├── [TASK-GL-5.1] Asymmetric Staging Membrane (LoreStagingDO) & Human Ratification Promotion
  ├── [TASK-GL-5.2] Tri-State Epistemological Standing ("Still Good" Protocol) & Segmented Git-Notes
  └── [TASK-GL-5.3] Append-Only Errata Protocol, Multi-Repo Expand->Migrate->Contract Saga & QA Gauntlet
