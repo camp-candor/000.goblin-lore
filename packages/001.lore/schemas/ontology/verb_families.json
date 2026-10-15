@@ -1,0 +1,77 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "version": "1.0.0",
+    "families": {
+        "LOCOMOTION_RAPID": {
+            "capability_required": "bipedal_sprint",
+            "required_limbs": 2,
+            "lemmas": [
+                "sprint",
+                "run",
+                "dash",
+                "bolt",
+                "scamper",
+                "vault",
+                "charge"
+            ]
+        },
+        "LOCOMOTION_VERTICAL": {
+            "capability_required": "climb",
+            "required_limbs": 2,
+            "lemmas": ["climb", "scramble", "scale", "shinny"]
+        },
+        "BIMANUAL_GRIP": {
+            "capability_required": "two_functional_arms",
+            "required_limbs": 2,
+            "lemmas": [
+                "heave",
+                "pry",
+                "wring",
+                "strangle",
+                "haul",
+                "wield_two_handed"
+            ]
+        },
+        "MANIPULATION_FINE": {
+            "capability_required": "fine_motor_grasp",
+            "required_limbs": 1,
+            "lemmas": [
+                "thread",
+                "pick",
+                "twist",
+                "slice",
+                "unlatch",
+                "tinker",
+                "clutch",
+                "grip"
+            ]
+        },
+        "SUSPICION_AND_AVOIDANCE": {
+            "capability_required": "epistemic_suspicion",
+            "required_limbs": 0,
+            "lemmas": [
+                "sniff",
+                "inspect",
+                "hesitate",
+                "pour_out",
+                "refuse_drink",
+                "scrutinize",
+                "suspect"
+            ]
+        }
+    },
+    "abstract_dobj_whitelist": [
+        "fate",
+        "destiny",
+        "silence",
+        "shadow",
+        "thought",
+        "memory",
+        "idea",
+        "grief",
+        "tradition",
+        "terror",
+        "patience",
+        "pride"
+    ]
+}
