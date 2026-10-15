@@ -3,7 +3,7 @@
     "version": "0.4.0",
     "private": true,
     "scripts": {
-        "dev": "npx tsx run.ts -t pivot",
+        "dev": "npx tsx run.ts -t lore",
         "test": "ava",
         "check:gauntlet": "ava test/gauntlet.verification.test.ts"
     },

@@ -190,6 +190,8 @@ const init = async () => {
             }
         }
 
+        let targetAction: (() => Promise<void>) | null = null
+
         for (const pkg of existingPackages) {
             try {
                 let pkgDistPath = path.resolve(
@@ -236,24 +238,36 @@ const init = async () => {
 
                 const MENU_ACTION = require(menuActionPath)
 
+                const routeFnc = async () => {
+                    await new Promise<void>((resolve) => {
+                        ;(global as any)[pkg.globalKey].hunt(
+                            MENU_ACTION.INIT_MENU,
+                            {
+                                slv: resolve,
+                            },
+                        )
+                    })
+                    await LIBRARY.hunt(MENU_ACTION_LIBRARY.OPEN_MENU, {
+                        src: '',
+                    })
+                }
+
                 // Mount sub-menu into root Blessed navigation
                 await LIBRARY.hunt(MENU_ACTION_LIBRARY.ROUTE_MENU, {
                     idx: pkg.menuTitle,
                     src: pkg.menuDesc,
-                    fnc: async () => {
-                        await new Promise<void>((resolve) => {
-                            ;(global as any)[pkg.globalKey].hunt(
-                                MENU_ACTION.INIT_MENU,
-                                {
-                                    slv: resolve,
-                                },
-                            )
-                        })
-                        await LIBRARY.hunt(MENU_ACTION_LIBRARY.OPEN_MENU, {
-                            src: '',
-                        })
-                    },
+                    fnc: routeFnc,
                 })
+
+                if (
+                    idx &&
+                    (pkg.name.toLowerCase() === idx.toLowerCase() ||
+                        pkg.globalKey.toLowerCase() === idx.toLowerCase() ||
+                        pkg.name.toLowerCase().endsWith('.' + idx.toLowerCase()) ||
+                        pkg.menuTitle.toLowerCase().includes(idx.toLowerCase()))
+                ) {
+                    targetAction = routeFnc
+                }
 
                 await LIBRARY.hunt(CONSOLE_ACTION_LIBRARY.UPDATE_CONSOLE, {
                     idx: 'cns00',
@@ -266,8 +280,6 @@ const init = async () => {
                 })
             }
         }
-
-        await LIBRARY.hunt(MENU_ACTION_LIBRARY.OPEN_MENU, { src: '' })
 
         if (logWidget && Array.isArray(logWidget.logLines)) {
             const libPkgPath = path.resolve(
@@ -288,6 +300,12 @@ const init = async () => {
                 logWidget.scrollTo(0)
             }
             if (logWidget.screen) logWidget.screen.render()
+        }
+
+        if (targetAction) {
+            await targetAction()
+        } else {
+            await LIBRARY.hunt(MENU_ACTION_LIBRARY.OPEN_MENU, { src: '' })
         }
     } catch (err: any) {
         console.error(':: [FAIL] Terminal Runtime Panic:', err)

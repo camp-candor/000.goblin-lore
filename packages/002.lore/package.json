@@ -1,0 +1,29 @@
+{
+    "name": "@camp_candor/002.lore",
+    "version": "0.0.3",
+    "private": true,
+    "type": "module",
+    "terminal": {
+        "globalKey": "LORE",
+        "menuTitle": "LORE MENU",
+        "menuDesc": "Open the lore menu\nto manage lore."
+    },
+    "main": "BEE.ts",
+    "exports": {
+        ".": {
+            "types": "./BEE.ts",
+            "import": "./BEE.ts",
+            "require": "./BEE.ts",
+            "default": "./BEE.ts"
+        },
+        "./hunt": {
+            "types": "./hunt.ts",
+            "import": "./hunt.ts",
+            "require": "./hunt.ts",
+            "default": "./hunt.ts"
+        }
+    },
+    "scripts": {
+        "test": "vitest run"
+    }
+}
