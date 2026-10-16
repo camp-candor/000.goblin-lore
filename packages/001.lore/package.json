@@ -3,6 +3,7 @@
     "version": "1.0.0",
     "type": "module",
     "scripts": {
+        "compile": "tsx scripts/compile.ts",
         "test": "vitest run",
         "check:types": "tsc -b tsconfig.json"
     },
