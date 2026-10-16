@@ -160,10 +160,7 @@ the reasoning behind the current state instead of re-deriving it.
 
 ### 3.5 Rules for the Historical Record
 
-- **Append-only:** Never rewrite or delete past `overview/`, `building/`, or
-  `directive/` documents. Add new numbered files instead.
-- **Record new work:** When executing a multi-step epic, add the next numbered
-  directive under the current `day-XXX/` folder rather than overwriting.
+- **Append-only:** Never rewrite or delete past `overview/`or `build/` documents. Add new numbered files instead.
 - **Verify, don't trust:** Historical specs may reference since-renamed paths
   (e.g. `camp-candor/000.repo-bot`). Always confirm against live code.
 
