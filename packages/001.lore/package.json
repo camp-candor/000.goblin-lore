@@ -1,0 +1,22 @@
+{
+  "name": "@camp_candor/001.lore",
+  "version": "0.1.0",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "test": "vitest run",
+    "check:types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "better-sqlite3": "^11.5.0",
+    "js-yaml": "^4.1.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.11",
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20.14.9",
+    "typescript": "^5.5.3",
+    "vitest": "^2.1.2"
+  }
+}
