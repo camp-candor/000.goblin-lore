@@ -13,7 +13,7 @@ import {
 } from '../src/harvest/ratificationStamper.js'
 import { verifyByteZeroIntegrity } from '../src/scaffolder/entityBuilder.js'
 import { ErrataManager } from '../src/core/ledger/errataManager.js'
-import { ErrataRecord } from '../src/schemas/errata.js'
+import { ErrataRecord, ErrataRecordSchema } from '../src/schemas/errata.js'
 
 describe('Phase 5: Canon Lifecycle, Harvest Ratification & Append-Only Errata', () => {
     let tmpDir: string
@@ -31,7 +31,31 @@ describe('Phase 5: Canon Lifecycle, Harvest Ratification & Append-Only Errata', 
     })
 
     it('guarantees zero-cascade propagation for FLAGGED_FOR_REVIEW and atomic cascade for DEPRECATED', () => {
-        const dependencies: SceneDependencyRecord[] = [
+        // Trap 1: 10 downstream dependencies
+        const depScenes10: SceneDependencyRecord[] = Array.from(
+            { length: 10 },
+            (_, idx) => ({
+                scene_id: `sc_101_${String(idx + 1).padStart(2, '0')}`,
+                depends_on_entity_id: 'char_bog',
+                is_dirty: false,
+            }),
+        )
+
+        // Transition to FLAGGED_FOR_REVIEW: must suppress cascade
+        const flagResult = StandingEngine.executeTransition(
+            'char_bog',
+            'ACTIVE_ENDORSED',
+            'FLAGGED_FOR_REVIEW',
+            'user_continuity_editor',
+            'Doubt over left arm injury timeline',
+            depScenes10,
+            45,
+        )
+        expect(flagResult.cascadeFired).toBe(false)
+        expect(flagResult.dirtyScenes.length).toBe(0)
+
+        // Trap 2: 3 downstream dependencies
+        const depScenes3: SceneDependencyRecord[] = [
             {
                 scene_id: 'sc_101_01',
                 depends_on_entity_id: 'char_bog',
@@ -43,24 +67,11 @@ describe('Phase 5: Canon Lifecycle, Harvest Ratification & Append-Only Errata', 
                 is_dirty: false,
             },
             {
-                scene_id: 'sc_102_04',
-                depends_on_entity_id: 'loc_culvert',
+                scene_id: 'sc_101_03',
+                depends_on_entity_id: 'char_bog',
                 is_dirty: false,
             },
         ]
-
-        // Transition to FLAGGED_FOR_REVIEW: must suppress cascade
-        const flagResult = StandingEngine.executeTransition(
-            'char_bog',
-            'ACTIVE_ENDORSED',
-            'FLAGGED_FOR_REVIEW',
-            'user_continuity_editor',
-            'Doubt over left arm injury timeline',
-            dependencies,
-            45,
-        )
-        expect(flagResult.cascadeFired).toBe(false)
-        expect(flagResult.dirtyScenes.length).toBe(0)
 
         // Transition to DEPRECATED_ARCHIVED: must fire atomic cascade across dependent scenes
         const deprecateResult = StandingEngine.executeTransition(
@@ -69,11 +80,15 @@ describe('Phase 5: Canon Lifecycle, Harvest Ratification & Append-Only Errata', 
             'DEPRECATED_ARCHIVED',
             'user_showrunner',
             'Canonical retcon applied',
-            dependencies,
+            depScenes3,
             46,
         )
         expect(deprecateResult.cascadeFired).toBe(true)
-        expect(deprecateResult.dirtyScenes).toEqual(['sc_101_01', 'sc_101_02'])
+        expect(deprecateResult.dirtyScenes).toEqual([
+            'sc_101_01',
+            'sc_101_02',
+            'sc_101_03',
+        ])
     })
 
     it('executes 5-second Still Good affirmation without bumping versions or mutating hash', () => {
@@ -101,7 +116,7 @@ describe('Phase 5: Canon Lifecycle, Harvest Ratification & Append-Only Errata', 
             suggested_slug: 'item_green_enamel_cup',
             name: 'Green Enamel Cup',
             recurrence_count: 4,
-      drama_weight: 0.85,
+            drama_weight: 0.85,
             description: 'Chipped tin cup with peeling green enamel paint.',
             assigned_owner: 'char_bog',
             occupies_hands: 1,
@@ -124,7 +139,7 @@ describe('Phase 5: Canon Lifecycle, Harvest Ratification & Append-Only Errata', 
             true,
         )
 
-        // Reject promotion below 0.70 salience threshold
+        // Reject promotion below 0.70 salience threshold (Trap 4)
         const lowSalienceCandidate = {
             ...candidate,
             recurrence_count: 1,
@@ -141,7 +156,7 @@ describe('Phase 5: Canon Lifecycle, Harvest Ratification & Append-Only Errata', 
         expect(initialLedger.records.length).toBe(0)
 
         const record: ErrataRecord = {
-            errata_id: 'err_culvert_seam_01',
+            errata_id: 'err_sample_01',
             superseded_canon_sha: 'a'.repeat(64),
             active_canon_sha: 'b'.repeat(64),
             affected_entity_ids: ['loc_culvert'],
@@ -155,11 +170,19 @@ describe('Phase 5: Canon Lifecycle, Harvest Ratification & Append-Only Errata', 
         manager.appendErrata(record)
         const updated = manager.loadLedger()
         expect(updated.records.length).toBe(1)
-        expect(updated.records[0].errata_id).toBe('err_culvert_seam_01')
+        expect(updated.records[0].errata_id).toBe('err_sample_01')
 
-        // Reject duplicate errata ID
+        // Trap 5: Reject duplicate errata ID
         expect(() => manager.appendErrata(record)).toThrow(
             /ERRATA_DUPLICATE_ERROR/,
         )
+
+        // Trap 6: Reject un-schemaed payload key injection (.strict())
+        const unvalidated = {
+            errata_id: 'err_test_01',
+            rogue_key: 'ILLEGAL_VAL',
+        }
+        const parseResult = ErrataRecordSchema.safeParse(unvalidated)
+        expect(parseResult.success).toBe(false)
     })
 })

@@ -9,7 +9,12 @@ import {
 import { deepFreeze, loadBibleState } from '../src/core/canon/bibleLoader.js'
 import { ThreePassCompiler } from '../scripts/compile.js'
 import { Grievance } from '../src/schemas/grievance.js'
-import { Character, Location } from '../src/schemas/entities.js'
+import {
+    Character,
+    Location,
+    CharacterSchema,
+    LocationSchema,
+} from '../src/schemas/entities.js'
 
 describe('Phase 4: JCS Canonicalization, Compiler Gauntlet & Merkle Sealing', () => {
     describe('JCS Canonicalization (RFC 8785)', () => {
@@ -131,20 +136,15 @@ describe('Phase 4: JCS Canonicalization, Compiler Gauntlet & Merkle Sealing', ()
         it('Trap 3: Dangling Foreign-Key Trap (Pass 2 Integrity Sweep)', () => {
             const compiler = new ThreePassCompiler()
 
-            const ghostChar: Character = {
+            const ghostChar: Character = CharacterSchema.parse({
                 id: 'char_ghost_walker',
                 name: 'Ghost Walker',
-                role: 'Drifter',
-                biology: {
-                    handedness: 'AMBIDEXTROUS',
-                    limbs: { functional_arms: 2, functional_legs: 2 },
-                    banned_kinetic_verbs: [],
-                },
+                type: 'character',
+                somatic: { available_arms: 2, banned_kinetic_verbs: [] },
+                logistical: {},
+                epistemic: {},
                 location: 'loc_ghost_room', // Unknown location
-                logistical: { worn: [], held: [] },
-                epistemic: { leverage_strings: {} },
-                linked_grievances: [],
-            }
+            })
 
             compiler.characters.set(ghostChar.id, ghostChar)
 
@@ -154,18 +154,20 @@ describe('Phase 4: JCS Canonicalization, Compiler Gauntlet & Merkle Sealing', ()
         it('Trap 4: Asymmetric Spatial Portal Trap (One-Way Trap Sweep)', () => {
             const compiler = new ThreePassCompiler()
 
-            const locA: Location = {
+            const locA: Location = LocationSchema.parse({
                 id: 'loc_room_a',
                 name: 'Room A',
+                type: 'location',
                 acoustic_damping_bp: 1000,
                 connected_locations: ['loc_room_b'],
-            }
-            const locB: Location = {
+            })
+            const locB: Location = LocationSchema.parse({
                 id: 'loc_room_b',
                 name: 'Room B',
+                type: 'location',
                 acoustic_damping_bp: 1000,
                 connected_locations: [], // Asymmetric missing return link
-            }
+            })
 
             compiler.locations.set(locA.id, locA)
             compiler.locations.set(locB.id, locB)
@@ -200,20 +202,14 @@ describe('Phase 4: JCS Canonicalization, Compiler Gauntlet & Merkle Sealing', ()
 
         it('Trap 6: Runtime State Mutation Trap (deepFreeze Immutability)', () => {
             const compiler = new ThreePassCompiler()
-            const charBog: Character = {
+            const charBog: Character = CharacterSchema.parse({
                 id: 'char_bog',
                 name: 'Bog',
-                role: 'Forager',
-                biology: {
-                    handedness: 'RIGHT',
-                    limbs: { functional_arms: 2, functional_legs: 2 },
-                    banned_kinetic_verbs: [],
-                },
-                location: undefined,
-                logistical: { worn: [], held: [] },
-                epistemic: { leverage_strings: {} },
-                linked_grievances: [],
-            }
+                type: 'character',
+                somatic: { available_arms: 2, banned_kinetic_verbs: [] },
+                logistical: {},
+                epistemic: {},
+            })
             compiler.characters.set(charBog.id, charBog)
             compiler.executePass3(compiledDir, 'canon')
 
