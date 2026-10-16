@@ -17,7 +17,7 @@ Before writing code, orient yourself in this order:
 
 1. **This file** -- laws, boundaries, and the verification gauntlet.
 2. **`data/overview/`** -- the _why_: architectural intent and design rationale.
-3. **`data/building/`** -- the _how_: day-by-day build log of what was done.
+3. **`data/build/`** -- the _how_: day-by-day build log of what was done.
 4. **`data/directive/`** -- the _what_: the exact task specs and audit results
    that produced the current codebase, in execution order.
 5. **The code** -- verify any historical claim against the live source before
@@ -83,7 +83,7 @@ Before writing code, orient yourself in this order:
 │
 └── data/                       # Historical record & generated artifacts (see Section 3)
     ├── overview/               # Architectural intent & design rationale
-    ├── building/               # Chronological build logs
+    ├── build/               # Chronological build logs
     ├── directive/              # Executed task specs & audit dossiers, by day
     ├── flat/                   # [GENERATED, gitignored] flattened library snapshots
     ├── unit/                   # [GENERATED, gitignored] scaffolded unit templates
@@ -110,10 +110,10 @@ the reasoning behind the current state instead of re-deriving it.
 - **Use it when:** Making architectural decisions, adding new tools or
   invariants, or evaluating whether a change fits the template's intent.
 
-### 3.2 `data/building/` -- Build Logs (the HOW)
+### 3.2 `data/build/` -- Build Logs (the HOW)
 
 - **Contents:** Chronological session transcripts, one per build day, e.g.
-  `Building _ NPM-Agent-01.DAY-000..md`.
+  `build _ NPM-Agent-01.DAY-000..md`.
 - **Purpose:** Records the prompts issued, the task specifications generated in
   response, and the epics worked (e.g. `EPIC-06-REMEDIATION-PHASE-1`). Shows the
   sequence of remediation phases and why particular fixes were chosen.
