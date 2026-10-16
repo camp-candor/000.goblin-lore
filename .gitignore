@@ -179,6 +179,7 @@ pnpm-lock.yaml
 
 # Scratch Files
 scratch
+scratch_*
 temp
 tmp
 examples
