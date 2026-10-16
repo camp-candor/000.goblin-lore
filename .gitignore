@@ -203,3 +203,6 @@ dist/
 
 data/flat
 data/unit
+
+# Ephemeral 995.library fleet saga journal (crash-recovery state; unlinked on clean completion)
+apps/995.library/data/saga/
