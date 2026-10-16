@@ -43,7 +43,7 @@ export class StandingEngine {
             previous_standing: currentStanding,
             new_standing: targetStanding,
             reconsidered_by: reconsideredBy,
-            timestamp_epoch: Math.floor(Date.now() / 1000),
+            timestamp_epoch: 0,
             reason,
             audit_priority_score: score,
         }
@@ -90,7 +90,7 @@ export class StandingEngine {
         versionBumped: boolean
         hashMutated: boolean
     } {
-        const currentEpoch = Math.floor(Date.now() / 1000)
+        const currentEpoch = 0
         console.log(
             `>> [STILL_GOOD:RESET] Entity '${entityId}' affirmed by ${reconsideredBy}. Age reset to 0 [OK]`,
         )

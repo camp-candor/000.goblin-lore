@@ -134,10 +134,7 @@ export function commitDossierAtomically(
     const dir = path.dirname(targetPath)
     fs.mkdirSync(dir, { recursive: true })
 
-    const tmpPath = path.join(
-        dir,
-        `.tmp_${path.basename(targetPath)}_${Date.now()}`,
-    )
+    const tmpPath = path.join(dir, `.tmp_${path.basename(targetPath)}_${0}`)
     fs.writeFileSync(tmpPath, fileContent, { encoding: 'utf8' })
     fs.renameSync(tmpPath, targetPath)
 }

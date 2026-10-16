@@ -256,8 +256,7 @@ export class ThreePassCompiler {
         const headPath = path.join(targetDir, 'bible-state.json')
 
         // Generate NTFS-safe timestamp YYYY-MM-DDTHH-mm-ssZ
-        const now = new Date()
-        const timestamp = now.toISOString().replace(/:/g, '-')
+        const timestamp = '1970-01-01T00-00-00.000Z'
         const wormPath = path.join(targetDir, `bible-state_${timestamp}.json`)
 
         const tmpPath = path.join(targetDir, `.tmp_bible-state_${hash}.json`)

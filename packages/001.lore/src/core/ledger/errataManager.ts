@@ -43,7 +43,7 @@ export class ErrataManager {
         }
 
         // Atomic sibling POSIX swap
-        const tmpPath = path.join(dir, `.tmp_errata_${Date.now()}.json`)
+        const tmpPath = path.join(dir, `.tmp_errata_${0}.json`)
         fs.writeFileSync(tmpPath, JSON.stringify(ledger, null, 2), 'utf8')
         fs.renameSync(tmpPath, this.ledgerPath)
 
