@@ -1,0 +1,77 @@
+{
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "version": "1.0.0",
+    "families": {
+        "LOCOMOTION_RAPID": {
+            "capability_required": "LEGS_BIPEDAL_RAPID",
+            "required_limbs": 2,
+            "lemmas": [
+                "sprint",
+                "run",
+                "dash",
+                "bolt",
+                "vault",
+                "gallop",
+                "flee",
+                "bound",
+                "charge"
+            ]
+        },
+        "LOCOMOTION_VERTICAL": {
+            "capability_required": "FULL_BODY_VERTICAL",
+            "required_limbs": 4,
+            "lemmas": ["climb", "scramble", "scale", "shinny", "hoist_self"]
+        },
+        "BIMANUAL_GRIP": {
+            "capability_required": "ARMS_TWO_HANDED",
+            "required_limbs": 2,
+            "lemmas": [
+                "heave",
+                "swing_two_handed",
+                "wrench",
+                "prowl_lever",
+                "pry_bilateral"
+            ]
+        },
+        "MANIPULATION_FINE": {
+            "capability_required": "DIGITS_FINE_MOTOR",
+            "required_limbs": 1,
+            "lemmas": [
+                "unpick",
+                "thread",
+                "splice",
+                "disarm_mechanism",
+                "carve"
+            ]
+        },
+        "SUSPICION_AND_AVOIDANCE": {
+            "capability_required": "EPISTEMIC_VIGILANCE",
+            "required_limbs": 0,
+            "lemmas": [
+                "suspect",
+                "sniff",
+                "inspect",
+                "hesitate",
+                "pour_out",
+                "refuse_drink",
+                "scrutinize"
+            ]
+        }
+    },
+    "abstract_dobj_whitelist": [
+        "fate",
+        "destiny",
+        "silence",
+        "shadow",
+        "thought",
+        "memory",
+        "idea",
+        "grief",
+        "tradition",
+        "terror",
+        "patience",
+        "pride",
+        "courage",
+        "distance"
+    ]
+}
