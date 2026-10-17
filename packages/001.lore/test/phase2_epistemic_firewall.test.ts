@@ -2,9 +2,9 @@ import { describe, it, expect } from 'vitest'
 import {
     DialogueLineASTSchema,
     BlindProbeInputSchema,
-} from '../src/types/dialogueAst'
-import { TrieClueDisjointnessSolver } from '../src/health/trieClueDisjointness'
-import { LexicalGate } from '../src/linters/lexicalGate'
+} from '../src/types/dialogueAst.js'
+import { TrieClueDisjointnessSolver } from '../src/health/trieClueDisjointness.js'
+import { LexicalGate } from '../src/linters/lexicalGate.js'
 
 describe('Phase 2: Epistemic Firewall, Action Ontology & Clue-Disjointness Kernels', () => {
     it('enforces split parenthetical AST validation and rejects un-schemaed keys', () => {

@@ -1,4 +1,4 @@
-import { ErrorSignatureVector } from '../types/dialogueAst'
+import { ErrorSignatureVector } from '../types/dialogueAst.js'
 
 interface TrieNode {
     children: Map<string, TrieNode>

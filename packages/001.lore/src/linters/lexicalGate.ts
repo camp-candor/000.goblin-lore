@@ -1,6 +1,6 @@
 import * as fs from 'node:fs'
 import * as path from 'node:path'
-import { DialogueLineAST, ErrorSignatureVector } from '../types/dialogueAst'
+import { DialogueLineAST, ErrorSignatureVector } from '../types/dialogueAst.js'
 
 export interface LexicalGateOptions {
     ontologyPath?: string
@@ -120,7 +120,7 @@ export class LexicalGate {
             ).map((v) => v.toUpperCase()),
         )
 
-        const selfReportedActions = line.extracted_motor_actions.map((a) =>
+        const selfReportedActions = line.extracted_motor_actions.map((a: string) =>
             a.toUpperCase(),
         )
         const extractedProseActions = this.extractProseActions(

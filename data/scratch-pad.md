@@ -20,26 +20,26 @@
 │  PHASE 1: SPATIAL CO-PRESENCE, MATTER CONSERVATION & VOCAL-MOTOR FEASIBILITY                │
 │  ├── *[TASK-GPS-1.1] Spatial Presence & Absolute Item Disjointness Schema                    │
 │  ├── *[TASK-GPS-1.2] The Vocal-Motor Feasibility Theorem Engine (vocalFeasibility.ts)        │
-│  └── [TASK-GPS-1.3] Local SQLite Physical Entity Ledger (localSpatialSomaticLedger.ts)      │
+│  └── *[TASK-GPS-1.3] Local SQLite Physical Entity Ledger (localSpatialSomaticLedger.ts)      │
 │                                                                                             │
 │  PHASE 2: DYNAMIC ENVIRONMENTAL OVERLAYS & MATERIAL DEGRADATION KERNEL                      │
-│  ├── [TASK-GPS-2.1] Material State Vector & Structural Integrity Schema                     │
-│  ├── [TASK-GPS-2.2] Dynamic Environmental Overlay & Friction Engine (environmentalOverlay.ts)│
-│  └── [TASK-GPS-2.3] Local SQLite Material Feasibility Gate (materialFeasibility.ts)        │
+│  ├── *[TASK-GPS-2.1] Material State Vector & Structural Integrity Schema                     │
+│  ├── *[TASK-GPS-2.2] Dynamic Environmental Overlay & Friction Engine (environmentalOverlay.ts)│
+│  └── *[TASK-GPS-2.3] Local SQLite Material Feasibility Gate (materialFeasibility.ts)        │
 │                                                                                             │
 │  PHASE 3: THE CARTESIAN SENSORY FIREWALL & SENSORY PERCEPT FILTRATION                       │
-│  ├── [TASK-GPS-3.1] The Formal Four-Stage Cartesian Pipeline Contract (F -> G -> H -> J)   │
-│  ├── [TASK-GPS-3.2] Acoustic Attenuation & Line-of-Sight Ray-Caster (acousticOcclusion.ts)   │
-│  └── [TASK-GPS-3.3] Local SQLite Sensory Percept Ledger (perceptFilter.ts)                  │
+│  ├── *[TASK-GPS-3.1] The Formal Four-Stage Cartesian Pipeline Contract (F -> G -> H -> J)   │
+│  ├── *[TASK-GPS-3.2] Acoustic Attenuation & Line-of-Sight Ray-Caster (acousticOcclusion.ts)   │
+│  └── *[TASK-GPS-3.3] Local SQLite Sensory Percept Ledger (perceptFilter.ts)                  │
 │                                                                                             │
 │  PHASE 4: NON-PARDONABLE INVARIANT ENFORCEMENT & THE PARDON LEDGER                          │
-│  ├── [TASK-GPS-4.1] The Non-Pardonable Invariant Classification Schema (pardon.schema.ts)   │
-│  ├── [TASK-GPS-4.2] Local SQLite Pardon Ledger & Tamper Guard (localPardonLedger.ts)        │
-│  └── [TASK-GPS-4.3] Cryptographic Waiver Gate & Hard Invariant Interceptor                  │
+│  ├── *[TASK-GPS-4.1] The Non-Pardonable Invariant Classification Schema (pardon.schema.ts)   │
+│  ├── *[TASK-GPS-4.2] Local SQLite Pardon Ledger & Tamper Guard (localPardonLedger.ts)        │
+│  └── *[TASK-GPS-4.3] Cryptographic Waiver Gate & Hard Invariant Interceptor                  │
 │                                                                                             │
 │  PHASE 5: ADVERSARIAL PENETRATION SUITE & GATED UPSTREAM D1 PHYSICAL SYNC                   │
-│  ├── [TASK-GPS-5.1] Five-Vector Physical State Adversarial Injection Test Battery           │
-│  ├── [TASK-GPS-5.2] Automated Local SQLite Execution Trap Harness                           │
+│  ├── *[TASK-GPS-5.1] Five-Vector Physical State Adversarial Injection Test Battery           │
+│  ├── *[TASK-GPS-5.2] Automated Local SQLite Execution Trap Harness                           │
 │  └── [TASK-GPS-5.3] Gated Upstream D1 Physical Core Migration Bridge (syncPhysicalCoreToD1)│
 └─────────────────────────────────────────────────────────────────────────────────────────────┘
 
