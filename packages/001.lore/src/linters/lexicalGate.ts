@@ -120,8 +120,8 @@ export class LexicalGate {
             ).map((v) => v.toUpperCase()),
         )
 
-        const selfReportedActions = line.extracted_motor_actions.map((a: string) =>
-            a.toUpperCase(),
+        const selfReportedActions = line.extracted_motor_actions.map(
+            (a: string) => a.toUpperCase(),
         )
         const extractedProseActions = this.extractProseActions(
             `${line.observable_parenthetical} ${line.dialogue_text}`,
