@@ -4,8 +4,8 @@ import {
     EnvironmentalZoneSchema,
     EnvironmentalZone,
     LocomotionEvaluationInput,
-} from '../src/schemas/environmentalOverlay'
-import { EnvironmentalFrictionEngine } from '../src/core/environment/environmentalOverlay'
+} from '../src/schemas/environmentalOverlay.js'
+import { EnvironmentalFrictionEngine } from '../src/core/environment/environmentalOverlay.js'
 
 describe('Ground-Truth Physical State: Dynamic Environmental Overlay & Friction Engine', () => {
     let db: Database.Database

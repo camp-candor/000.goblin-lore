@@ -3,7 +3,7 @@ import {
     EnvironmentalZone,
     EnvironmentalZoneSchema,
     LocomotionEvaluationInput,
-} from '../../schemas/environmentalOverlay'
+} from '../../schemas/environmentalOverlay.js'
 
 export interface LocomotionEvaluationResult {
     satisfiable: boolean
@@ -89,7 +89,7 @@ export class EnvironmentalFrictionEngine {
 
         // 2. Pitch black darkness restriction
         if (zone.ambient_lux === 0 && !input.has_light_source) {
-            const rapidVerbs = input.attempted_verbs.filter((v) =>
+            const rapidVerbs = input.attempted_verbs.filter((v: any) =>
                 ['SPRINT', 'VAULT', 'LEAP', 'CHARGE'].includes(v.toUpperCase()),
             )
 
@@ -113,7 +113,7 @@ export class EnvironmentalFrictionEngine {
         // 3. Dynamic kinetic verb bans check
         const dynamicBanned = this.deriveBannedVerbs(zone)
         const bannedSet = new Set(dynamicBanned)
-        const attemptedBanned = input.attempted_verbs.filter((v) =>
+        const attemptedBanned = input.attempted_verbs.filter((v: any) =>
             bannedSet.has(v.toUpperCase()),
         )
 
