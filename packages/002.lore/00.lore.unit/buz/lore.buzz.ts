@@ -8,8 +8,7 @@ const lore = {
     },
 }
 
-export const initLore = (cpy: LoreModel, bal: LoreBit, ste: State) => {
-}
+export const initLore = (cpy: LoreModel, bal: LoreBit, ste: State) => {}
 
 export const updateLore = (cpy: LoreModel, bal: LoreBit, ste: State) => {
     bal.slv({ intBit: { idx: 'update-lore' } })
