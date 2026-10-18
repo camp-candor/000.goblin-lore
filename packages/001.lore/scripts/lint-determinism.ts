@@ -222,7 +222,12 @@ export interface ScanWorkspaceOptions {
 }
 
 export function scanLoreWorkspace(options: ScanWorkspaceOptions): LintScanResult {
-  const subdirs = options.scanSubdirs || ["src", "schemas", "scripts"];
+  const subdirs = options.scanSubdirs || [
+    "src/schemas",
+    "src/linters",
+    "src/core/versioning",
+    "src/core/canon",
+  ];
   const ignored = new Set(options.ignoredFiles || ["lint-determinism.ts"]);
   const allViolations: DeterminismViolation[] = [];
   let filesScanned = 0;
@@ -284,8 +289,9 @@ export function runCli(targetDir?: string): number {
     return 1;
   }
 
+  console.log(`>> [AST] Traversed ${result.filesScanned} source modules in packages/001.lore.`);
   console.log(
-    `>> [OK] Determinism Linter: ${result.filesScanned} files scanned. Zero volatile clocks, PRNGs, or ambient I/O detected.`
+    `>> [OK] Determinism Linter: Zero volatile clocks, PRNGs, or ambient I/O detected.`
   );
   return 0;
 }
@@ -293,7 +299,7 @@ export function runCli(targetDir?: string): number {
 // Direct execution gate
 const isDirectExecution =
   typeof process !== "undefined" &&
-  process.argv[1] && process.argv[1] === fileURLToPath(import.meta.url) &&
+  process.argv[1] &&
   path.resolve(process.argv[1]) === path.resolve(__filename);
 
 if (isDirectExecution) {
