@@ -123,7 +123,7 @@ export const PardonRecordSchema = z
   .object({
     id: z.string().regex(/^pardon_[a-z0-9_]+$/, "Pardon ID must follow snake_case prefixed with pardon_"),
     target: PardonScopeSchema,
-    rule_id: z.string().regex(/^rule_[a-z0-9_]+$/),
+    rule_id: z.string(),
     authorizer_id: z.string().regex(/^auth_[a-z0-9_]+$/),
     reason: z.string().min(20, "Pardon reason must be descriptive (at least 20 chars) to ensure principled review"),
     granted_against_entity_hash: z.string().regex(/^[0-9a-f]{64}$/, "Must be a 64-character lowercase hex SHA-256 hash"),
