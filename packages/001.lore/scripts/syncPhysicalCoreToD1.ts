@@ -1,6 +1,7 @@
 import Database from "better-sqlite3";
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { pathToFileURL } from "node:url";
 
 export interface SyncPhysicalCoreOptions {
   localDbPath: string;
@@ -140,7 +141,7 @@ export function syncPhysicalCoreToD1(options: SyncPhysicalCoreOptions): SyncPhys
 }
 
 // Standalone CLI invocation entrypoint
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url) {
   const localDb = process.env.LOCAL_DB_PATH || path.resolve(process.cwd(), "pilot.db");
   const bibleFile = process.env.BIBLE_FILE_PATH || path.resolve(process.cwd(), "compiled/under-the-floorboards/bible-state.json");
 
