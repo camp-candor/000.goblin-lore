@@ -1,4 +1,5 @@
 import Database from "better-sqlite3";
+import { pathToFileURL } from "node:url";
 import {
   SyntheticHallucinationGenerator,
   TeleportationAttackPayload,
@@ -409,7 +410,7 @@ export class SqliteExecutionTrapHarness {
 }
 
 // Standalone CLI runner entrypoint
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url) {
   const harness = new SqliteExecutionTrapHarness(":memory:");
   const report = harness.runAllTraps();
 
