@@ -74,8 +74,8 @@ describe("Task MV-1.1: Monotonic Claim-Diff Guard & Fact Node Schema", () => {
 
   it("computes deterministic SHA-256 content hashes with Unicode NFC normalization", () => {
     const textA = "Spleen's hideout in Sector 4";
-    const textB = "Spleen's hideout in Sector 4\u0041\u030A"; // Decomposed Å
-    const textBNormalized = "Spleen's hideout in Sector 4\u00C5"; // Precomposed Å
+    const textB = "Spleen's hideout in Sector 4\u0041\u030A"; // Decomposed \\u00C5
+    const textBNormalized = "Spleen's hideout in Sector 4\u00C5"; // Precomposed \\u00C5
 
     const hash1 = computeFactContentHash(textB, "LOCATION");
     const hash2 = computeFactContentHash(textBNormalized, "LOCATION");
