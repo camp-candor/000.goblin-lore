@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "version": "1.0.0",
+  "authorizers": [
+    {
+      "id": "auth_ed_showrunner",
+      "name": "Ed Showrunner",
+      "role": "SHOWRUNNER",
+      "permitted_severity_classes": ["FORMAT", "STYLE", "RELATIONAL", "ONTOLOGY"]
+    },
+    {
+      "id": "auth_lead_architect",
+      "name": "Lead Systems Architect",
+      "role": "LEAD_ARCHITECT",
+      "permitted_severity_classes": ["FORMAT", "STYLE", "RELATIONAL", "ONTOLOGY"]
+    },
+    {
+      "id": "auth_scene_director",
+      "name": "Guest Scene Director",
+      "role": "SCENE_DIRECTOR",
+      "permitted_severity_classes": ["FORMAT", "STYLE"]
+    }
+  ]
+}
