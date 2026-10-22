@@ -6,7 +6,7 @@ import CharacterUnit from './02.character.unit/character.unit'
 import LawsUnit from './03.laws.unit/laws.unit'
 import LogisticUnit from './04.logistic.unit/logistic.unit'
 import ClockUnit from './05.clock.unit/clock.unit'
-import CooldownUnit from './06.cooldown.unit/cooldown.unit'
+import FactsUnit from './06.facts.unit/facts.unit'
 import DatabaseUnit from './07.database.unit/database.unit'
 import DecayUnit from './08.decay.unit/decay.unit'
 import EntityUnit from './09.entity.unit/entity.unit'
@@ -42,6 +42,7 @@ import VerbsUnit from './39.verbs.unit/verbs.unit'
 import WoundUnit from './40.wound.unit/wound.unit'
 import CanonUnit from './41.canon.unit/canon.unit'
 import CatalystUnit from './42.catalyst.unit/catalyst.unit'
+import CooldownUnit from './43.cooldown.unit/cooldown.unit'
 import ModelUnit from './96.model.unit/model.unit'
 import CollectUnit from './97.collect.unit/collect.unit'
 import MenuUnit from './98.menu.unit/menu.unit'
@@ -59,8 +60,8 @@ import Logistic from './04.logistic.unit/fce/logistic.interface'
 import { LogisticModel } from './04.logistic.unit/logistic.model'
 import Clock from './05.clock.unit/fce/clock.interface'
 import { ClockModel } from './05.clock.unit/clock.model'
-import Cooldown from './06.cooldown.unit/fce/cooldown.interface'
-import { CooldownModel } from './06.cooldown.unit/cooldown.model'
+import Facts from './06.facts.unit/fce/facts.interface'
+import { FactsModel } from './06.facts.unit/facts.model'
 import Database from './07.database.unit/fce/database.interface'
 import { DatabaseModel } from './07.database.unit/database.model'
 import Decay from './08.decay.unit/fce/decay.interface'
@@ -131,6 +132,8 @@ import Canon from './41.canon.unit/fce/canon.interface'
 import { CanonModel } from './41.canon.unit/canon.model'
 import Catalyst from './42.catalyst.unit/fce/catalyst.interface'
 import { CatalystModel } from './42.catalyst.unit/catalyst.model'
+import Cooldown from './43.cooldown.unit/fce/cooldown.interface'
+import { CooldownModel } from './43.cooldown.unit/cooldown.model'
 import ModelInterface from './96.model.unit/fce/model.interface'
 import { ModelModel } from './96.model.unit/model.model'
 import Collect from './97.collect.unit/fce/collect.interface'
@@ -147,7 +150,7 @@ export const list: Array<any> = [
     LawsUnit,
     LogisticUnit,
     ClockUnit,
-    CooldownUnit,
+    FactsUnit,
     DatabaseUnit,
     DecayUnit,
     EntityUnit,
@@ -183,6 +186,7 @@ export const list: Array<any> = [
     WoundUnit,
     CanonUnit,
     CatalystUnit,
+    CooldownUnit,
     ModelUnit,
     CollectUnit,
     MenuUnit,
@@ -195,7 +199,7 @@ import * as reduceFromCharacter from './02.character.unit/character.reduce'
 import * as reduceFromLaws from './03.laws.unit/laws.reduce'
 import * as reduceFromLogistic from './04.logistic.unit/logistic.reduce'
 import * as reduceFromClock from './05.clock.unit/clock.reduce'
-import * as reduceFromCooldown from './06.cooldown.unit/cooldown.reduce'
+import * as reduceFromFacts from './06.facts.unit/facts.reduce'
 import * as reduceFromDatabase from './07.database.unit/database.reduce'
 import * as reduceFromDecay from './08.decay.unit/decay.reduce'
 import * as reduceFromEntity from './09.entity.unit/entity.reduce'
@@ -231,6 +235,7 @@ import * as reduceFromVerbs from './39.verbs.unit/verbs.reduce'
 import * as reduceFromWound from './40.wound.unit/wound.reduce'
 import * as reduceFromCanon from './41.canon.unit/canon.reduce'
 import * as reduceFromCatalyst from './42.catalyst.unit/catalyst.reduce'
+import * as reduceFromCooldown from './43.cooldown.unit/cooldown.reduce'
 import * as reduceFromModel from './96.model.unit/model.reduce'
 import * as reduceFromCollect from './97.collect.unit/collect.reduce'
 import * as reduceFromMenu from './98.menu.unit/menu.reduce'
@@ -243,7 +248,7 @@ export const reducer: any = {
     laws: reduceFromLaws.reducer,
     logistic: reduceFromLogistic.reducer,
     clock: reduceFromClock.reducer,
-    cooldown: reduceFromCooldown.reducer,
+    facts: reduceFromFacts.reducer,
     database: reduceFromDatabase.reducer,
     decay: reduceFromDecay.reducer,
     entity: reduceFromEntity.reducer,
@@ -279,6 +284,7 @@ export const reducer: any = {
     wound: reduceFromWound.reducer,
     canon: reduceFromCanon.reducer,
     catalyst: reduceFromCatalyst.reducer,
+    cooldown: reduceFromCooldown.reducer,
     model: reduceFromModel.reducer,
     collect: reduceFromCollect.reducer,
     menu: reduceFromMenu.reducer,
@@ -292,7 +298,7 @@ export default class UnitData implements Model {
     laws: Laws = new LawsModel()
     logistic: Logistic = new LogisticModel()
     clock: Clock = new ClockModel()
-    cooldown: Cooldown = new CooldownModel()
+    facts: Facts = new FactsModel()
     database: Database = new DatabaseModel()
     decay: Decay = new DecayModel()
     entity: Entity = new EntityModel()
@@ -328,6 +334,7 @@ export default class UnitData implements Model {
     wound: Wound = new WoundModel()
     canon: Canon = new CanonModel()
     catalyst: Catalyst = new CatalystModel()
+    cooldown: Cooldown = new CooldownModel()
     model: ModelInterface = new ModelModel()
     collect: Collect = new CollectModel()
     menu: Menu = new MenuModel()

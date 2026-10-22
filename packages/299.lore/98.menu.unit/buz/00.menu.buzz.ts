@@ -16,6 +16,11 @@ import * as FOCUS from '../../val/focus.js'
 import {
     runFactScopeMenuAudit,
     runAuthorityLevelMenuAudit,
+    runStandingMenuAudit,
+    runIdentifierMenuAudit,
+    runAsciiSanitizerMenuAudit,
+    runEpochMenuAudit,
+    runClosureMenuAudit,
 } from './menu.buzz.js'
 
 let bit, lst, dex, idx, dat, src, val
@@ -94,6 +99,11 @@ export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
             lst = [
                 'Validate Fact Scope Enumerations',
                 'Audit Authority Level Stratification',
+                'Audit Tri-State Standing Transitions',
+                'Validate Snake-Case Identifier Regex Gate',
+                'Validate 7-Bit ASCII Claim Sanitizer',
+                'Validate Deterministic Epoch Integer Enforcer',
+                'Validate Un-Schemaed Key Closure Enforcer',
                 'BACK',
             ]
             bit = await global.LIBRARY.hunt(UPDATE_GRID, {
@@ -127,6 +137,71 @@ export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
                 src === '[Audit Authority Level Stratification]'
             ) {
                 runAuthorityLevelMenuAudit({
+                    log: (msg: string) => {
+                        global.LIBRARY.hunt(UPDATE_CONSOLE, {
+                            idx: 'cns00',
+                            src: msg,
+                        })
+                    },
+                })
+                await new Promise((resolve) => setTimeout(resolve, 3000))
+            } else if (
+                src === 'Audit Tri-State Standing Transitions' ||
+                src === '[Audit Tri-State Standing Transitions]'
+            ) {
+                runStandingMenuAudit({
+                    log: (msg: string) => {
+                        global.LIBRARY.hunt(UPDATE_CONSOLE, {
+                            idx: 'cns00',
+                            src: msg,
+                        })
+                    },
+                })
+                await new Promise((resolve) => setTimeout(resolve, 3000))
+            } else if (
+                src === 'Validate Snake-Case Identifier Regex Gate' ||
+                src === '[Validate Snake-Case Identifier Regex Gate]'
+            ) {
+                runIdentifierMenuAudit({
+                    log: (msg: string) => {
+                        global.LIBRARY.hunt(UPDATE_CONSOLE, {
+                            idx: 'cns00',
+                            src: msg,
+                        })
+                    },
+                })
+                await new Promise((resolve) => setTimeout(resolve, 3000))
+            } else if (
+                src === 'Validate 7-Bit ASCII Claim Sanitizer' ||
+                src === '[Validate 7-Bit ASCII Claim Sanitizer]'
+            ) {
+                runAsciiSanitizerMenuAudit({
+                    log: (msg: string) => {
+                        global.LIBRARY.hunt(UPDATE_CONSOLE, {
+                            idx: 'cns00',
+                            src: msg,
+                        })
+                    },
+                })
+                await new Promise((resolve) => setTimeout(resolve, 3000))
+            } else if (
+                src === 'Validate Deterministic Epoch Integer Enforcer' ||
+                src === '[Validate Deterministic Epoch Integer Enforcer]'
+            ) {
+                runEpochMenuAudit({
+                    log: (msg: string) => {
+                        global.LIBRARY.hunt(UPDATE_CONSOLE, {
+                            idx: 'cns00',
+                            src: msg,
+                        })
+                    },
+                })
+                await new Promise((resolve) => setTimeout(resolve, 3000))
+            } else if (
+                src === 'Validate Un-Schemaed Key Closure Enforcer' ||
+                src === '[Validate Un-Schemaed Key Closure Enforcer]'
+            ) {
+                runClosureMenuAudit({
                     log: (msg: string) => {
                         global.LIBRARY.hunt(UPDATE_CONSOLE, {
                             idx: 'cns00',
