@@ -8,6 +8,8 @@ export interface ValidatedFactIdentifierBit {
     readonly slug: string
     readonly prefix: 'fact_'
     readonly isValid: true
+    readonly reason?: string
+    readonly errorCode?: string
 }
 
 export interface IdentifierValidationFailureBit {

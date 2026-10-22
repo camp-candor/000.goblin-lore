@@ -8,6 +8,8 @@ export interface ValidatedEpochIntegerBit {
     readonly isSafeInteger: true
     readonly isNonNegative: true
     readonly isValid: true
+    readonly reason?: string
+    readonly errorCode?: string
 }
 
 export interface EpochValidationFailureBit {

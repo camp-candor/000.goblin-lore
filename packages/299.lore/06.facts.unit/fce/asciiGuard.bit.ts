@@ -14,6 +14,9 @@ export interface ValidatedAsciiClaimBit {
     readonly raw: string
     readonly length: number
     readonly isValid: true
+    readonly reason?: string
+    readonly errorCode?: string
+    readonly violations?: readonly AsciiViolationBit[]
 }
 
 export interface AsciiValidationFailureBit {

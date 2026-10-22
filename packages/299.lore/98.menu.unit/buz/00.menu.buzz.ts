@@ -21,6 +21,7 @@ import {
     runAsciiSanitizerMenuAudit,
     runEpochMenuAudit,
     runClosureMenuAudit,
+    runSequenceMenuAudit,
 } from './menu.buzz.js'
 
 let bit, lst, dex, idx, dat, src, val
@@ -104,6 +105,7 @@ export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
                 'Validate 7-Bit ASCII Claim Sanitizer',
                 'Validate Deterministic Epoch Integer Enforcer',
                 'Validate Un-Schemaed Key Closure Enforcer',
+                'Audit Sequential Version Progression',
                 'BACK',
             ]
             bit = await global.LIBRARY.hunt(UPDATE_GRID, {
@@ -202,6 +204,19 @@ export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
                 src === '[Validate Un-Schemaed Key Closure Enforcer]'
             ) {
                 runClosureMenuAudit({
+                    log: (msg: string) => {
+                        global.LIBRARY.hunt(UPDATE_CONSOLE, {
+                            idx: 'cns00',
+                            src: msg,
+                        })
+                    },
+                })
+                await new Promise((resolve) => setTimeout(resolve, 3000))
+            } else if (
+                src === 'Audit Sequential Version Progression' ||
+                src === '[Audit Sequential Version Progression]'
+            ) {
+                runSequenceMenuAudit({
                     log: (msg: string) => {
                         global.LIBRARY.hunt(UPDATE_CONSOLE, {
                             idx: 'cns00',

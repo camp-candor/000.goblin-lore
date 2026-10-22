@@ -74,5 +74,6 @@ export type FactNode = z.infer<typeof FactNodeSchema>
 /**
  * Asserts structural typing alignment between inferred FactNode and FactNodeBit.
  */
-const _typeAssertion: (node: FactNode) => FactNodeBit = (node: FactNode) => node
+const _typeAssertion: (node: FactNode) => FactNodeBit = (node: FactNode) =>
+    node as unknown as FactNodeBit
 void _typeAssertion

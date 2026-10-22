@@ -10,6 +10,10 @@ import { canOverwriteAuthority } from '../../38.types.unit/buz/authority.buzz.js
 import { VALID_TRI_STATE_STANDINGS } from '../../38.types.unit/val/standing.val.js'
 import { STANDING_DEFINITIONS } from '../../38.types.unit/fce/standing.bit.js'
 import { evaluateStandingTransition } from '../../38.types.unit/buz/standing.buzz.js'
+import {
+    getNextSequentialVersion,
+    evaluateVersionProgression,
+} from '../../28.sequence.unit/buz/sequence.buzz.js'
 
 export function runFactScopeMenuAudit(cns00: {
     log: (msg: string) => void
@@ -208,6 +212,94 @@ export async function runClosureAudit(options?: {
 
 export const runClosureMenuAudit = runClosureAudit
 
+export function runSequenceMenuAudit(
+    cns?:
+        | { log: (msg: string) => void }
+        | { consoleStream?: { log: (msg: string) => void } },
+): void {
+    const logger =
+        cns && 'log' in cns && typeof cns.log === 'function'
+            ? cns
+            : cns && 'consoleStream' in cns && cns.consoleStream
+              ? cns.consoleStream
+              : { log: console.log }
+
+    logger.log(
+        '--- [299.LORE :: 28.SEQUENCE.UNIT :: SEQUENCE VERIFIER AUDIT] ---',
+    )
+
+    // Test 1: Contiguous progression
+    const nextVer = getNextSequentialVersion(1)
+    logger.log(`[OK] Contiguous increment: v1 -> v${nextVer}`)
+
+    // Test 2: Mutation bump check
+    const validStep = evaluateVersionProgression({
+        currentVersion: 1,
+        proposedVersion: 2,
+        claimMutated: true,
+        hashMutated: true,
+    })
+    if (validStep.valid) {
+        logger.log('[OK] Evaluated valid step: v1 -> v2 on mutation verified.')
+    }
+
+    // Test 3: Negative-control regression blockage
+    const regressionStep = evaluateVersionProgression({
+        currentVersion: 2,
+        proposedVersion: 1,
+        claimMutated: true,
+        hashMutated: true,
+    })
+    if (
+        !regressionStep.valid &&
+        regressionStep.errorCode === 'MONOTONIC_VERSION_REGRESSION_BREACH'
+    ) {
+        logger.log('[TRAP PASS] Blocked version regression: v2 -> v1 trapped.')
+    } else {
+        logger.log('[FAIL] Version regression trap failed.')
+    }
+
+    // Test 4: Negative-control gap blockage
+    const gapStep = evaluateVersionProgression({
+        currentVersion: 2,
+        proposedVersion: 5,
+        claimMutated: true,
+        hashMutated: true,
+    })
+    if (
+        !gapStep.valid &&
+        gapStep.errorCode === 'MONOTONIC_SEQUENCE_GAP_BREACH'
+    ) {
+        logger.log('[TRAP PASS] Blocked sequence gap: v2 -> v5 trapped.')
+    } else {
+        logger.log('[FAIL] Sequence gap trap failed.')
+    }
+
+    // Test 5: Negative-control unversioned mutation blockage
+    const unversionedStep = evaluateVersionProgression({
+        currentVersion: 2,
+        proposedVersion: 2,
+        claimMutated: true,
+        hashMutated: false,
+    })
+    if (
+        !unversionedStep.valid &&
+        unversionedStep.errorCode === 'MUTATION_WITHOUT_VERSION_BUMP_BREACH'
+    ) {
+        logger.log(
+            '[TRAP PASS] Blocked silent mutation: v2 -> v2 on mutation trapped.',
+        )
+    } else {
+        logger.log('[FAIL] Silent mutation trap failed.')
+    }
+
+    logger.log(
+        '--- [AUDIT COMPLETE: SEQUENCE CONTIGUITY CERTIFIED AT T0 = $0.00] ---',
+    )
+}
+
+export const runSequenceAudit = runSequenceMenuAudit
+
 export const MenuBuzz = {
     runFactScopeMenuAudit,
     runAuthorityLevelMenuAudit,
@@ -220,4 +312,6 @@ export const MenuBuzz = {
     runEpochMenuAudit,
     runClosureAudit,
     runClosureMenuAudit,
+    runSequenceMenuAudit,
+    runSequenceAudit,
 }

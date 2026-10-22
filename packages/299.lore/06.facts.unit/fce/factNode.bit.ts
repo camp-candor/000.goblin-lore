@@ -24,6 +24,9 @@ export interface FactClosureValidationSuccessBit {
     readonly data: FactNodeBit
     readonly propertyCount: 11
     readonly isValid: true
+    readonly reason?: string
+    readonly errorCode?: string
+    readonly unrecognizedKeys?: readonly string[]
 }
 
 export interface FactClosureValidationFailureBit {
