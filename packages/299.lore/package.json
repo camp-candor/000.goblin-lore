@@ -1,13 +1,8 @@
 {
-    "name": "@camp_candor/002.lore",
+    "name": "@camp_candor/299.lore",
     "version": "0.0.3",
     "private": true,
     "type": "module",
-    "terminal": {
-        "globalKey": "LORE",
-        "menuTitle": "LORE MENU",
-        "menuDesc": "Open the lore menu\nto manage lore."
-    },
     "main": "BEE.ts",
     "exports": {
         ".": {

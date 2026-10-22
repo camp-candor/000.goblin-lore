@@ -26,6 +26,7 @@ import {
 const cleanEnv = () => {
     delete process.env.FLEET_ROOT
     delete process.env.WORK_DIR
+    delete process.env.SAGA_JOURNAL_PATH
 }
 
 test.beforeEach(() => {
@@ -601,27 +602,18 @@ test.serial('Pre-Flight Guard: ignores dirty files residing outside target direc
 
 test.serial('progressLibrarySaga: aborts before staging when target tree is dirty', async (t) => {
     const gitRoot = (await resolveGitRoot(process.cwd()))!
-    // NOTE: this marker dir must stay git-VISIBLE (no scratch_ prefix) so
-    // checkGitWorkingTree flags it as DIRTY_WORKING_TREE; teardown removes it.
     const dirtyTarget = path.join(gitRoot, 'test_saga_dirty_target_real')
     const dirtyFile = path.join(dirtyTarget, 'agent.ts')
+    const journalSandbox = path.resolve(process.cwd(), 'scratch_saga_dirty_journal')
 
     await fs.ensureDir(dirtyTarget)
     await fs.writeFile(dirtyFile, '// Important unsaved work')
-
-    // HERMETIC: progressLibrarySaga persists via getJournalPath() (cwd-derived);
-    // redirect it into scratch and prove the real tracked journal stays untouched.
-    const realJournalFile = getJournalPath()
-    const realJournalBefore = (await fs.pathExists(realJournalFile))
-        ? await fs.readFile(realJournalFile, 'utf8')
-        : null
-
-    const scratchRoot = path.resolve(process.cwd(), 'scratch_test_saga_abort_journal')
-    await fs.ensureDir(scratchRoot)
+    await fs.ensureDir(journalSandbox)
+    process.env.SAGA_JOURNAL_PATH = path.join(journalSandbox, 'active.json')
 
     t.teardown(async () => {
         await fs.remove(dirtyTarget).catch(() => {})
-        await fs.remove(scratchRoot).catch(() => {})
+        await fs.remove(journalSandbox).catch(() => {})
     })
 
     let resolvedResult: any = null
@@ -632,13 +624,7 @@ test.serial('progressLibrarySaga: aborts before staging when target tree is dirt
         },
     }
 
-    const originalCwd = process.cwd
-    process.cwd = () => scratchRoot
-    try {
-        await progressLibrarySaga(new LibraryModel(), bal as any, null as any)
-    } finally {
-        process.cwd = originalCwd
-    }
+    await progressLibrarySaga(new LibraryModel(), bal as any, null as any)
 
     t.truthy(resolvedResult)
     t.is(resolvedResult.libBit.idx, 'progress-library-saga-error')
@@ -647,12 +633,6 @@ test.serial('progressLibrarySaga: aborts before staging when target tree is dirt
     // Assert existing dirty work was strictly preserved and not overwritten
     const preservedContent = await fs.readFile(dirtyFile, 'utf8')
     t.is(preservedContent, '// Important unsaved work')
-
-    if (realJournalBefore === null) {
-        t.false(await fs.pathExists(realJournalFile), 'Real journal file must not be created')
-    } else {
-        t.is(await fs.readFile(realJournalFile, 'utf8'), realJournalBefore, 'Real tracked journal must remain byte-identical')
-    }
 })
 
 
@@ -876,57 +856,46 @@ test.serial('retryAtomicRename: successfully renames and handles transient retri
     t.true(await fs.pathExists(destFile));
 });
 
-test.serial('Phase 3 Journal: writes and flushes active saga state to data/saga/active.json', async (t) => {
-    // HERMETIC: getJournalPath() resolves under process.cwd(), so redirect it
-    // into scratch. The real tracked data/saga/active.json must never be
-    // touched, otherwise the suite dirties the git tree and breaks `npm version`.
-    const realJournalFile = getJournalPath();
-    const realJournalBefore = (await fs.pathExists(realJournalFile))
-        ? await fs.readFile(realJournalFile, 'utf8')
-        : null;
+test.serial('getJournalPath -- honors SAGA_JOURNAL_PATH override and defaults to cwd data/saga/active.json', (t) => {
+    delete process.env.SAGA_JOURNAL_PATH;
+    t.is(getJournalPath(), path.resolve(process.cwd(), 'data', 'saga', 'active.json'));
 
-    const scratchRoot = path.resolve(process.cwd(), 'scratch_test_saga_journal');
-    await fs.ensureDir(scratchRoot);
+    const sandboxOverride = path.join('scratch_journal_override', 'nested', 'active.json');
+    process.env.SAGA_JOURNAL_PATH = sandboxOverride;
+    t.is(getJournalPath(), path.resolve(sandboxOverride));
+
+    delete process.env.SAGA_JOURNAL_PATH;
+});
+
+test.serial('Phase 3 Journal: writes and flushes active saga state to the resolved journal path', async (t) => {
+    const sandboxDir = path.resolve(process.cwd(), 'scratch_journal_write_test');
+    await fs.ensureDir(sandboxDir);
+    process.env.SAGA_JOURNAL_PATH = path.join(sandboxDir, 'active.json');
+    const journalFile = getJournalPath();
+    const mockJournal: SagaJournal = {
+        sagaId: 'test-saga-001',
+        sourceDir: '/source',
+        status: 'RUNNING',
+        targetsCompleted: ['/target1'],
+        targetsFailed: [],
+        backups: { '/target1': '/backup1' },
+        records: {
+            '/target1': { targetDir: '/target1', state: 'COMPLETED' },
+        },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+    };
 
     t.teardown(async () => {
-        await fs.remove(scratchRoot).catch(() => {});
+        await fs.remove(sandboxDir).catch(() => {});
     });
 
-    const originalCwd = process.cwd;
-    process.cwd = () => scratchRoot;
+    await writeSagaJournal(mockJournal);
 
-    try {
-        const journalFile = getJournalPath();
-        t.true(journalFile.startsWith(scratchRoot), 'Journal path must resolve inside the scratch dir');
-        const mockJournal: SagaJournal = {
-            sagaId: 'test-saga-001',
-            sourceDir: '/source',
-            status: 'RUNNING',
-            targetsCompleted: ['/target1'],
-            targetsFailed: [],
-            backups: { '/target1': '/backup1' },
-            records: {
-                '/target1': { targetDir: '/target1', state: 'COMPLETED' },
-            },
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-        };
-
-        await writeSagaJournal(mockJournal);
-
-        t.true(await fs.pathExists(journalFile));
-        const loaded = await fs.readJson(journalFile);
-        t.is(loaded.sagaId, 'test-saga-001');
-        t.is(loaded.status, 'RUNNING');
-    } finally {
-        process.cwd = originalCwd;
-    }
-
-    if (realJournalBefore === null) {
-        t.false(await fs.pathExists(realJournalFile), 'Real journal file must not be created');
-    } else {
-        t.is(await fs.readFile(realJournalFile, 'utf8'), realJournalBefore, 'Real tracked journal must remain byte-identical');
-    }
+    t.true(await fs.pathExists(journalFile));
+    const loaded = await fs.readJson(journalFile);
+    t.is(loaded.sagaId, 'test-saga-001');
+    t.is(loaded.status, 'RUNNING');
 });
 
 test.serial('Phase 3 Compensation: reverses multi-target fleet mutations in reverse chronological order', async (t) => {
@@ -952,12 +921,8 @@ test.serial('Phase 3 Compensation: reverses multi-target fleet mutations in reve
     await fs.writeFile(path.join(backupB, 'version.txt'), 'ORIGINAL_B');
     await fs.writeFile(path.join(targetB, 'version.txt'), 'MUTATED_B');
 
-    // HERMETIC: rollbackSagaJournal persists via getJournalPath() (cwd-derived);
-    // snapshot the real tracked journal so the test can prove it stays untouched.
-    const realJournalFile = getJournalPath();
-    const realJournalBefore = (await fs.pathExists(realJournalFile))
-        ? await fs.readFile(realJournalFile, 'utf8')
-        : null;
+    const journalFile = path.join(sandboxDir, 'saga', 'active.json');
+    process.env.SAGA_JOURNAL_PATH = journalFile;
 
     t.teardown(async () => {
         await fs.remove(sandboxDir).catch(() => {});
@@ -981,15 +946,7 @@ test.serial('Phase 3 Compensation: reverses multi-target fleet mutations in reve
         updatedAt: new Date().toISOString(),
     };
 
-    // Redirect the journal write into the sandbox (serial test: no cwd race).
-    const originalCwd = process.cwd;
-    process.cwd = () => sandboxDir;
-    let outcome: { compensated: boolean; unrecoverableErrors: string[] };
-    try {
-        outcome = await rollbackSagaJournal(mockJournal);
-    } finally {
-        process.cwd = originalCwd;
-    }
+    const outcome = await rollbackSagaJournal(mockJournal);
 
     t.true(outcome.compensated);
     t.is(outcome.unrecoverableErrors.length, 0);
@@ -1005,26 +962,16 @@ test.serial('Phase 3 Compensation: reverses multi-target fleet mutations in reve
     // Assert journal recorded COMPENSATED status
     t.is(mockJournal.status, 'COMPENSATED');
 
-    // Assert the journal write landed in the sandbox, never the real data dir
-    t.true(await fs.pathExists(path.join(sandboxDir, 'data', 'saga', 'active.json')), 'Compensated journal must be written inside the sandbox');
-
-    if (realJournalBefore === null) {
-        t.false(await fs.pathExists(realJournalFile), 'Real journal file must not be created');
-    } else {
-        t.is(await fs.readFile(realJournalFile, 'utf8'), realJournalBefore, 'Real tracked journal must remain byte-identical');
-    }
+    // Assert sandbox journal file persisted the COMPENSATED status
+    const persisted = await fs.readJson(journalFile);
+    t.is(persisted.status, 'COMPENSATED');
 });
 
 test.serial('Phase 3 Finalize: sweeps lingering backups and unlinks active journal file on success', async (t) => {
     const sandboxDir = path.resolve(process.cwd(), 'scratch_finalize_test');
     const backupDir = path.join(sandboxDir, '.tmp_backup_clean');
-
-    // HERMETIC: snapshot the real tracked journal; finalize must only unlink
-    // the scratch journal, never the real data/saga/active.json.
-    const realJournalFile = getJournalPath();
-    const realJournalBefore = (await fs.pathExists(realJournalFile))
-        ? await fs.readFile(realJournalFile, 'utf8')
-        : null;
+    process.env.SAGA_JOURNAL_PATH = path.join(sandboxDir, 'saga', 'active.json');
+    const journalFile = getJournalPath();
 
     await fs.ensureDir(backupDir);
     await fs.writeFile(path.join(backupDir, 'dummy.txt'), 'old');
@@ -1045,23 +992,10 @@ test.serial('Phase 3 Finalize: sweeps lingering backups and unlinks active journ
         updatedAt: new Date().toISOString(),
     };
 
-    // Redirect the journal write/unlink into the sandbox (serial test: no cwd race).
-    const originalCwd = process.cwd;
-    process.cwd = () => sandboxDir;
-    try {
-        await finalizeSagaJournal(mockJournal);
-    } finally {
-        process.cwd = originalCwd;
-    }
+    await finalizeSagaJournal(mockJournal);
 
     t.false(await fs.pathExists(backupDir));
-    t.false(await fs.pathExists(path.join(sandboxDir, 'data', 'saga', 'active.json')), 'Scratch journal must be unlinked on success');
-
-    if (realJournalBefore === null) {
-        t.false(await fs.pathExists(realJournalFile), 'Real journal file must not be created');
-    } else {
-        t.is(await fs.readFile(realJournalFile, 'utf8'), realJournalBefore, 'Real tracked journal must remain byte-identical');
-    }
+    t.false(await fs.pathExists(journalFile));
 });
 
 test.serial('auditLibrary -- parses manifest and validates aligned repositories', async (t) => {

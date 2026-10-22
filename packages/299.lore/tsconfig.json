@@ -1,7 +1,7 @@
 {
     "extends": "../../apps/995.library/tsconfig-base.json",
     "compilerOptions": {
-        "outDir": "../dist/002.lore",
+        "outDir": "../dist/299.lore",
         "composite": true,
         "skipLibCheck": true,
         "noImplicitAny": false,

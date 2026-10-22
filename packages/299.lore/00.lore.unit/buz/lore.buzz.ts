@@ -10,7 +10,8 @@ const lore = {
 
 export const initLore = (cpy: LoreModel, bal: LoreBit, ste: State) => {
     const url =
-        process.env.LORE_URL || 'https://zero00-lore.onrender.com/api/lore/test'
+        process.env.LORE_URL ||
+        'https://zero00-lore.onrender.com/api/lore/test'
     if (url) {
         fetch(url)
             .then((response) => response.json())
@@ -41,7 +42,11 @@ export const initLore = (cpy: LoreModel, bal: LoreBit, ste: State) => {
     return cpy
 }
 
-export const updateLore = (cpy: LoreModel, bal: LoreBit, ste: State) => {
+export const updateLore = (
+    cpy: LoreModel,
+    bal: LoreBit,
+    ste: State,
+) => {
     bal.slv({ intBit: { idx: 'update-lore' } })
 
     return cpy
@@ -52,7 +57,11 @@ export const testLore = (cpy: LoreModel, bal: LoreBit, ste: State) => {
     return cpy
 }
 
-export const listLore = async (cpy: LoreModel, bal: LoreBit, ste: State) => {
+export const listLore = async (
+    cpy: LoreModel,
+    bal: LoreBit,
+    ste: State,
+) => {
     const response = await lore.list()
     if (bal.slv != null)
         bal.slv({

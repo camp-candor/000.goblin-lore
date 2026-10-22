@@ -27,7 +27,8 @@ describe('lore', () => {
         const slv = vi.fn()
         const bal = { idx: 'test', slv } as any
 
-        const urllore = 'https://zero00-lore.onrender.com/api/lore/test'
+        const urllore =
+            'https://zero00-lore.onrender.com/api/lore/test'
 
         const mockResponselore = { status: 'lore-awake' }
 
@@ -67,7 +68,8 @@ describe('lore', () => {
         const slv = vi.fn()
         const bal = { idx: 'test', slv } as any
 
-        const urllore = 'https://zero00-lore.onrender.com/api/lore/test'
+        const urllore =
+            'https://zero00-lore.onrender.com/api/lore/test'
 
         const errorMessage = 'Network error'
         const globalFetch = vi
