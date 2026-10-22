@@ -13,7 +13,10 @@ import * as Color from '../../val/console-color.js'
 
 import * as SHAPE from '../../val/shape.js'
 import * as FOCUS from '../../val/focus.js'
-import { runFactScopeMenuAudit } from './menu.buzz.js'
+import {
+    runFactScopeMenuAudit,
+    runAuthorityLevelMenuAudit,
+} from './menu.buzz.js'
 
 let bit, lst, dex, idx, dat, src, val
 let rootSlv
@@ -88,7 +91,11 @@ export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
     switch (src) {
         case 'FACT SCHEMA CONTRACT':
         case '[FACT SCHEMA CONTRACT]':
-            lst = ['BACK', 'Validate Fact Scope Enumerations']
+            lst = [
+                'Validate Fact Scope Enumerations',
+                'Audit Authority Level Stratification',
+                'BACK',
+            ]
             bit = await global.LIBRARY.hunt(UPDATE_GRID, {
                 x: 0,
                 y: 4,
@@ -107,6 +114,19 @@ export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
                 src === '[Validate Fact Scope Enumerations]'
             ) {
                 runFactScopeMenuAudit({
+                    log: (msg: string) => {
+                        global.LIBRARY.hunt(UPDATE_CONSOLE, {
+                            idx: 'cns00',
+                            src: msg,
+                        })
+                    },
+                })
+                await new Promise((resolve) => setTimeout(resolve, 3000))
+            } else if (
+                src === 'Audit Authority Level Stratification' ||
+                src === '[Audit Authority Level Stratification]'
+            ) {
+                runAuthorityLevelMenuAudit({
                     log: (msg: string) => {
                         global.LIBRARY.hunt(UPDATE_CONSOLE, {
                             idx: 'cns00',

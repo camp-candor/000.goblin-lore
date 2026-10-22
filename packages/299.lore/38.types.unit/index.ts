@@ -1,3 +1,6 @@
 export * from './val/scope.val.js'
 export * from './fce/scope.bit.js'
 export * from './buz/scope.buzz.js'
+export * from './val/authority.val.js'
+export * from './fce/authority.bit.js'
+export * from './buz/authority.buzz.js'
