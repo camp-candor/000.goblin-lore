@@ -1,4 +1,4 @@
-export default interface ActorBit {
+export default interface CharacterBit {
     idx: string
     src?: string
     val?: number

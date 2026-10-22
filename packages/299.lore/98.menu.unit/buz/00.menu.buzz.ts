@@ -13,6 +13,7 @@ import * as Color from '../../val/console-color.js'
 
 import * as SHAPE from '../../val/shape.js'
 import * as FOCUS from '../../val/focus.js'
+import { runFactScopeMenuAudit } from './menu.buzz.js'
 
 let bit, lst, dex, idx, dat, src, val
 let rootSlv
@@ -63,6 +64,7 @@ export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
 export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
     lst = [
         ActOlm.UPDATE_LORE.split(']')[1],
+        'FACT SCHEMA CONTRACT',
         ActOlm.TEST_LORE.split(']')[1],
         ActOlm.LIST_LORE.split(']')[1],
         'ROOT MENU',
@@ -84,6 +86,38 @@ export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
     src = bit.chcBit.src
 
     switch (src) {
+        case 'FACT SCHEMA CONTRACT':
+        case '[FACT SCHEMA CONTRACT]':
+            lst = ['BACK', 'Validate Fact Scope Enumerations']
+            bit = await global.LIBRARY.hunt(UPDATE_GRID, {
+                x: 0,
+                y: 4,
+                xSpan: 4,
+                ySpan: 8,
+            })
+            bit = await global.LIBRARY.hunt(OPEN_CHOICE, {
+                dat: { clr0: Color.BLACK, clr1: Color.YELLOW },
+                src: Align.VERTICAL,
+                lst,
+                net: bit.grdBit.dat,
+            })
+            src = bit.chcBit.src
+            if (
+                src === 'Validate Fact Scope Enumerations' ||
+                src === '[Validate Fact Scope Enumerations]'
+            ) {
+                runFactScopeMenuAudit({
+                    log: (msg: string) => {
+                        global.LIBRARY.hunt(UPDATE_CONSOLE, {
+                            idx: 'cns00',
+                            src: msg,
+                        })
+                    },
+                })
+                await new Promise((resolve) => setTimeout(resolve, 3000))
+            }
+            break
+
         case ActOlm.UPDATE_LORE.split(']')[1]:
             bit = await ste.hunt(ActOlm.UPDATE_LORE, {
                 content: 'Lore Menu Selected',

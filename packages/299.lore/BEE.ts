@@ -1,10 +1,10 @@
 import Model from './99.core/interface/model.interface'
 
 import LoreUnit from './00.lore.unit/lore.unit'
-import ActionUnit from './01.action.unit/action.unit'
-import ActorUnit from './02.actor.unit/actor.unit'
-import CanonUnit from './03.canon.unit/canon.unit'
-import CatalystUnit from './04.catalyst.unit/catalyst.unit'
+import LocationUnit from './01.location.unit/location.unit'
+import CharacterUnit from './02.character.unit/character.unit'
+import LawsUnit from './03.laws.unit/laws.unit'
+import LogisticUnit from './04.logistic.unit/logistic.unit'
 import ClockUnit from './05.clock.unit/clock.unit'
 import CooldownUnit from './06.cooldown.unit/cooldown.unit'
 import DatabaseUnit from './07.database.unit/database.unit'
@@ -18,7 +18,7 @@ import IntensityUnit from './14.intensity.unit/intensity.unit'
 import ItemUnit from './15.item.unit/item.unit'
 import LedgerUnit from './16.ledger.unit/ledger.unit'
 import LeverageUnit from './17.leverage.unit/leverage.unit'
-import LocationUnit from './18.location.unit/location.unit'
+import ActionUnit from './18.action.unit/action.unit'
 import LocomotionUnit from './19.locomotion.unit/locomotion.unit'
 import ParanoiaUnit from './20.paranoia.unit/paranoia.unit'
 import PayloadUnit from './22.payload.unit/payload.unit'
@@ -40,6 +40,8 @@ import TraumaUnit from './37.trauma.unit/trauma.unit'
 import TypesUnit from './38.types.unit/types.unit'
 import VerbsUnit from './39.verbs.unit/verbs.unit'
 import WoundUnit from './40.wound.unit/wound.unit'
+import CanonUnit from './41.canon.unit/canon.unit'
+import CatalystUnit from './42.catalyst.unit/catalyst.unit'
 import ModelUnit from './96.model.unit/model.unit'
 import CollectUnit from './97.collect.unit/collect.unit'
 import MenuUnit from './98.menu.unit/menu.unit'
@@ -47,14 +49,14 @@ import BusUnit from './99.bus.unit/bus.unit'
 
 import Lore from './00.lore.unit/fce/lore.interface'
 import { LoreModel } from './00.lore.unit/lore.model'
-import Action from './01.action.unit/fce/action.interface'
-import { ActionModel } from './01.action.unit/action.model'
-import Actor from './02.actor.unit/fce/actor.interface'
-import { ActorModel } from './02.actor.unit/actor.model'
-import Canon from './03.canon.unit/fce/canon.interface'
-import { CanonModel } from './03.canon.unit/canon.model'
-import Catalyst from './04.catalyst.unit/fce/catalyst.interface'
-import { CatalystModel } from './04.catalyst.unit/catalyst.model'
+import Location from './01.location.unit/fce/location.interface'
+import { LocationModel } from './01.location.unit/location.model'
+import Character from './02.character.unit/fce/character.interface'
+import { CharacterModel } from './02.character.unit/character.model'
+import Laws from './03.laws.unit/fce/laws.interface'
+import { LawsModel } from './03.laws.unit/laws.model'
+import Logistic from './04.logistic.unit/fce/logistic.interface'
+import { LogisticModel } from './04.logistic.unit/logistic.model'
 import Clock from './05.clock.unit/fce/clock.interface'
 import { ClockModel } from './05.clock.unit/clock.model'
 import Cooldown from './06.cooldown.unit/fce/cooldown.interface'
@@ -81,8 +83,8 @@ import Ledger from './16.ledger.unit/fce/ledger.interface'
 import { LedgerModel } from './16.ledger.unit/ledger.model'
 import Leverage from './17.leverage.unit/fce/leverage.interface'
 import { LeverageModel } from './17.leverage.unit/leverage.model'
-import Location from './18.location.unit/fce/location.interface'
-import { LocationModel } from './18.location.unit/location.model'
+import Action from './18.action.unit/fce/action.interface'
+import { ActionModel } from './18.action.unit/action.model'
 import Locomotion from './19.locomotion.unit/fce/locomotion.interface'
 import { LocomotionModel } from './19.locomotion.unit/locomotion.model'
 import Paranoia from './20.paranoia.unit/fce/paranoia.interface'
@@ -125,6 +127,10 @@ import Verbs from './39.verbs.unit/fce/verbs.interface'
 import { VerbsModel } from './39.verbs.unit/verbs.model'
 import Wound from './40.wound.unit/fce/wound.interface'
 import { WoundModel } from './40.wound.unit/wound.model'
+import Canon from './41.canon.unit/fce/canon.interface'
+import { CanonModel } from './41.canon.unit/canon.model'
+import Catalyst from './42.catalyst.unit/fce/catalyst.interface'
+import { CatalystModel } from './42.catalyst.unit/catalyst.model'
 import ModelInterface from './96.model.unit/fce/model.interface'
 import { ModelModel } from './96.model.unit/model.model'
 import Collect from './97.collect.unit/fce/collect.interface'
@@ -136,10 +142,10 @@ import { BusModel } from './99.bus.unit/bus.model'
 
 export const list: Array<any> = [
     LoreUnit,
-    ActionUnit,
-    ActorUnit,
-    CanonUnit,
-    CatalystUnit,
+    LocationUnit,
+    CharacterUnit,
+    LawsUnit,
+    LogisticUnit,
     ClockUnit,
     CooldownUnit,
     DatabaseUnit,
@@ -153,7 +159,7 @@ export const list: Array<any> = [
     ItemUnit,
     LedgerUnit,
     LeverageUnit,
-    LocationUnit,
+    ActionUnit,
     LocomotionUnit,
     ParanoiaUnit,
     PayloadUnit,
@@ -175,6 +181,8 @@ export const list: Array<any> = [
     TypesUnit,
     VerbsUnit,
     WoundUnit,
+    CanonUnit,
+    CatalystUnit,
     ModelUnit,
     CollectUnit,
     MenuUnit,
@@ -182,10 +190,10 @@ export const list: Array<any> = [
 ]
 
 import * as reduceFromLore from './00.lore.unit/lore.reduce'
-import * as reduceFromAction from './01.action.unit/action.reduce'
-import * as reduceFromActor from './02.actor.unit/actor.reduce'
-import * as reduceFromCanon from './03.canon.unit/canon.reduce'
-import * as reduceFromCatalyst from './04.catalyst.unit/catalyst.reduce'
+import * as reduceFromLocation from './01.location.unit/location.reduce'
+import * as reduceFromCharacter from './02.character.unit/character.reduce'
+import * as reduceFromLaws from './03.laws.unit/laws.reduce'
+import * as reduceFromLogistic from './04.logistic.unit/logistic.reduce'
 import * as reduceFromClock from './05.clock.unit/clock.reduce'
 import * as reduceFromCooldown from './06.cooldown.unit/cooldown.reduce'
 import * as reduceFromDatabase from './07.database.unit/database.reduce'
@@ -199,7 +207,7 @@ import * as reduceFromIntensity from './14.intensity.unit/intensity.reduce'
 import * as reduceFromItem from './15.item.unit/item.reduce'
 import * as reduceFromLedger from './16.ledger.unit/ledger.reduce'
 import * as reduceFromLeverage from './17.leverage.unit/leverage.reduce'
-import * as reduceFromLocation from './18.location.unit/location.reduce'
+import * as reduceFromAction from './18.action.unit/action.reduce'
 import * as reduceFromLocomotion from './19.locomotion.unit/locomotion.reduce'
 import * as reduceFromParanoia from './20.paranoia.unit/paranoia.reduce'
 import * as reduceFromPayload from './22.payload.unit/payload.reduce'
@@ -221,6 +229,8 @@ import * as reduceFromTrauma from './37.trauma.unit/trauma.reduce'
 import * as reduceFromTypes from './38.types.unit/types.reduce'
 import * as reduceFromVerbs from './39.verbs.unit/verbs.reduce'
 import * as reduceFromWound from './40.wound.unit/wound.reduce'
+import * as reduceFromCanon from './41.canon.unit/canon.reduce'
+import * as reduceFromCatalyst from './42.catalyst.unit/catalyst.reduce'
 import * as reduceFromModel from './96.model.unit/model.reduce'
 import * as reduceFromCollect from './97.collect.unit/collect.reduce'
 import * as reduceFromMenu from './98.menu.unit/menu.reduce'
@@ -228,10 +238,10 @@ import * as reduceFromBus from './99.bus.unit/bus.reduce'
 
 export const reducer: any = {
     lore: reduceFromLore.reducer,
-    action: reduceFromAction.reducer,
-    actor: reduceFromActor.reducer,
-    canon: reduceFromCanon.reducer,
-    catalyst: reduceFromCatalyst.reducer,
+    location: reduceFromLocation.reducer,
+    character: reduceFromCharacter.reducer,
+    laws: reduceFromLaws.reducer,
+    logistic: reduceFromLogistic.reducer,
     clock: reduceFromClock.reducer,
     cooldown: reduceFromCooldown.reducer,
     database: reduceFromDatabase.reducer,
@@ -245,7 +255,7 @@ export const reducer: any = {
     item: reduceFromItem.reducer,
     ledger: reduceFromLedger.reducer,
     leverage: reduceFromLeverage.reducer,
-    location: reduceFromLocation.reducer,
+    action: reduceFromAction.reducer,
     locomotion: reduceFromLocomotion.reducer,
     paranoia: reduceFromParanoia.reducer,
     payload: reduceFromPayload.reducer,
@@ -267,6 +277,8 @@ export const reducer: any = {
     types: reduceFromTypes.reducer,
     verbs: reduceFromVerbs.reducer,
     wound: reduceFromWound.reducer,
+    canon: reduceFromCanon.reducer,
+    catalyst: reduceFromCatalyst.reducer,
     model: reduceFromModel.reducer,
     collect: reduceFromCollect.reducer,
     menu: reduceFromMenu.reducer,
@@ -275,10 +287,10 @@ export const reducer: any = {
 
 export default class UnitData implements Model {
     lore: Lore = new LoreModel()
-    action: Action = new ActionModel()
-    actor: Actor = new ActorModel()
-    canon: Canon = new CanonModel()
-    catalyst: Catalyst = new CatalystModel()
+    location: Location = new LocationModel()
+    character: Character = new CharacterModel()
+    laws: Laws = new LawsModel()
+    logistic: Logistic = new LogisticModel()
     clock: Clock = new ClockModel()
     cooldown: Cooldown = new CooldownModel()
     database: Database = new DatabaseModel()
@@ -292,7 +304,7 @@ export default class UnitData implements Model {
     item: Item = new ItemModel()
     ledger: Ledger = new LedgerModel()
     leverage: Leverage = new LeverageModel()
-    location: Location = new LocationModel()
+    action: Action = new ActionModel()
     locomotion: Locomotion = new LocomotionModel()
     paranoia: Paranoia = new ParanoiaModel()
     payload: Payload = new PayloadModel()
@@ -314,6 +326,8 @@ export default class UnitData implements Model {
     types: Types = new TypesModel()
     verbs: Verbs = new VerbsModel()
     wound: Wound = new WoundModel()
+    canon: Canon = new CanonModel()
+    catalyst: Catalyst = new CatalystModel()
     model: ModelInterface = new ModelModel()
     collect: Collect = new CollectModel()
     menu: Menu = new MenuModel()
