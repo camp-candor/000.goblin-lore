@@ -4,6 +4,11 @@
     "private": true,
     "type": "module",
     "main": "BEE.ts",
+    "terminal": {
+        "globalKey": "LORE",
+        "menuTitle": "LORE MENU",
+        "menuDesc": "Open the lore menu\nto manage lore."
+    },
     "exports": {
         ".": {
             "types": "./BEE.ts",

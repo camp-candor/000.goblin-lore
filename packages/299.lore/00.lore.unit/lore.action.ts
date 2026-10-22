@@ -40,9 +40,4 @@ export class ListLore implements Action {
 }
 
 export type Actions =
-    | InitLore
-    | UpdateLore
-    | TestLore
-    | IntellectLore
-    | VisionLore
-    | ListLore
+    InitLore | UpdateLore | TestLore | IntellectLore | VisionLore | ListLore
