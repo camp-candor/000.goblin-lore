@@ -1,82 +1,82 @@
 import {
-    isNonNegativeSafeInteger,
     EpochIntegerSchema,
     FactEpochTriadSchema,
+    MIN_EPOCH_INTEGER,
+    MAX_SAFE_EPOCH_INTEGER,
 } from '../val/epoch.val.js'
 import type {
-    ValidatedEpochIntegerBit,
     EpochValidationResult,
     FactEpochTriadBit,
 } from '../fce/epoch.bit.js'
 
 /**
- * Synchronous in-memory epoch integer enforcer and temporal sequence gate.
- * Emits strictly 7-bit ASCII receipts. Operates at Stage T0 = $0.00.
+ * Synchronous in-memory epoch validation engine.
+ * Emits strictly 7-bit ASCII diagnostic receipts.
  */
 export class EpochGateBuzz {
     /**
-     * Fast sub-microsecond non-negative safe integer check.
+     * Fast boolean check avoiding object allocation on high-throughput compilation loops.
      */
-    public static isEpochIntegerFast(candidate: unknown): boolean {
-        return isNonNegativeSafeInteger(candidate)
+    public static isEpochIntegerFast(candidate: unknown): candidate is number {
+        return (
+            typeof candidate === 'number' &&
+            Number.isSafeInteger(candidate) &&
+            candidate >= MIN_EPOCH_INTEGER &&
+            candidate <= MAX_SAFE_EPOCH_INTEGER
+        )
     }
 
     /**
-     * Evaluates a candidate integer timestamp against strict integer invariants.
+     * Evaluates candidate epoch value with granular diagnostic error receipts.
      */
     public static validateEpoch(candidate: unknown): EpochValidationResult {
         if (typeof candidate !== 'number') {
             return {
                 raw: candidate,
-                reason: 'Epoch value must be a number primitive',
+                reason: 'Candidate epoch must be a numeric primitive',
                 errorCode: 'INVALID_TYPE',
                 isValid: false,
             }
         }
 
-        if (
-            !Number.isFinite(candidate) ||
-            Math.floor(candidate) !== candidate
-        ) {
+        if (Number.isNaN(candidate) || !Number.isFinite(candidate)) {
             return {
                 raw: candidate,
-                reason: `Floating-point or non-finite timestamp prohibited: ${candidate}`,
+                reason: 'Candidate epoch is NaN or non-finite',
                 errorCode: 'FLOAT_PROHIBITED',
                 isValid: false,
             }
         }
 
-        if (candidate < 0) {
+        if (!Number.isInteger(candidate)) {
             return {
                 raw: candidate,
-                reason: `Negative epoch integer prohibited: ${candidate}`,
+                reason: `Floating-point value (${candidate}) is strictly prohibited`,
+                errorCode: 'FLOAT_PROHIBITED',
+                isValid: false,
+            }
+        }
+
+        if (candidate < MIN_EPOCH_INTEGER) {
+            return {
+                raw: candidate,
+                reason: `Negative epoch integer (${candidate}) is prohibited`,
                 errorCode: 'NEGATIVE_INTEGER_PROHIBITED',
                 isValid: false,
             }
         }
 
-        if (candidate > Number.MAX_SAFE_INTEGER) {
+        if (candidate > MAX_SAFE_EPOCH_INTEGER) {
             return {
                 raw: candidate,
-                reason: `Epoch exceeds Number.MAX_SAFE_INTEGER: ${candidate}`,
+                reason: `Epoch integer exceeds MAX_SAFE_INTEGER (${candidate})`,
                 errorCode: 'UNSAFE_INTEGER_OVERFLOW',
                 isValid: false,
             }
         }
 
-        const parseResult = EpochIntegerSchema.safeParse(candidate)
-        if (!parseResult.success) {
-            const issue = parseResult.error.issues[0]
-            return {
-                raw: candidate,
-                reason: issue ? issue.message : 'Unknown epoch integer failure',
-                errorCode: 'INVALID_TYPE',
-                isValid: false,
-            }
-        }
-
         return {
-            value: parseResult.data,
+            value: candidate,
             isSafeInteger: true,
             isNonNegative: true,
             isValid: true,

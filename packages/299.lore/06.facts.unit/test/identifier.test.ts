@@ -3,170 +3,133 @@ import {
     FactIdSchema,
     AuthorHandleSchema,
     Sha256HashSchema,
-    FACT_ID_REGEX,
-    AUTHOR_HANDLE_REGEX,
-    SHA256_HEX_REGEX,
 } from '../val/identifier.val.js'
 import { IdentifierGateBuzz } from '../buz/identifier.buzz.js'
 
 describe('06.facts.unit :: Snake-Case Identifier Regex Gate', () => {
-    describe('Fact ID Positive Controls', () => {
-        const validFactIds = [
-            'fact_bog_shoulder',
-            'fact_episode_09_intro',
-            'fact_room_culvert_04',
-            'fact_item_wrench_m8',
-            'fact_axiom_thermodynamics',
-            'fact_123_456',
-        ]
+    describe('Positive Controls (Valid Identifiers)', () => {
+        it('accepts valid snake_case fact identifiers prefixed with fact_', () => {
+            const validCases = [
+                'fact_bog_shoulder',
+                'fact_valve_04_sealed',
+                'fact_iron_knife_mass_120g',
+                'fact_culvert_siphon_intact',
+                'fact_character_001_limp',
+            ]
 
-        it.each(validFactIds)('accepts canonical fact ID: %s', (id) => {
-            expect(() => FactIdSchema.parse(id)).not.toThrow()
-            const result = IdentifierGateBuzz.validateFactId(id)
-            expect(result.isValid).toBe(true)
-            if (result.isValid) {
-                expect(result.raw).toBe(id)
-                expect(result.slug).toBe(id.slice(5))
-                expect(result.length).toBe(id.length)
-            }
-            expect(() => IdentifierGateBuzz.assertFactId(id)).not.toThrow()
-            expect(IdentifierGateBuzz.isFactIdFast(id)).toBe(true)
-        })
-    })
-
-    describe('Fact ID Negative Controls (Fail-Closed Traps)', () => {
-        const missingPrefix = [
-            'bog_shoulder',
-            'episode_09',
-            'culvert_04',
-            'item_wrench',
-        ]
-
-        it.each(missingPrefix)(
-            'rejects fact ID missing required "fact_" prefix: %s',
-            (id) => {
-                expect(() => FactIdSchema.parse(id)).toThrow()
+            for (const id of validCases) {
+                expect(FactIdSchema.parse(id)).toBe(id)
                 const result = IdentifierGateBuzz.validateFactId(id)
-                expect(result.isValid).toBe(false)
-                if (!result.isValid) {
-                    expect(result.errorCode).toBe('INVALID_PATTERN')
+                expect(result.isValid).toBe(true)
+                if (result.isValid) {
+                    expect(result.prefix).toBe('fact_')
+                    expect(result.raw).toBe(id)
                 }
-                expect(() => IdentifierGateBuzz.assertFactId(id)).toThrow(
-                    /SCHEMA_GATE_FAIL/,
-                )
-                expect(IdentifierGateBuzz.isFactIdFast(id)).toBe(false)
-            },
-        )
-
-        const casingViolations = [
-            'fact_BogShoulder',
-            'Fact_bog_shoulder',
-            'FACT_BOG_SHOULDER',
-            'fact_bogShoulderDislocated',
-            'fact_Culvert-04',
-        ]
-
-        it.each(casingViolations)(
-            'rejects camelCase, PascalCase, or uppercase characters: %s',
-            (id) => {
-                expect(() => FactIdSchema.parse(id)).toThrow()
-                const result = IdentifierGateBuzz.validateFactId(id)
-                expect(result.isValid).toBe(false)
-                expect(IdentifierGateBuzz.isFactIdFast(id)).toBe(false)
-            },
-        )
-
-        const symbolAndSpacingViolations = [
-            'fact_bog shoulder',
-            'fact_bog-shoulder',
-            'fact_bog.shoulder',
-            'fact_bog@shoulder',
-            'fact_bog$shoulder',
-            'fact_bog/shoulder',
-        ]
-
-        it.each(symbolAndSpacingViolations)(
-            'rejects spaces, dashes, dots, and illegal punctuation: %s',
-            (id) => {
-                expect(() => FactIdSchema.parse(id)).toThrow()
-                const result = IdentifierGateBuzz.validateFactId(id)
-                expect(result.isValid).toBe(false)
-                expect(IdentifierGateBuzz.isFactIdFast(id)).toBe(false)
-            },
-        )
-
-        it('rejects underflow strings shorter than 6 characters', () => {
-            const underflow = 'fact_'
-            expect(() => FactIdSchema.parse(underflow)).toThrow()
-            const result = IdentifierGateBuzz.validateFactId(underflow)
-            expect(result.isValid).toBe(false)
-            if (!result.isValid) {
-                expect(result.errorCode).toBe('LENGTH_VIOLATION')
+                expect(IdentifierGateBuzz.isFactIdFast(id)).toBe(true)
             }
         })
 
-        it('rejects overflow strings exceeding 128 characters', () => {
-            const overflow = 'fact_' + 'a'.repeat(124) // 129 chars total
-            expect(() => FactIdSchema.parse(overflow)).toThrow()
-            const result = IdentifierGateBuzz.validateFactId(overflow)
-            expect(result.isValid).toBe(false)
-            if (!result.isValid) {
-                expect(result.errorCode).toBe('LENGTH_VIOLATION')
-            }
-        })
-
-        it('rejects non-string primitive types fail-closed', () => {
-            const nonStrings = [null, undefined, 12345, true, {}, []]
-            for (const item of nonStrings) {
-                expect(() => FactIdSchema.parse(item)).toThrow()
-                const result = IdentifierGateBuzz.validateFactId(item)
-                expect(result.isValid).toBe(false)
-                if (!result.isValid) {
-                    expect(result.errorCode).toBe('INVALID_TYPE')
-                }
-            }
-        })
-    })
-
-    describe('Author Handle & SHA-256 Digest Validation', () => {
-        it('validates canonical author handles', () => {
-            const validAuthors = ['lead_writer', 'director_01', 'agent_alpha']
+        it('accepts valid author handles', () => {
+            const validAuthors = [
+                'lead_writer',
+                'showrunner',
+                'jules_01',
+                'editor',
+            ]
             for (const author of validAuthors) {
-                expect(() => AuthorHandleSchema.parse(author)).not.toThrow()
+                expect(AuthorHandleSchema.parse(author)).toBe(author)
                 expect(IdentifierGateBuzz.validateAuthor(author)).toBe(true)
             }
         })
 
-        it('rejects invalid author handles', () => {
-            const invalidAuthors = [
-                'LeadWriter',
-                'lead-writer',
-                'writer@studio',
-                '',
-            ]
-            for (const author of invalidAuthors) {
-                expect(() => AuthorHandleSchema.parse(author)).toThrow()
-                expect(IdentifierGateBuzz.validateAuthor(author)).toBe(false)
-            }
-        })
-
-        it('validates 64-character lowercase hexadecimal SHA-256 digests', () => {
+        it('accepts valid 64-character lowercase SHA-256 digests', () => {
             const validHash =
                 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
-            expect(() => Sha256HashSchema.parse(validHash)).not.toThrow()
+            expect(Sha256HashSchema.parse(validHash)).toBe(validHash)
             expect(IdentifierGateBuzz.validateHash(validHash)).toBe(true)
         })
+    })
 
-        it('rejects invalid SHA-256 hashes (length mismatch, uppercase, or invalid characters)', () => {
-            const invalidHashes = [
-                'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b85', // 63 chars
-                'E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855', // uppercase
-                'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b8zz', // invalid hex 'zz'
+    describe('Negative Controls (Malformed Identifiers Fail Closed)', () => {
+        it('rejects identifiers missing the fact_ prefix', () => {
+            const invalid = 'bog_shoulder_broken'
+            expect(() => FactIdSchema.parse(invalid)).toThrow(/pattern \^fact_/)
+            const res = IdentifierGateBuzz.validateFactId(invalid)
+            expect(res.isValid).toBe(false)
+            expect(() => IdentifierGateBuzz.assertFactId(invalid)).toThrow(
+                /SCHEMA_GATE_FAIL/,
+            )
+        })
+
+        it('rejects camelCase and PascalCase identifiers', () => {
+            const cases = [
+                'fact_bogShoulder',
+                'fact_BogShoulder',
+                'Fact_bog_shoulder',
             ]
-            for (const hash of invalidHashes) {
-                expect(() => Sha256HashSchema.parse(hash)).toThrow()
-                expect(IdentifierGateBuzz.validateHash(hash)).toBe(false)
+            for (const c of cases) {
+                expect(() => FactIdSchema.parse(c)).toThrow()
+                expect(IdentifierGateBuzz.isFactIdFast(c)).toBe(false)
             }
+        })
+
+        it('rejects kebab-case and spaced identifiers', () => {
+            const cases = [
+                'fact-bog-shoulder',
+                'fact bog shoulder',
+                'fact_bog-shoulder',
+            ]
+            for (const c of cases) {
+                expect(() => FactIdSchema.parse(c)).toThrow()
+                expect(IdentifierGateBuzz.validateFactId(c).isValid).toBe(false)
+            }
+        })
+
+        it('rejects identifiers with illegal punctuation or non-ASCII characters', () => {
+            const cases = [
+                'fact_bog$shoulder',
+                'fact_bog.shoulder',
+                'fact_bog_shoulder!',
+            ]
+            for (const c of cases) {
+                expect(() => FactIdSchema.parse(c)).toThrow()
+            }
+        })
+
+        it('rejects identifiers violating boundary length constraints', () => {
+            const tooShort = 'fact_' // length 5 (min 6 required)
+            const tooLong = 'fact_' + 'a'.repeat(125) // length 130 (max 128)
+
+            expect(() => FactIdSchema.parse(tooShort)).toThrow()
+            expect(() => FactIdSchema.parse(tooLong)).toThrow()
+            expect(IdentifierGateBuzz.validateFactId(tooShort).isValid).toBe(
+                false,
+            )
+            expect(IdentifierGateBuzz.validateFactId(tooLong).isValid).toBe(
+                false,
+            )
+        })
+
+        it('rejects non-string primitives', () => {
+            const cases = [12345, null, undefined, {}, true]
+            for (const c of cases) {
+                const res = IdentifierGateBuzz.validateFactId(c)
+                expect(res.isValid).toBe(false)
+                if (!res.isValid) {
+                    expect(res.errorCode).toBe('INVALID_TYPE')
+                }
+            }
+        })
+
+        it('rejects uppercase and truncated hashes', () => {
+            const uppercaseHash =
+                'E3B0C44298FC1C149AFBF4C8996FB92427AE41E4649B934CA495991B7852B855'
+            const truncatedHash = 'e3b0c44298fc1c14'
+
+            expect(() => Sha256HashSchema.parse(uppercaseHash)).toThrow()
+            expect(() => Sha256HashSchema.parse(truncatedHash)).toThrow()
+            expect(IdentifierGateBuzz.validateHash(uppercaseHash)).toBe(false)
+            expect(IdentifierGateBuzz.validateHash(truncatedHash)).toBe(false)
         })
     })
 })

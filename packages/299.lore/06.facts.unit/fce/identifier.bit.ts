@@ -6,14 +6,14 @@
 export interface ValidatedFactIdentifierBit {
     readonly raw: string
     readonly slug: string
-    readonly length: number
+    readonly prefix: 'fact_'
     readonly isValid: true
 }
 
 export interface IdentifierValidationFailureBit {
     readonly raw: unknown
     readonly reason: string
-    readonly errorCode: 'INVALID_TYPE' | 'LENGTH_VIOLATION' | 'INVALID_PATTERN'
+    readonly errorCode: 'INVALID_PATTERN' | 'INVALID_TYPE' | 'LENGTH_VIOLATION'
     readonly isValid: false
 }
 

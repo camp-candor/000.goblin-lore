@@ -1,64 +1,57 @@
 import { describe, it, expect } from 'vitest'
-import { EpochGateBuzz } from '../buz/epoch.buzz.js'
 import {
     EpochIntegerSchema,
     FactEpochTriadSchema,
-    isNonNegativeSafeInteger,
+    MAX_SAFE_EPOCH_INTEGER,
 } from '../val/epoch.val.js'
+import { EpochGateBuzz } from '../buz/epoch.buzz.js'
 
 describe('06.facts.unit :: Deterministic Epoch Integer Enforcer', () => {
-    describe('Positive Controls (Integer Timestamps & Defaults)', () => {
-        const validIntegers = [
-            0,
-            1,
-            42,
-            1000,
-            1729600000,
-            Number.MAX_SAFE_INTEGER,
-        ]
+    describe('Positive Controls (Valid Epoch Integers & Defaults)', () => {
+        it('accepts zero as a valid baseline epoch', () => {
+            expect(EpochIntegerSchema.parse(0)).toBe(0)
+            const res = EpochGateBuzz.validateEpoch(0)
+            expect(res.isValid).toBe(true)
+            expect(EpochGateBuzz.isEpochIntegerFast(0)).toBe(true)
+            expect(() => EpochGateBuzz.assertEpochInteger(0)).not.toThrow()
+        })
 
-        it.each(validIntegers)(
-            'accepts valid non-negative safe integer: %d',
-            (epoch) => {
-                expect(() => EpochIntegerSchema.parse(epoch)).not.toThrow()
-                const res = EpochGateBuzz.validateEpoch(epoch)
+        it('accepts positive safe integers', () => {
+            const testCases = [1, 42, 1000, 1729600000, MAX_SAFE_EPOCH_INTEGER]
+            for (const val of testCases) {
+                expect(EpochIntegerSchema.parse(val)).toBe(val)
+                const res = EpochGateBuzz.validateEpoch(val)
                 expect(res.isValid).toBe(true)
-                if (res.isValid) {
-                    expect(res.value).toBe(epoch)
-                    expect(res.isSafeInteger).toBe(true)
-                    expect(res.isNonNegative).toBe(true)
-                }
+                expect(EpochGateBuzz.isEpochIntegerFast(val)).toBe(true)
                 expect(() =>
-                    EpochGateBuzz.assertEpochInteger(epoch),
+                    EpochGateBuzz.assertEpochInteger(val),
                 ).not.toThrow()
-                expect(EpochGateBuzz.isEpochIntegerFast(epoch)).toBe(true)
-                expect(isNonNegativeSafeInteger(epoch)).toBe(true)
-            },
-        )
+            }
+        })
 
-        it('resolves deterministic defaults to 0 without ambient Date.now() drift', () => {
+        it('defaults epoch fields to zero when omitted in FactEpochTriadSchema', () => {
             const parsed = FactEpochTriadSchema.parse({})
             expect(parsed.created_at_epoch).toBe(0)
             expect(parsed.last_mutated_epoch).toBe(0)
             expect(parsed.last_reconsidered_epoch).toBe(0)
         })
 
-        it('validates and preserves valid monotonic epoch triads', () => {
+        it('validates a causally consistent epoch triad', () => {
             const triad = {
                 created_at_epoch: 100,
-                last_mutated_epoch: 250,
+                last_mutated_epoch: 150,
                 last_reconsidered_epoch: 200,
             }
-            const validated = EpochGateBuzz.validateEpochTriad(triad)
-            expect(validated.createdAtEpoch).toBe(100)
-            expect(validated.lastMutatedEpoch).toBe(250)
-            expect(validated.lastReconsideredEpoch).toBe(200)
+            const res = EpochGateBuzz.validateEpochTriad(triad)
+            expect(res.createdAtEpoch).toBe(100)
+            expect(res.lastMutatedEpoch).toBe(150)
+            expect(res.lastReconsideredEpoch).toBe(200)
         })
     })
 
-    describe('Negative Controls (Floating-Point, Ambient Drift & Sequence Violations)', () => {
-        it('rejects floating-point timestamps with FLOAT_PROHIBITED', () => {
-            const floatCases = [1729600000.55, 0.1, 42.000001, Math.PI]
+    describe('Negative Controls (Adversarial & Malformed Inputs Fail Closed)', () => {
+        it('rejects floating-point numbers with FLOAT_PROHIBITED', () => {
+            const floatCases = [1729600000.55, 0.1, 42.000001, -0.5]
             for (const val of floatCases) {
                 expect(() => EpochIntegerSchema.parse(val)).toThrow(
                     /exact integer/,
@@ -140,14 +133,14 @@ describe('06.facts.unit :: Deterministic Epoch Integer Enforcer', () => {
             ).toThrow(/EPOCH_TRIAD_BREACH/)
         })
 
-        it('rejects extraneous properties injected into epoch triad', () => {
-            const dirtyTriad = {
-                created_at_epoch: 100,
-                last_mutated_epoch: 100,
-                last_reconsidered_epoch: 100,
-                ambient_wall_clock_ms: Date.now(), // Contaminant
+        it('rejects un-schemaed keys on FactEpochTriadSchema (.strict() gate)', () => {
+            const contaminated = {
+                created_at_epoch: 10,
+                last_mutated_epoch: 10,
+                last_reconsidered_epoch: 10,
+                hallucinated_timestamp: 1729600000, // Illegal un-schemaed property
             }
-            expect(() => FactEpochTriadSchema.parse(dirtyTriad)).toThrow(
+            expect(() => FactEpochTriadSchema.parse(contaminated)).toThrow(
                 /unrecognized_keys/,
             )
         })

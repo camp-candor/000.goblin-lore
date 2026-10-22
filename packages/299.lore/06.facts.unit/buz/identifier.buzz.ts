@@ -49,14 +49,14 @@ export class IdentifierGateBuzz {
         const bit: ValidatedFactIdentifierBit = {
             raw: candidate,
             slug,
-            length: candidate.length,
+            prefix: 'fact_',
             isValid: true,
         }
         return bit
     }
 
     /**
-     * Asserts whether candidate identifier is valid, throwing formatted Error on failure.
+     * Asserts whether a candidate identifier is valid, throwing formatted Error on failure.
      */
     public static assertFactId(
         candidate: unknown,
@@ -64,31 +64,33 @@ export class IdentifierGateBuzz {
         const result = this.validateFactId(candidate)
         if (!result.isValid) {
             throw new Error(
-                `[SCHEMA_GATE_FAIL] Identifier pattern breach: ${result.reason} (code: ${result.errorCode})`,
+                `[SCHEMA_GATE_FAIL] Identifier breach: ${result.reason} (raw: '${String(result.raw)}')`,
             )
         }
     }
 
     /**
-     * Validates author handle against snake_case contract.
+     * Validates author handle using AuthorHandleSchema.
      */
     public static validateAuthor(candidate: unknown): boolean {
         return AuthorHandleSchema.safeParse(candidate).success
     }
 
     /**
-     * Validates SHA-256 digest against 64 lowercase hex contract.
+     * Validates SHA-256 hash using Sha256HashSchema.
      */
     public static validateHash(candidate: unknown): boolean {
         return Sha256HashSchema.safeParse(candidate).success
     }
 
     /**
-     * Fast pre-flight regex check.
+     * Fast Boolean check bypassing Zod overhead for high-throughput loops.
      */
-    public static isFactIdFast(candidate: unknown): boolean {
-        if (typeof candidate !== 'string') return false
-        if (candidate.length < 6 || candidate.length > 128) return false
-        return FACT_ID_REGEX.test(candidate)
+    public static isFactIdFast(candidate: string): boolean {
+        return (
+            candidate.length >= 6 &&
+            candidate.length <= 128 &&
+            FACT_ID_REGEX.test(candidate)
+        )
     }
 }

@@ -1,42 +1,51 @@
 import { z } from 'zod'
 
 export const MIN_EPOCH_INTEGER = 0
-export const MAX_SAFE_EPOCH_INTEGER = Number.MAX_SAFE_INTEGER
+export const MAX_SAFE_EPOCH_INTEGER = Number.MAX_SAFE_INTEGER // 9007199254740991
 
 /**
- * Pure predicate checking whether a candidate value is a non-negative safe integer.
+ * Zod refinement predicate ensuring strict non-negative safe integers.
+ * Rejects floats, negatives, NaN, and Infinity.
  */
-export function isNonNegativeSafeInteger(val: unknown): val is number {
+export const isNonNegativeSafeInteger = (val: number): boolean => {
     return (
         typeof val === 'number' &&
-        Number.isInteger(val) &&
-        val >= MIN_EPOCH_INTEGER &&
-        val <= MAX_SAFE_EPOCH_INTEGER
+        Number.isSafeInteger(val) &&
+        val >= MIN_EPOCH_INTEGER
     )
 }
 
 /**
- * Zod schema enforcing integer time tokens.
+ * Base Zod Schema enforcing strict non-negative safe integer epochs.
  */
 export const EpochIntegerSchema = z
     .number({
         required_error: 'Epoch integer is required',
         invalid_type_error: 'Epoch must be a number primitive',
     })
-    .int('Epoch must be an exact integer; floating-point timestamps prohibited')
-    .min(
-        MIN_EPOCH_INTEGER,
-        'Epoch must be non-negative (>= 0); negative epochs prohibited',
-    )
-    .max(
-        MAX_SAFE_EPOCH_INTEGER,
-        'Epoch exceeds JavaScript MAX_SAFE_INTEGER bounds',
-    )
+    .refine((val) => !Number.isNaN(val), {
+        message: 'NaN is strictly forbidden as an epoch value',
+    })
+    .refine((val) => Number.isFinite(val), {
+        message: 'Non-finite values (Infinity) are strictly forbidden',
+    })
+    .refine((val) => Number.isInteger(val), {
+        message:
+            'Floating-point values are strictly forbidden; epoch must be an exact integer',
+    })
+    .refine((val) => val >= MIN_EPOCH_INTEGER, {
+        message: `Epoch must be a non-negative integer (>= ${MIN_EPOCH_INTEGER})`,
+    })
+    .refine((val) => val <= MAX_SAFE_EPOCH_INTEGER, {
+        message: `Epoch exceeds maximum safe integer bound (${MAX_SAFE_EPOCH_INTEGER})`,
+    })
 
 export type EpochInteger = z.infer<typeof EpochIntegerSchema>
 
 /**
- * Zod schema enforcing the complete 3-epoch temporal triad of a canonical Fact Node.
+ * Fact Node Temporal Epoch Triad Schema:
+ * Enforces discrete integer epochs with deterministic default initializers of 0.
+ * BANS runtime wall-clock default initializers.
  */
 export const FactEpochTriadSchema = z
     .object({

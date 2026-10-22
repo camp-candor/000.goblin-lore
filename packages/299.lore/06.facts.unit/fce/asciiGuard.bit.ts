@@ -4,31 +4,30 @@
  */
 
 export interface AsciiViolationBit {
-    readonly index: number
-    readonly byteValue: number
+    readonly byteOffset: number
+    readonly charCode: number
     readonly hexToken: string
-    readonly reason: string
+    readonly charSnippet: string
 }
 
 export interface ValidatedAsciiClaimBit {
-    readonly sanitizedText: string
+    readonly raw: string
     readonly length: number
-    readonly byteViolationsDetected: number
     readonly isValid: true
 }
 
 export interface AsciiValidationFailureBit {
-    readonly rawText: unknown
+    readonly raw: unknown
     readonly reason: string
-    readonly violations: readonly AsciiViolationBit[]
     readonly errorCode:
         | 'INVALID_TYPE'
         | 'LENGTH_UNDERFLOW'
         | 'LENGTH_OVERFLOW'
-        | 'CARRIAGE_RETURN_PROHIBITED'
-        | 'BOM_PROHIBITED'
-        | 'ANSI_ESCAPE_PROHIBITED'
-        | 'NON_ASCII_BYTES_DETECTED'
+        | 'CARRIAGE_RETURN_FORBIDDEN'
+        | 'UTF8_BOM_DETECTED'
+        | 'ANSI_ESCAPE_DETECTED'
+        | 'ASCII_INVARIANT_BREACH'
+    readonly violations: readonly AsciiViolationBit[]
     readonly isValid: false
 }
 
@@ -38,8 +37,7 @@ export type AsciiValidationResult =
 export interface SanitizationReceiptBit {
     readonly originalLength: number
     readonly sanitizedLength: number
-    readonly strippedByteCount: number
-    readonly normalizedLineEndingsCount: number
-    readonly unescapedAnsiCount: number
-    readonly output: string
+    readonly strippedAnsiSequences: number
+    readonly replacedNonAsciiChars: number
+    readonly sanitizedText: string
 }

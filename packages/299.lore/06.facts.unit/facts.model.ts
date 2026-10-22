@@ -1,3 +1,5 @@
+import Facts from './fce/facts.interface'
+import FactsBit from './fce/facts.interface'
 import { z } from 'zod'
 import {
     FactIdSchema,
@@ -10,7 +12,6 @@ import { FactScopeEnum } from '../38.types.unit/val/scope.val.js'
 import { AuthorityLevelEnum } from '../38.types.unit/val/authority.val.js'
 import { TriStateStandingEnum } from '../38.types.unit/val/standing.val.js'
 import type { FactNodeBit } from './fce/factNode.bit.js'
-import Facts from './fce/facts.interface.js'
 
 export class FactsModel implements Facts {
     //idx:string;
@@ -73,6 +74,5 @@ export type FactNode = z.infer<typeof FactNodeSchema>
 /**
  * Asserts structural typing alignment between inferred FactNode and FactNodeBit.
  */
-const _typeAssertion: (node: FactNode) => FactNodeBit = (node: FactNode) =>
-    node as FactNodeBit
+const _typeAssertion: (node: FactNode) => FactNodeBit = (node: FactNode) => node
 void _typeAssertion

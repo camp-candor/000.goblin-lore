@@ -15,9 +15,6 @@ export class ClosureGateBuzz {
     public static detectExtraneousKeys(
         candidate: Record<string, unknown>,
     ): string[] {
-        if (!candidate || typeof candidate !== 'object') {
-            return []
-        }
         const candidateKeys = Object.keys(candidate)
         const extraneous: string[] = []
         for (const key of candidateKeys) {

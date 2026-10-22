@@ -13,7 +13,7 @@ export interface SanitizeAsciiClaimPayload {
 }
 
 /**
- * Action dispatchers for 26.schema.unit text sanitization and validation.
+ * Action dispatchers for 06.facts.unit text sanitization and validation.
  */
 export class SchemaAction {
     /**

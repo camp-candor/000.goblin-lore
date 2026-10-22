@@ -24,10 +24,6 @@ export interface FactClosureValidationSuccessBit {
     readonly data: FactNodeBit
     readonly propertyCount: 11
     readonly isValid: true
-    readonly reason?: string
-    readonly unrecognizedKeys?: readonly string[]
-    readonly errorCode?:
-        'UNRECOGNIZED_KEYS' | 'MISSING_MANDATORY_FIELD' | 'INVALID_TYPE'
 }
 
 export interface FactClosureValidationFailureBit {
