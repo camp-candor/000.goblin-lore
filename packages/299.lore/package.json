@@ -10,7 +10,8 @@
         "menuDesc": "Open the lore menu\nto manage lore.",
         "journeys": {
             "polarity-scanner-audit": "Boot the lore menu for the verb polarity audit journey.",
-            "somatic-verbs-audit": "Boot the lore menu for the somatic verb mask audit journey."
+            "somatic-verbs-audit": "Boot the lore menu for the somatic verb mask audit journey.",
+            "mute-invariance-audit": "Boot the lore menu for the mute invariance audit journey."
         }
     },
     "exports": {
