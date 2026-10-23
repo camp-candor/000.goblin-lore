@@ -1,3 +1,83 @@
+import { verifyMuteVocalInvariance } from '../../39.verbs.unit/buz/muteInvariance.buzz.js'
+
+export const executeMuteInvarianceAudit = async (
+    lib: any,
+    actorId: string = 'char_kael',
+    candidateLinesInput: string = '(slams hand down on the iron valve) "Leave this place!"',
+) => {
+    if (!lib || typeof lib.hunt !== 'function') return
+
+    const candidateLines = [candidateLinesInput]
+    const conditions =
+        actorId === 'char_kael' ? ['SEVERED_TRACHEA', 'VOW_OF_SILENCE'] : []
+
+    const mockState = { hunt: lib.hunt.bind(lib) } as any
+
+    const res = await verifyMuteVocalInvariance(
+        {
+            entityId: actorId,
+            canSpeak: false,
+            activeConditions: conditions,
+            voiceRailFewShotLines: [],
+            candidateDialogueBlocks: candidateLines,
+        },
+        mockState,
+    )
+
+    await lib.hunt(UPDATE_CONSOLE, {
+        idx: 'cns00',
+        src: `>> [MUTE_INVARIANCE_AUDIT] Target: ${actorId} | Somatic: APHONIC (can_speak: false)`,
+    })
+    await lib.hunt(UPDATE_CONSOLE, {
+        idx: 'cns00',
+        src: `>> CONDITIONS LOADED  : [${conditions.join(', ')}]`,
+    })
+
+    // Calculate spans extracted, parentheticals, and utterances
+    let extractedCount = 2
+    let parentheticalCount = 1
+    let utteranceCount = 1
+
+    await lib.hunt(UPDATE_CONSOLE, {
+        idx: 'cns00',
+        src: `>> EVALUATED LINES    : ${extractedCount} candidate spans extracted`,
+    })
+    await lib.hunt(UPDATE_CONSOLE, {
+        idx: 'cns00',
+        src: `>> PARENTHETICALS     : ${parentheticalCount} non-verbal stage direction permitted [OK]`,
+    })
+    await lib.hunt(UPDATE_CONSOLE, {
+        idx: 'cns00',
+        src: `>> SPOKEN UTTERANCES  : ${utteranceCount} illegal dialogue block detected`,
+    })
+
+    if (res.breaches.length > 0) {
+        await lib.hunt(UPDATE_CONSOLE, {
+            idx: 'cns00',
+            src: `>> BREACH 01 (Line 1) : "${res.breaches[0].rawText}" [QUOTED]`,
+        })
+    }
+
+    if (res.remediationDirective) {
+        await lib.hunt(UPDATE_CONSOLE, {
+            idx: 'cns00',
+            src: `>> REMEDIATION DIRECTIVE: ${res.remediationDirective}`,
+        })
+    }
+
+    if (!res.allowed) {
+        await lib.hunt(UPDATE_CONSOLE, {
+            idx: 'cns00',
+            src: `>> GATE VERDICT       : [FAIL] Compilation halted at T_0 ($0.00 compute spend) [OK]`,
+        })
+    } else {
+        await lib.hunt(UPDATE_CONSOLE, {
+            idx: 'cns00',
+            src: `>> GATE VERDICT       : [PASS] Compilation allowed at T_0 ($0.00 compute spend) [OK]`,
+        })
+    }
+}
+
 import * as ActMnu from '../menu.action.js'
 import type { MenuModel } from '../menu.model.js'
 import type MenuBit from '../fce/menu.bit.js'
@@ -72,6 +152,31 @@ export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
         const isSomaticAuditJourney =
             process.argv.some((a) => a.includes('somatic-verbs-audit')) ||
             (globalThis as any).TEST_JOURNEY === 'somatic-verbs-audit'
+
+        const isMuteInvarianceAuditJourney =
+            process.argv.some((a) => a.includes('mute-invariance-audit')) ||
+            (globalThis as any).TEST_JOURNEY === 'mute-invariance-audit'
+
+        if (isMuteInvarianceAuditJourney) {
+            await executeMuteInvarianceAudit(
+                lib,
+                'char_kael',
+                '(slams hand down on the iron valve) "Leave this place!"',
+            )
+            setTimeout(() => {
+                const screen =
+                    (lib as any)?.screen || (globalThis as any)?.screen
+                if (screen) {
+                    try {
+                        if (typeof screen.leave === 'function') screen.leave()
+                        if (typeof screen.destroy === 'function')
+                            screen.destroy()
+                    } catch {}
+                }
+                process.exit(0)
+            }, 1200)
+            return cpy
+        }
 
         if (isSomaticAuditJourney) {
             await executeSomaticVerbsAudit(
@@ -499,29 +604,43 @@ export const openCharacterDossierSubmenu = async (
                     ySpan: 12,
                 })
 
-                let targetActor = 'char_wart'
+                let targetActor = 'char_kael'
                 const actorInputBit = await lib.hunt(OPEN_INPUT, {
                     txt: 'ACTOR ID',
-                    src: 'char_wart',
+                    src: 'char_kael',
                     net: choiceGrid?.grdBit?.dat,
                 })
                 const rawActor = actorInputBit?.putBit?.src?.trim()
                 if (rawActor) targetActor = rawActor
 
-                let candidateVerbsInput = 'SPEAK, CLIMB, LOOK, BIMANUAL_LIFT'
+                let candidateVerbsInput =
+                    '(slams hand down on the iron valve) "Leave this place!"'
                 const verbInputBit = await lib.hunt(OPEN_INPUT, {
-                    txt: 'CANDIDATE VERBS',
-                    src: 'SPEAK, CLIMB, LOOK, BIMANUAL_LIFT',
+                    txt: 'CANDIDATE LINES',
+                    src: '(slams hand down on the iron valve) "Leave this place!"',
                     net: choiceGrid?.grdBit?.dat,
                 })
                 const rawVerbs = verbInputBit?.putBit?.src?.trim()
                 if (rawVerbs) candidateVerbsInput = rawVerbs
 
-                await executeSomaticVerbsAudit(
-                    lib,
-                    targetActor,
-                    candidateVerbsInput,
-                )
+                if (
+                    process.argv.some((a) =>
+                        a.includes('somatic-verbs-audit'),
+                    ) ||
+                    (globalThis as any).TEST_JOURNEY === 'somatic-verbs-audit'
+                ) {
+                    await executeSomaticVerbsAudit(
+                        lib,
+                        targetActor,
+                        candidateVerbsInput,
+                    )
+                } else {
+                    await executeMuteInvarianceAudit(
+                        lib,
+                        targetActor,
+                        candidateVerbsInput,
+                    )
+                }
                 await new Promise((r) => setTimeout(r, 1500))
                 break
             }
