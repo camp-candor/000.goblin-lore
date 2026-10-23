@@ -7,3 +7,9 @@ export default interface BusBit {
     slv?: Function
     dat?: any
 }
+
+export interface BusLogMessageBit {
+    readonly channel: string
+    readonly message: string
+    readonly timestampMs: number
+}

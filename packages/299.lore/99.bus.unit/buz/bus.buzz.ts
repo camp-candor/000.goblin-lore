@@ -217,3 +217,22 @@ export const updateBus = async (cpy: BusModel, bal: BusBit, ste: State) => {
 }
 
 var patch = (ste, type, bale) => ste.dispatch({ type, bale })
+
+export const emitBusConsoleLog = async (
+    channel: string,
+    message: string,
+): Promise<void> => {
+    const lib = (globalThis as any).LIBRARY
+    if (lib && typeof lib.hunt === 'function') {
+        await lib.hunt('[Console action] Update Console', {
+            idx: channel,
+            src: message,
+        })
+    }
+}
+
+export const createBusLogger = (channel: string = 'cns00') => ({
+    log: async (msg: string) => {
+        await emitBusConsoleLog(channel, msg)
+    },
+})

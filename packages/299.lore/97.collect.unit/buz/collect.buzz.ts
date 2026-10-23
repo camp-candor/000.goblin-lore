@@ -1,4 +1,15 @@
 import * as ActCol from '../../97.collect.unit/collect.action.js'
+import * as fs from 'node:fs'
+import * as path from 'node:path'
+import {
+    ExtractedFactDossierBit,
+    DossierExtractionFailureBit,
+} from '../../41.canon.unit/fce/byteZero.bit.js'
+import {
+    extractByteZeroFactDossier,
+    deepFreeze,
+} from '../../41.canon.unit/buz/byteZero.buzz.js'
+import { FactCollectionBit, CollectBatchResultBit } from '../fce/collect.bit.js'
 
 import { CollectModel } from '../collect.model.js'
 import CollectBit from '../fce/collect.bit.js'
@@ -332,4 +343,69 @@ export const hashCollect = (cpy: CollectModel, bal: CollectBit, ste: State) => {
     bal.slv({ clcBit: { idx: 'hash-collect', dat } })
 
     return cpy
+}
+
+/**
+ * Scans a directory recursively for .md files and extracts them under the Byte-0 Frontmatter Law.
+ */
+export function collectDossiersFromDirectory<T>(
+    dirPath: string,
+    validator?: (data: unknown) => T,
+): CollectBatchResultBit {
+    if (!fs.existsSync(dirPath)) {
+        throw new Error(
+            `[COLLECT_DIR_NOT_FOUND] Directory does not exist: '${dirPath}'`,
+        )
+    }
+
+    const dossiers = new Map<string, ExtractedFactDossierBit>()
+    const failures: DossierExtractionFailureBit[] = []
+
+    function scanRecursive(currentDir: string): void {
+        const entries = fs.readdirSync(currentDir, { withFileTypes: true })
+        for (const entry of entries) {
+            const fullPath = path.join(currentDir, entry.name)
+            if (entry.isDirectory()) {
+                scanRecursive(fullPath)
+            } else if (entry.isFile() && entry.name.endsWith('.md')) {
+                const fileBuffer = fs.readFileSync(fullPath)
+                const result = extractByteZeroFactDossier(
+                    fullPath,
+                    fileBuffer,
+                    validator,
+                )
+                if (result.valid) {
+                    dossiers.set(fullPath, result)
+                } else {
+                    failures.push(result as DossierExtractionFailureBit)
+                }
+            }
+        }
+    }
+
+    scanRecursive(dirPath)
+
+    const collection: FactCollectionBit = {
+        totalFilesScanned: dossiers.size + failures.length,
+        successfulExtractions: dossiers.size,
+        failedExtractions: failures.length,
+        dossiers: deepFreeze(dossiers),
+        failures: deepFreeze(failures),
+    }
+
+    if (failures.length > 0) {
+        return {
+            valid: false,
+            errorCode: 'COLLECTION_VALIDATION_BREACH',
+            failureCount: failures.length,
+            errors: failures.map(
+                (f) => `[${f.errorCode}] ${f.filePath}: ${f.message}`,
+            ),
+        }
+    }
+
+    return {
+        valid: true,
+        collection,
+    }
 }

@@ -1,2 +1,20 @@
-export { initMenu } from './buz/00.menu.buzz.js'
-export { updateMenu } from './buz/00.menu.buzz.js'
+export {
+    initMenu,
+    updateMenu,
+    openFactSchemaSubmenu,
+    handleGauntletMenuChoice,
+} from './buz/00.menu.buzz.js'
+
+export {
+    runFactScopeMenuAudit,
+    runAuthorityLevelMenuAudit,
+    runSequenceMenuAudit,
+    runLiminalStatusMenuAudit,
+    runCanonHashMenuAudit,
+    runByteZeroMenuAudit,
+    runPreWriteInterceptorMenuAudit,
+    runFactRegistryMenuAudit,
+    runFullNegativeControlGauntlet,
+} from './buz/menu.buzz.js'
+
+export { executeNegativeControlSchemaGauntlet } from './buz/schemaGauntlet.buzz.js'

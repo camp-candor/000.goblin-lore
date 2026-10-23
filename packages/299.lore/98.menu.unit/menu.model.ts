@@ -1,15 +1,9 @@
 import Menu from './fce/menu.interface.js'
-import MenuBit from './fce/menu.interface.js'
+import type MenuBit from './fce/menu.bit.js'
 
 export class MenuModel implements Menu {
+    idx: string = '98.menu'
+    activeSubmenu: string = 'root'
     lst: string[] = []
-
-    geoJsonNow: any
-    atlasNow: any
-    sizeNow: any = 0
-    mapShape: string = 'none'
-    mapNomNow: string = 'none'
-    mapDimensions: string = 'none'
-
-    shapeBit: any
+    lastSelection: string = ''
 }
