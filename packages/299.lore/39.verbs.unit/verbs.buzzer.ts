@@ -1,2 +1,6 @@
-export { initVerbs } from './buz/verbs.buzz'
-export { updateVerbs } from './buz/verbs.buzz'
+export {
+    initVerbs,
+    updateVerbs,
+    compileSomaticMaskVerbs,
+    assertKineticVerbs,
+} from './buz/verbs.buzz'

@@ -1,7 +1,5 @@
-import { Action } from '../99.core/interface/action.interface'
-import SeriesBit from './fce/series.bit'
-
-// Series actions
+import type { Action } from '../99.core/interface/action.interface.js'
+import type SeriesBit from './fce/series.bit.js'
 
 export const INIT_SERIES = '[Series action] Init Series'
 export class InitSeries implements Action {
@@ -15,4 +13,10 @@ export class UpdateSeries implements Action {
     constructor(public bale: SeriesBit) {}
 }
 
-export type Actions = InitSeries | UpdateSeries
+export const RESOLVE_ARCHETYPE = '[Series action] Resolve Archetype'
+export class ResolveArchetype implements Action {
+    readonly type = RESOLVE_ARCHETYPE
+    constructor(public bale: SeriesBit) {}
+}
+
+export type Actions = InitSeries | UpdateSeries | ResolveArchetype

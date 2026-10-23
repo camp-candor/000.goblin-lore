@@ -1,7 +1,5 @@
-import { Action } from '../99.core/interface/action.interface'
-import VerbsBit from './fce/verbs.bit'
-
-// Verbs actions
+import type { Action } from '../99.core/interface/action.interface'
+import type VerbsBit from './fce/verbs.bit'
 
 export const INIT_VERBS = '[Verbs action] Init Verbs'
 export class InitVerbs implements Action {
@@ -15,4 +13,17 @@ export class UpdateVerbs implements Action {
     constructor(public bale: VerbsBit) {}
 }
 
-export type Actions = InitVerbs | UpdateVerbs
+export const COMPILE_SOMATIC_MASK = '[Verbs action] Compile Somatic Mask'
+export class CompileSomaticMask implements Action {
+    readonly type = COMPILE_SOMATIC_MASK
+    constructor(public bale: VerbsBit) {}
+}
+
+export const ASSERT_KINETIC_VERBS = '[Verbs action] Assert Kinetic Verbs'
+export class AssertKineticVerbs implements Action {
+    readonly type = ASSERT_KINETIC_VERBS
+    constructor(public bale: VerbsBit) {}
+}
+
+export type Actions =
+    InitVerbs | UpdateVerbs | CompileSomaticMask | AssertKineticVerbs

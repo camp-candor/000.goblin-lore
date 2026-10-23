@@ -1,2 +1,10 @@
-export { initLogistic } from './buz/logistic.buzz'
-export { updateLogistic } from './buz/logistic.buzz'
+export {
+    initLogistic,
+    updateLogistic,
+    verifyHandSaturationBuzz,
+    transferEquipSlotBuzz,
+    auditMassConservationBuzz,
+    registerCharacterLogisticBuzz,
+    registerPossessionBuzz,
+} from './buz/logistic.buzz'
+export { evaluatePreflightSatBuzz } from './buz/satSolver.buzz'

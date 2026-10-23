@@ -1,0 +1,7 @@
+export * from './val/locomotion.val.js'
+export * from './fce/locomotion.bit.js'
+export * from './fce/locomotion.interface.js'
+export * from './locomotion.action.js'
+export * from './locomotion.model.js'
+export * from './locomotion.buzzer.js'
+export * from './locomotion.reduce.js'

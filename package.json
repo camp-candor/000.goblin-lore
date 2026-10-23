@@ -78,6 +78,7 @@
         "dotenv": "^16.6.1",
         "eslint": "^9.0.0",
         "globals": "^15.0.0",
+        "gray-matter": "4.0.3",
         "lint-staged": "^15.0.0",
         "markdownlint-cli2": "^0.13.0",
         "playwright-core": "1.57.0",

@@ -1,2 +1,5 @@
-export { initSeries } from './buz/series.buzz'
-export { updateSeries } from './buz/series.buzz'
+export {
+    initSeries,
+    updateSeries,
+    resolveArchetype,
+} from './buz/series.buzz.js'

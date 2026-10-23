@@ -1,2 +1,8 @@
-export { initEscalation } from './buz/escalation.buzz'
-export { updateEscalation } from './buz/escalation.buzz'
+export {
+    initEscalation,
+    updateEscalation,
+    registerConversationalProfileBuzz,
+    validateEscalationCeilingBuzz,
+    evaluateDialogueTurnBuzz,
+} from './buz/escalation.buzz'
+export { auditDialogueAttenuationBuzz } from './buz/attenuation.buzz'

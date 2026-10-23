@@ -1,7 +1,8 @@
-export default interface WoundBit {
+export default interface WoundBit<TDat = any, TLst = any> {
     idx: string
     src?: string
+    lst?: TLst[]
     val?: number
-    dat?: any
-    slv?: Function
+    dat?: TDat
+    slv?: (result: { wndBit: Partial<WoundBit<any, TLst>> }) => void
 }

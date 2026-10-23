@@ -43,6 +43,7 @@ import WoundUnit from './40.wound.unit/wound.unit'
 import CanonUnit from './41.canon.unit/canon.unit'
 import CatalystUnit from './42.catalyst.unit/catalyst.unit'
 import CooldownUnit from './43.cooldown.unit/cooldown.unit'
+import VoiceUnit from './44.voice.unit/voice.unit'
 import ModelUnit from './96.model.unit/model.unit'
 import CollectUnit from './97.collect.unit/collect.unit'
 import MenuUnit from './98.menu.unit/menu.unit'
@@ -134,6 +135,8 @@ import Catalyst from './42.catalyst.unit/fce/catalyst.interface'
 import { CatalystModel } from './42.catalyst.unit/catalyst.model'
 import Cooldown from './43.cooldown.unit/fce/cooldown.interface'
 import { CooldownModel } from './43.cooldown.unit/cooldown.model'
+import Voice from './44.voice.unit/fce/voice.interface'
+import { VoiceModel } from './44.voice.unit/voice.model'
 import ModelInterface from './96.model.unit/fce/model.interface'
 import { ModelModel } from './96.model.unit/model.model'
 import Collect from './97.collect.unit/fce/collect.interface'
@@ -187,6 +190,7 @@ export const list: Array<any> = [
     CanonUnit,
     CatalystUnit,
     CooldownUnit,
+    VoiceUnit,
     ModelUnit,
     CollectUnit,
     MenuUnit,
@@ -236,6 +240,7 @@ import * as reduceFromWound from './40.wound.unit/wound.reduce'
 import * as reduceFromCanon from './41.canon.unit/canon.reduce'
 import * as reduceFromCatalyst from './42.catalyst.unit/catalyst.reduce'
 import * as reduceFromCooldown from './43.cooldown.unit/cooldown.reduce'
+import * as reduceFromVoice from './44.voice.unit/voice.reduce'
 import * as reduceFromModel from './96.model.unit/model.reduce'
 import * as reduceFromCollect from './97.collect.unit/collect.reduce'
 import * as reduceFromMenu from './98.menu.unit/menu.reduce'
@@ -285,6 +290,7 @@ export const reducer: any = {
     canon: reduceFromCanon.reducer,
     catalyst: reduceFromCatalyst.reducer,
     cooldown: reduceFromCooldown.reducer,
+    voice: reduceFromVoice.reducer,
     model: reduceFromModel.reducer,
     collect: reduceFromCollect.reducer,
     menu: reduceFromMenu.reducer,
@@ -335,8 +341,11 @@ export default class UnitData implements Model {
     canon: Canon = new CanonModel()
     catalyst: Catalyst = new CatalystModel()
     cooldown: Cooldown = new CooldownModel()
+    voice: Voice = new VoiceModel()
     model: ModelInterface = new ModelModel()
     collect: Collect = new CollectModel()
     menu: Menu = new MenuModel()
     bus: Bus = new BusModel()
 }
+
+export { reduceFromVoice }

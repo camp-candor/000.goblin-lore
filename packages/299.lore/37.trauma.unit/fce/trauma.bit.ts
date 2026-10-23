@@ -1,7 +1,8 @@
-export default interface TraumaBit {
+export default interface TraumaBit<TDat = any, TLst = any> {
     idx: string
     src?: string
+    lst?: TLst[]
     val?: number
-    dat?: any
-    slv?: Function
+    dat?: TDat
+    slv?: (result: { trmBit: Partial<TraumaBit<TDat, TLst>> }) => void
 }

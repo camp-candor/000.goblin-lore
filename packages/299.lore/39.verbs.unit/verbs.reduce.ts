@@ -8,15 +8,27 @@ export function reducer(
     model: VerbsModel = new VerbsModel(),
     act: Act.Actions,
     state?: State,
-) {
+): VerbsModel {
+    const cpy = clone(model)
     switch (act.type) {
-        case Act.UPDATE_VERBS:
-            return Buzz.updateVerbs(clone(model), act.bale, state)
-
         case Act.INIT_VERBS:
-            return Buzz.initVerbs(clone(model), act.bale, state)
-
+            return Buzz.initVerbs(cpy, act.bale, state!)
+        case Act.UPDATE_VERBS:
+            return Buzz.updateVerbs(cpy, act.bale, state!)
+        case Act.COMPILE_SOMATIC_MASK:
+            return Buzz.compileSomaticMaskVerbs(cpy, act.bale, state!)
+        case Act.ASSERT_KINETIC_VERBS:
+            Buzz.assertKineticVerbs(cpy, act.bale, state!)
+            return cpy
         default:
-            return model
+            return cpy
     }
+}
+
+export default function verbsReducer(
+    state: State,
+    action: Act.Actions,
+    tack: VerbsModel = new VerbsModel(),
+): VerbsModel {
+    return reducer(tack, action, state)
 }

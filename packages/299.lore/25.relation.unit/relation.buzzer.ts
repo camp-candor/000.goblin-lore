@@ -1,2 +1,7 @@
-export { initRelation } from './buz/relation.buzz'
-export { updateRelation } from './buz/relation.buzz'
+export {
+    initRelation,
+    updateRelation,
+    registerRelationProfileBuzz,
+    resolveDyadicAttitudeBuzz,
+    buildEpistemicPromptBuzz,
+} from './buz/relation.buzz'

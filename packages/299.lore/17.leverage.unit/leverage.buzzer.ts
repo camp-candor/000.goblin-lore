@@ -1,2 +1,8 @@
-export { initLeverage } from './buz/leverage.buzz'
-export { updateLeverage } from './buz/leverage.buzz'
+export {
+    initLeverage,
+    updateLeverage,
+    indexLeverageDirectoryBuzz,
+    spendLeverageStringsBuzz,
+    verifyLeverageIntegrityBuzz,
+} from './buz/leverage.buzz'
+export { evaluateBeliefDivergenceBuzz } from './buz/beliefRecord.buzz'

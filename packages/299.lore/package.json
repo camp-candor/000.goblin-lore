@@ -7,7 +7,11 @@
     "terminal": {
         "globalKey": "LORE",
         "menuTitle": "LORE MENU",
-        "menuDesc": "Open the lore menu\nto manage lore."
+        "menuDesc": "Open the lore menu\nto manage lore.",
+        "journeys": {
+            "polarity-scanner-audit": "Boot the lore menu for the verb polarity audit journey.",
+            "somatic-verbs-audit": "Boot the lore menu for the somatic verb mask audit journey."
+        }
     },
     "exports": {
         ".": {

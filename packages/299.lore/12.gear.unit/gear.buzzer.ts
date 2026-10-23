@@ -1,2 +1,7 @@
-export { initGear } from './buz/gear.buzz'
-export { updateGear } from './buz/gear.buzz'
+export {
+    initGear,
+    updateGear,
+    resolveCharacterGearBuzz,
+    auditFleetGearBuzz,
+    registerPossessionDossierBuzz,
+} from './buz/gear.buzz'

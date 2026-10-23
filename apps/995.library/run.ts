@@ -11,7 +11,11 @@ const require = createRequire(import.meta.url)
 const exec = promisify(execCb)
 
 // 1. Setup CLI
-program.option('--first').option('-t, --separator <char>')
+program
+    .option('--first')
+    .option('-t, --separator <char>')
+    .option('-p, --package <name>')
+    .option('--test-journey <slug>')
 program.parse(process.argv)
 const options = program.opts()
 
@@ -21,6 +25,7 @@ export interface PackageTerminalMetadata {
     menuTitle: string
     menuDesc: string
     targetDir: string
+    journeys: Record<string, string>
 }
 
 /**
@@ -62,6 +67,11 @@ export const getExistingPackages = (): PackageTerminalMetadata[] => {
                     terminalMeta.menuDesc ||
                     `Open ${entry.name} management console.`,
                 targetDir,
+                journeys:
+                    terminalMeta.journeys &&
+                    typeof terminalMeta.journeys === 'object'
+                        ? (terminalMeta.journeys as Record<string, string>)
+                        : {},
             })
         } else {
             // Heuristic Fallback
@@ -75,6 +85,7 @@ export const getExistingPackages = (): PackageTerminalMetadata[] => {
                 menuTitle: `${upper} MENU`,
                 menuDesc: `Open the ${domain} menu\nto manage ${domain}.`,
                 targetDir,
+                journeys: {},
             })
         }
     }
@@ -116,12 +127,31 @@ const init = async () => {
 
     global.window = global as any
     ;(global as any).PIVOTS = (global as any).PIVOTS || {}
+    if (options.testJourney) {
+        ;(global as any).TEST_JOURNEY = options.testJourney
+    }
 
-    const idx = options.separator
-    if (idx) console.log(`   Targeting: ${idx}`)
+    const requested = options.package || options.separator
+    if (requested) console.log(`   Targeting: ${requested}`)
 
     const libPath = path.resolve(import.meta.dirname, './dist/995.library')
     const existingPackages = getExistingPackages()
+
+    let idx = requested
+    if (!idx && options.testJourney) {
+        const slug = String(options.testJourney)
+        const owner = existingPackages.find(
+            (p) =>
+                p.journeys &&
+                Object.prototype.hasOwnProperty.call(p.journeys, slug),
+        )
+        if (owner) {
+            idx = owner.name
+            console.log(`   Journey: ${slug} -> ${owner.name}`)
+        } else {
+            console.log(`   Journey: ${slug} (undeclared; opening root menu)`)
+        }
+    }
 
     try {
         const LIBRARY = require(path.join(libPath, 'hunt'))
@@ -162,6 +192,64 @@ const init = async () => {
             ]
             logWidget.setItems(logWidget.logLines)
             if (logWidget.screen) logWidget.screen.render()
+        }
+
+        const screen = logWidget?.screen
+        if (screen) {
+            const exitCleanly = () => {
+                const focused = (screen as any).focused
+                if (
+                    focused &&
+                    (focused.type === 'textbox' ||
+                        focused.type === 'textarea' ||
+                        focused._isInput)
+                ) {
+                    return
+                }
+                try {
+                    if (typeof screen.leave === 'function') screen.leave()
+                    if (typeof screen.destroy === 'function') screen.destroy()
+                } catch {}
+                process.exit(0)
+            }
+
+            screen.key(['q', 'Q', 'C-c'], () => exitCleanly())
+            screen.on('destroy', () => {
+                process.exit(0)
+            })
+
+            process.on('SIGINT', () => {
+                try {
+                    if (typeof screen.leave === 'function') screen.leave()
+                    if (typeof screen.destroy === 'function') screen.destroy()
+                } catch {}
+                process.exit(0)
+            })
+            process.on('SIGTERM', () => {
+                try {
+                    if (typeof screen.leave === 'function') screen.leave()
+                    if (typeof screen.destroy === 'function') screen.destroy()
+                } catch {}
+                process.exit(0)
+            })
+
+            if (process.stdin && typeof process.stdin.on === 'function') {
+                process.stdin.on('data', (buf: Buffer) => {
+                    if (buf.length === 1 && (buf[0] === 3 || buf[0] === 0x71 || buf[0] === 0x51)) {
+                        const focused = (screen as any).focused
+                        if (
+                            buf[0] !== 3 &&
+                            focused &&
+                            (focused.type === 'textbox' ||
+                                focused.type === 'textarea' ||
+                                focused._isInput)
+                        ) {
+                            return
+                        }
+                        exitCleanly()
+                    }
+                })
+            }
         }
 
         const MENU_ACTION_LIBRARY = require(

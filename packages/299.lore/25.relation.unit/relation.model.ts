@@ -1,8 +1,10 @@
-import Relation from './fce/relation.interface'
-import RelationBit from './fce/relation.interface'
+import Relation, {
+    RelationVerificationErrorBit,
+} from './fce/relation.interface'
+import { CharacterRelationProfile } from './val/relation.val'
 
 export class RelationModel implements Relation {
-    //idx:string;
-    //relationBitList: RelationBit[] = [];
-    //relationBits: any = {};
+    idx: string = '25.relation.unit'
+    profiles: Record<string, CharacterRelationProfile> = {}
+    errors: RelationVerificationErrorBit[] = []
 }

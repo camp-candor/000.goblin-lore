@@ -1,8 +1,8 @@
-import Gear from './fce/gear.interface'
-import GearBit from './fce/gear.interface'
+import Gear, { CharacterGearResolutionResultBit } from './fce/gear.interface'
+import { PossessionDossierFrontmatter } from './val/gear.val'
 
 export class GearModel implements Gear {
-    //idx:string;
-    //gearBitList: GearBit[] = [];
-    //gearBits: any = {};
+    idx: string = '12.gear.unit'
+    catalog: Record<string, PossessionDossierFrontmatter> = {}
+    allocations: Record<string, CharacterGearResolutionResultBit> = {}
 }

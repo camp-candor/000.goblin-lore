@@ -1,2 +1,5 @@
-export { initLocomotion } from './buz/locomotion.buzz'
-export { updateLocomotion } from './buz/locomotion.buzz'
+export {
+    initLocomotion,
+    updateLocomotion,
+    validateLocomotion,
+} from './buz/locomotion.buzz.js'

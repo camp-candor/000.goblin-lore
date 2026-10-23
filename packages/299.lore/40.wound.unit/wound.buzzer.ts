@@ -1,2 +1,7 @@
-export { initWound } from './buz/wound.buzz'
-export { updateWound } from './buz/wound.buzz'
+export {
+    initWound,
+    updateWound,
+    clampCompoundTrauma,
+    calculateCompoundTraumaLimbClamping,
+    assertIntegerBps,
+} from './buz/wound.buzz.js'
