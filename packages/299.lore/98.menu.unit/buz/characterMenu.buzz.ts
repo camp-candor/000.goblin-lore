@@ -50,6 +50,7 @@ export const openCharacterDossierSubmenu = async (
         '[7] AUDIT COMEDIC REGISTER (SLOP SCANNER)',
         '[8] VALIDATE DOSSIER SCHEMA INTEGRITY',
         '[9] AUDIT PROGRESSION LOCKS & SHOWRUNNER TASKS',
+        '[11] AUDIT REFUSAL VECTOR TUPLES & STRAIN CEILINGS',
         '[13] BIND DISCOVERY PROVENANCE HASHES & SEAL EXCERPTS',
         '[10] RETURN TO LORE MENU',
     ]
@@ -401,6 +402,56 @@ Short clipped sentences, gravelly dialect, heavy staccato pacing.
                 const { executeProgressionAudit } =
                     await import('./characterTelemetry.buzz.js')
                 await executeProgressionAudit(lib, chosenChar)
+            }
+            break
+        }
+        case '[11] AUDIT REFUSAL VECTOR TUPLES & STRAIN CEILINGS': {
+            await lib.hunt(UPDATE_CONSOLE, {
+                idx: 'cns00',
+                src: `>> [REFUSAL TUPLE AUDIT] Opening candidate selector...`,
+            })
+            const headFile = path.join(
+                repoRoot,
+                'data',
+                'compiled',
+                activeSlug,
+                'bible-state.json',
+            )
+            let charChoices = [
+                'char_bog',
+                'char_spleen',
+                'char_wart',
+                'char_mum_grissel',
+            ]
+            if (fs.existsSync(headFile)) {
+                try {
+                    const raw = JSON.parse(fs.readFileSync(headFile, 'utf-8'))
+                    const chars = Object.keys(
+                        raw?.entities?.characters || raw?.characters || {},
+                    )
+                    if (chars.length > 0) charChoices = chars
+                } catch {}
+            }
+
+            const subChoices = [...charChoices, 'CANCEL']
+            const charGrid = await lib.hunt(UPDATE_GRID, {
+                x: 0,
+                y: 4,
+                xSpan: 4,
+                ySpan: Math.min(12, Math.max(6, subChoices.length + 2)),
+            })
+
+            const charSelection = await lib.hunt(OPEN_CHOICE, {
+                dat: { clr0: 'black', clr1: 'cyan' },
+                src: 'vertical',
+                lst: subChoices,
+                net: charGrid?.grdBit?.dat,
+            })
+
+            const chosenChar = charSelection?.chcBit?.src
+            if (chosenChar && chosenChar !== 'CANCEL') {
+                const { executeRefusalAudit } = await import('./characterTelemetry.buzz.js')
+                await executeRefusalAudit(lib, chosenChar)
             }
             break
         }

@@ -212,9 +212,29 @@ export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
             process.argv.some((a) => a.includes('subtext-audit')) ||
             (globalThis as any).TEST_JOURNEY === 'subtext-audit'
 
+        const isRefusalAuditJourney = process.argv.some((a) => a.includes('refusal-audit')) || (globalThis as any).TEST_JOURNEY === 'refusal-audit'
+
         const isMuteInvarianceAuditJourney =
             process.argv.some((a) => a.includes('mute-invariance-audit')) ||
             (globalThis as any).TEST_JOURNEY === 'mute-invariance-audit'
+
+
+        if (isRefusalAuditJourney) {
+            const { executeRefusalAudit } = await import('./characterTelemetry.buzz.js')
+            await executeRefusalAudit(lib, 'char_spleen')
+            setTimeout(() => {
+                const screen =
+                    (lib as any)?.screen || (globalThis as any)?.screen
+                if (screen) {
+                    try {
+                        if (typeof screen.leave === 'function') screen.leave()
+                        if (typeof screen.destroy === 'function') screen.destroy()
+                    } catch {}
+                }
+                console.log('>>> JOURNEY COMPLETE <<<'); process.exit(0)
+            }, 1200)
+            return cpy
+        }
 
         if (isMuteInvarianceAuditJourney) {
             await executeMuteInvarianceAudit(
@@ -232,7 +252,7 @@ export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
                             screen.destroy()
                     } catch {}
                 }
-                process.exit(0)
+                console.log('>>> JOURNEY COMPLETE <<<'); process.exit(0)
             }, 1200)
             return cpy
         }
@@ -253,7 +273,7 @@ export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
                             screen.destroy()
                     } catch {}
                 }
-                process.exit(0)
+                console.log('>>> JOURNEY COMPLETE <<<'); process.exit(0)
             }, 1200)
             return cpy
         }
@@ -270,7 +290,7 @@ export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
                             screen.destroy()
                     } catch {}
                 }
-                process.exit(0)
+                console.log('>>> JOURNEY COMPLETE <<<'); process.exit(0)
             }, 1200)
             return cpy
         }
@@ -287,7 +307,7 @@ export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
                             screen.destroy()
                     } catch {}
                 }
-                process.exit(0)
+                console.log('>>> JOURNEY COMPLETE <<<'); process.exit(0)
             }, 1200)
             return cpy
         }
@@ -304,7 +324,7 @@ export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
                             screen.destroy()
                     } catch {}
                 }
-                process.exit(0)
+                console.log('>>> JOURNEY COMPLETE <<<'); process.exit(0)
             }, 1200)
             return cpy
         }
@@ -322,7 +342,7 @@ export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
                             screen.destroy()
                     } catch {}
                 }
-                process.exit(0)
+                console.log('>>> JOURNEY COMPLETE <<<'); process.exit(0)
             }, 1200)
             return cpy
         }
@@ -346,7 +366,7 @@ export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
                             screen.destroy()
                     } catch {}
                 }
-                process.exit(0)
+                console.log('>>> JOURNEY COMPLETE <<<'); process.exit(0)
             }, 1200)
             return cpy
         }
@@ -364,7 +384,7 @@ export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
                             screen.destroy()
                     } catch {}
                 }
-                process.exit(0)
+                console.log('>>> JOURNEY COMPLETE <<<'); process.exit(0)
             }, 1200)
             return cpy
         }
@@ -381,7 +401,7 @@ export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
                             screen.destroy()
                     } catch {}
                 }
-                process.exit(0)
+                console.log('>>> JOURNEY COMPLETE <<<'); process.exit(0)
             }, 1200)
             return cpy
         }
