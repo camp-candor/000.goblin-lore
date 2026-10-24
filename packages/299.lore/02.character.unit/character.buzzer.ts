@@ -8,6 +8,7 @@ export {
     generateSeedProtagonist,
     generateSeedProtagonistDossier,
     buildSeedProtagonistDossier,
+    seedCoreCharacters,
 } from './buz/seedProtagonist.buzz.js'
 export {
     serializeCharacterDossier,
