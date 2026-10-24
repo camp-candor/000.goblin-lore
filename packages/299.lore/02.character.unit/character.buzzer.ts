@@ -19,3 +19,4 @@ export {
     retireCharacterDossier,
     preFlightRetireAudit,
 } from './buz/retireCharacter.buzz.js'
+export { inspectSomatic } from './buz/inspectSomatic.buzz.js'

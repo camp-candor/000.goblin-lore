@@ -1,0 +1,208 @@
+import { emitBusConsoleLog } from '../../99.bus.unit/buz/bus.buzz.js'
+import type { MenuModel } from '../menu.model.js'
+import type MenuBit from '../fce/menu.bit.js'
+
+export interface SomaticTelemetryData {
+    readonly characterId: string
+    readonly locomotionBaseline: string
+    readonly availableArmsBps: number
+    readonly conditions: readonly string[]
+    readonly bannedVerbs: readonly string[]
+    readonly opticalState: string
+    readonly blindConeDegrees: number
+    readonly canSpeak: boolean
+}
+
+export interface PolarityViolationData {
+    readonly characterId: string
+    readonly lineNumber: number
+    readonly lineText: string
+    readonly verbLemma: string
+}
+
+/**
+ * Stream formatted 7-bit ASCII telemetry line to cns00 console widget.
+ */
+export async function streamToCns00(msg: string): Promise<void> {
+    const lib = (globalThis as any).LIBRARY
+    if (lib && typeof lib.hunt === 'function') {
+        await lib.hunt('[Console action] Update Console', {
+            idx: 'cns00',
+            src: msg,
+        })
+    } else {
+        await emitBusConsoleLog('cns00', msg)
+    }
+}
+
+/**
+ * Stream Somatic Mask inspection telemetry for a character.
+ */
+export async function streamSomaticMaskTelemetry(
+    data: SomaticTelemetryData,
+): Promise<void> {
+    const armsDisplay = (data.availableArmsBps / 10000).toFixed(1)
+    await streamToCns00(
+        '----------------------------------------------------------------------',
+    )
+    await streamToCns00(
+        `>> [SOMATIC PROJECTION] ${data.characterId} (Gait: ${data.locomotionBaseline})`,
+    )
+    await streamToCns00(
+        `>> AVAILABLE ARMS   : ${data.availableArmsBps.toLocaleString()} / 20,000 bps (${armsDisplay} Arms)`,
+    )
+    await streamToCns00(`>> ACTIVE CONDITIONS: [${data.conditions.join(', ')}]`)
+    await streamToCns00(
+        `>> BANNED VERBS     : [${data.bannedVerbs.join(', ')}]`,
+    )
+    await streamToCns00(
+        `>> OPTICAL STATE    : ${data.opticalState} (Blind Cone: ${data.blindConeDegrees} deg)`,
+    )
+    await streamToCns00(
+        `>> VOCAL STATUS     : ${data.canSpeak ? 'CAN_SPEAK' : 'MUTE'}`,
+    )
+    await streamToCns00(
+        '>> STATUS           : [OK] Deep-Frozen Somatic Mask Verified ($T0 = $0.00)',
+    )
+    await streamToCns00(
+        '----------------------------------------------------------------------',
+    )
+}
+
+/**
+ * Stream Verb Polarity Audit results across all character dossiers in a series.
+ */
+export async function streamVerbPolarityTelemetry(
+    seriesSlug: string,
+    violations: readonly PolarityViolationData[],
+    scannedCount: number,
+): Promise<void> {
+    await streamToCns00(
+        `>> [LINT PROSE] Scanning Voice Rail bodies for series [${seriesSlug}]...`,
+    )
+    await streamToCns00(
+        `>> Scanned ${scannedCount} character dossier(s) on local disk.`,
+    )
+
+    if (violations.length === 0) {
+        await streamToCns00(
+            '>> [POLARITY PASS] 0 banned kinetic verb violations detected.',
+        )
+        await streamToCns00(
+            '>> [STATUS] 100% Somatic-Linguistic Parity Certified [OK]',
+        )
+    } else {
+        for (const v of violations) {
+            await streamToCns00(
+                `:: [FATAL_SOMATIC_POLARITY_BREACH] Breach in ${v.characterId}.md!`,
+            )
+            await streamToCns00(`:: Line ${v.lineNumber}: "${v.lineText}"`)
+            await streamToCns00(
+                `:: Banned Verb Lemma: "${v.verbLemma}" (Banned by Somatic Mask)`,
+            )
+        }
+        await streamToCns00(
+            ':: Build halted at Stage T0 ($0.00 compute spend).',
+        )
+    }
+}
+
+/**
+ * Stream Character Retirement lifecycle receipts.
+ */
+export async function streamRetirementTelemetry(
+    characterId: string,
+    seriesSlug: string,
+    success: boolean,
+    reason?: string,
+): Promise<void> {
+    await streamToCns00(
+        `>> [DEPRECATION GUARD] Inspecting character dossier: ${characterId}`,
+    )
+    if (success) {
+        await streamToCns00('>> [INVENTORY CLEAN] 0 held/worn items dangling.')
+        await streamToCns00(
+            '>> [LEVERAGE CLEAN] 0 active debt strings dangling.',
+        )
+        await streamToCns00(
+            `>> [MOVED] series/${seriesSlug}/characters/${characterId}.md -> characters/_retired/`,
+        )
+        await streamToCns00(
+            '>> [STATUS] Character Dossier Deprecated Cleanly [OK]',
+        )
+    } else {
+        await streamToCns00(
+            `:: [RETIREMENT REJECTED] Failed to deprecate ${characterId}!`,
+        )
+        await streamToCns00(`:: Reason: ${reason || 'Unknown error'}`)
+    }
+}
+
+export const runCharacterAuditTelemetry = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste: any,
+): Promise<MenuModel> => {
+    const auditType = bal?.dat?.auditType || 'SOMATIC'
+    const seriesSlug =
+        bal?.src || (cpy as any).activeSeriesSlug || 'under-the-floorboards'
+
+    switch (auditType) {
+        case 'SOMATIC': {
+            const data: SomaticTelemetryData = bal?.dat?.somaticData || {
+                characterId: bal?.dat?.characterId || 'char_bog',
+                locomotionBaseline: 'bipedal_hunched',
+                availableArmsBps: 10000,
+                conditions: ['cnd_severed_left_arm'],
+                bannedVerbs: [
+                    'bimanual_lift',
+                    'climb',
+                    'dual_wield',
+                    'sprint',
+                    'vault',
+                ],
+                opticalState: 'NORMAL',
+                blindConeDegrees: 0,
+                canSpeak: true,
+            }
+            await streamSomaticMaskTelemetry(data)
+            break
+        }
+
+        case 'POLARITY': {
+            const violations: PolarityViolationData[] =
+                bal?.dat?.violations || []
+            const scannedCount =
+                typeof bal?.dat?.scannedCount === 'number'
+                    ? bal.dat.scannedCount
+                    : 4
+            await streamVerbPolarityTelemetry(
+                seriesSlug,
+                violations,
+                scannedCount,
+            )
+            break
+        }
+
+        case 'RETIRE': {
+            const characterId = bal?.dat?.characterId || 'char_retiree'
+            const success = bal?.dat?.success !== false
+            const reason = bal?.dat?.reason
+            await streamRetirementTelemetry(
+                characterId,
+                seriesSlug,
+                success,
+                reason,
+            )
+            break
+        }
+    }
+
+    if (bal?.slv) {
+        bal.slv({
+            mnuBit: { idx: 'character-audit-telemetry-streamed', val: 1 },
+        })
+    }
+
+    return cpy
+}

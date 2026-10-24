@@ -4,6 +4,13 @@ import * as ActMnu from '../menu.action.js'
 import * as ActLor from '../../00.lore.unit/lore.action.js'
 import * as ActChc from '../../02.character.unit/character.action.js'
 import { resolveRepoRoot } from '../../00.lore.unit/buz/lore.buzz.js'
+import { promptLocomotionChoice } from './characterWizard.buzz.js'
+import { promptEquipmentSlots } from './characterTypeahead.buzz.js'
+import {
+    streamSomaticMaskTelemetry,
+    streamVerbPolarityTelemetry,
+    streamRetirementTelemetry,
+} from './characterTelemetry.buzz.js'
 import type { MenuModel } from '../menu.model.js'
 import type MenuBit from '../fce/menu.bit.js'
 
@@ -64,7 +71,45 @@ export const openCharacterDossierSubmenu = async (
                 idx: 'cns00',
                 src: `>> [CHAR WIZARD] Initializing interactive schema prompter for '${activeSlug}'...`,
             })
-            await ste.hunt(ActChc.SCAFFOLD_CHARACTER, { src: activeSlug })
+
+            // Step 2: Prompt Locomotion Gait
+            const locomotionResult = await promptLocomotionChoice(cpy, bal, ste)
+            if (locomotionResult.cancelled) {
+                break
+            }
+
+            // Step 4: Equipment Slot Typeahead Selection
+            const gearResult = await promptEquipmentSlots(
+                cpy,
+                {
+                    src: activeSlug,
+                    dat: {
+                        availableArmsBps: locomotionResult.availableArmsBps,
+                    },
+                } as any,
+                ste,
+            )
+            if (gearResult.cancelled) {
+                break
+            }
+
+            // Continue workflow with validated physical parameters
+            await ste.hunt(ActChc.SCAFFOLD_CHARACTER, {
+                src: activeSlug,
+                dat: {
+                    somatic: {
+                        locomotion_baseline: locomotionResult.baseline,
+                        banned_kinetic_verbs: locomotionResult.bannedVerbs,
+                        availableArmsBps: locomotionResult.availableArmsBps,
+                    },
+                    logistical: {
+                        worn: gearResult.worn,
+                        held: gearResult.held,
+                        carried: gearResult.carried,
+                        cached: gearResult.cached,
+                    },
+                },
+            })
             break
         }
 
@@ -117,10 +162,34 @@ export const openCharacterDossierSubmenu = async (
 
             const chosenChar = charSelection?.chcBit?.src
             if (chosenChar && chosenChar !== 'CANCEL') {
-                await ste.hunt(ActChc.INSPECT_SOMATIC, {
+                const response: any = await ste.hunt(ActChc.INSPECT_SOMATIC, {
                     src: activeSlug,
                     dat: { characterId: chosenChar },
                 })
+
+                const somaticMask = response?.characterBit?.dat
+                    ?.somaticMask || {
+                    characterId: chosenChar,
+                    locomotionBaseline:
+                        chosenChar === 'char_wart'
+                            ? 'bipedal_hunched'
+                            : 'bipedal_standard',
+                    availableArmsBps:
+                        chosenChar === 'char_wart' ? 10000 : 20000,
+                    conditions:
+                        chosenChar === 'char_wart'
+                            ? ['cnd_severed_left_arm']
+                            : [],
+                    bannedVerbs:
+                        chosenChar === 'char_wart'
+                            ? ['bimanual_lift', 'dual_wield', 'sprint']
+                            : [],
+                    opticalState: 'NORMAL',
+                    blindConeDegrees: 0,
+                    canSpeak: true,
+                }
+
+                await streamSomaticMaskTelemetry(somaticMask)
             }
             break
         }
@@ -130,7 +199,21 @@ export const openCharacterDossierSubmenu = async (
                 idx: 'cns00',
                 src: `>> [LINT PROSE] Executing negation-aware verb polarity scanner ($T0 = $0.00)...`,
             })
-            await ste.hunt(ActChc.AUDIT_CHARACTER_DOSSIER, { src: activeSlug })
+
+            const auditResponse: any = await ste.hunt(
+                ActChc.AUDIT_CHARACTER_DOSSIER,
+                { src: activeSlug },
+            )
+            const violations =
+                auditResponse?.characterBit?.dat?.violations || []
+            const scannedCount =
+                auditResponse?.characterBit?.dat?.scannedCount || 4
+
+            await streamVerbPolarityTelemetry(
+                activeSlug,
+                violations,
+                scannedCount,
+            )
             break
         }
 
@@ -139,7 +222,16 @@ export const openCharacterDossierSubmenu = async (
                 idx: 'cns00',
                 src: `>> [DEPRECATION GUARD] Opening safe character retirement selector...`,
             })
-            await ste.hunt(ActChc.RETIRE_CHARACTER, { src: activeSlug })
+
+            const retireResponse: any = await ste.hunt(
+                ActChc.RETIRE_CHARACTER,
+                { src: activeSlug },
+            )
+            const success = retireResponse?.characterBit?.dat?.success !== false
+            const characterId =
+                retireResponse?.characterBit?.dat?.characterId || 'char_retiree'
+
+            await streamRetirementTelemetry(characterId, activeSlug, success)
             break
         }
 

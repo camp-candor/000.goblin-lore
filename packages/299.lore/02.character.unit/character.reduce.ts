@@ -31,6 +31,8 @@ export function reducer(
             )
         case Act.RETIRE_CHARACTER:
             return Buzz.retireCharacter(cpy, action.bale, state as State)
+        case Act.INSPECT_SOMATIC:
+            return Buzz.inspectSomatic(cpy, action.bale, state as State)
         default:
             return cpy
     }

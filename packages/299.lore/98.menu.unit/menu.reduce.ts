@@ -35,6 +35,30 @@ export function reducer(
             )
             break
 
+        case Act.PROMPT_LOCOMOTION_CHOICE:
+            result = Buzz.promptLocomotionChoice(
+                clone(model),
+                act.bale,
+                state as any,
+            )
+            break
+
+        case Act.PROMPT_EQUIPMENT_SLOTS:
+            result = Buzz.promptEquipmentSlots(
+                clone(model),
+                act.bale,
+                state as any,
+            )
+            break
+
+        case Act.RUN_CHARACTER_AUDIT_TELEMETRY:
+            result = Buzz.runCharacterAuditTelemetry(
+                clone(model),
+                act.bale,
+                state as any,
+            )
+            break
+
         default:
             return model
     }

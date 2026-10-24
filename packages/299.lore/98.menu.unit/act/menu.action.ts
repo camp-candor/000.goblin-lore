@@ -26,5 +26,30 @@ export class OpenCharacterDossierSubmenu implements Action {
     constructor(public bale?: MenuBit) {}
 }
 
+export const PROMPT_LOCOMOTION_CHOICE = '[Menu action] Prompt Locomotion Choice'
+export class PromptLocomotionChoice implements Action {
+    readonly type = PROMPT_LOCOMOTION_CHOICE
+    constructor(public bale?: MenuBit) {}
+}
+
+export const PROMPT_EQUIPMENT_SLOTS = '[Menu action] Prompt Equipment Slots'
+export class PromptEquipmentSlots implements Action {
+    readonly type = PROMPT_EQUIPMENT_SLOTS
+    constructor(public bale?: MenuBit) {}
+}
+
+export const RUN_CHARACTER_AUDIT_TELEMETRY =
+    '[Menu action] Run Character Audit Telemetry'
+export class RunCharacterAuditTelemetry implements Action {
+    readonly type = RUN_CHARACTER_AUDIT_TELEMETRY
+    constructor(public bale?: MenuBit) {}
+}
+
 export type Actions =
-    InitMenu | UpdateMenu | FactSchemaMenu | OpenCharacterDossierSubmenu
+    | InitMenu
+    | UpdateMenu
+    | FactSchemaMenu
+    | OpenCharacterDossierSubmenu
+    | PromptLocomotionChoice
+    | PromptEquipmentSlots
+    | RunCharacterAuditTelemetry
