@@ -131,7 +131,7 @@ A sharp bone knife.
             expect(result.cancelled).toBe(false)
             expect(result.held).toContain('item_knife')
 
-            // Verify Grid placement at x: 0, y: 4, xSpan: 4, ySpan: 11
+            // Verify Grid placement at x: 0, y: 4, w: 4, ySpan: 11
             const gridCall = libraryCalls.find(
                 (c) => c.action === '[Grid action] Update Grid',
             )
