@@ -4,7 +4,17 @@ export * from './fce/refusalRule.bit'
 export * from './fce/strainReceipt.bit'
 export * from './val/provenance.val'
 export * from './val/refusal.val'
-export * from './val/strain.val'
+export {
+    BasisPointScalarSchema,
+    BasisPointDeltaSchema,
+    RefusalStrainEvaluationPayloadSchema,
+    RefusalStrainReceiptSchema,
+    clampBasisPoints,
+} from './val/strain.val'
+export type {
+    RefusalStrainEvaluationPayload,
+    RefusalStrainReceipt,
+} from './val/strain.val'
 export * from './refusal.action'
 export * from './refusal.model'
 export * from './refusal.buzzer'

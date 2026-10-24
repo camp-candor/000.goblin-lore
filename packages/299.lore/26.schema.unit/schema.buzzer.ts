@@ -1,2 +1,6 @@
-export { initSchema } from './buz/schema.buzz'
-export { updateSchema } from './buz/schema.buzz'
+export { initSchema, updateSchema } from './buz/schema.buzz.js'
+export {
+    validateCharacterDossier,
+    deepFreeze,
+    verifyByteZeroOffset,
+} from './buz/schema.buzz.js'

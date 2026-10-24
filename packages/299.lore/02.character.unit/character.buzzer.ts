@@ -1,2 +1,16 @@
-export { initCharacter } from './buz/character.buzz'
-export { updateCharacter } from './buz/character.buzz'
+export { initCharacter, updateCharacter } from './buz/character.buzz.js'
+export {
+    projectSomaticMask,
+    getCharacterSomaticMask,
+    deepFreeze,
+} from './buz/somaticMask.buzz.js'
+export {
+    generateSeedProtagonist,
+    generateSeedProtagonistDossier,
+    buildSeedProtagonistDossier,
+} from './buz/seedProtagonist.buzz.js'
+export {
+    serializeCharacterDossier,
+    serializeCharacterDossierToDisk,
+    buildCharacterDossierMarkdown,
+} from './buz/serializer.buzz.js'

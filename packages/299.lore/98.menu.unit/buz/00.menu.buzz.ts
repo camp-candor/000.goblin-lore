@@ -106,6 +106,13 @@ import type { CharacterConversationalProfile } from '../../10.escalation.unit/va
 import { spendLeverageStrings } from '../../17.leverage.unit/buz/leverage.buzz.js'
 import type { StringsLedgerRecord } from '../../17.leverage.unit/val/leverage.val.js'
 import {
+    differentiateWants,
+    validateComedicRegister,
+} from '../../44.voice.unit/buz/voice.buzz.js'
+import { VoiceModel } from '../../44.voice.unit/voice.model.js'
+import type { WantDifferentiationResult } from '../../44.voice.unit/val/voiceRail.val.js'
+import type { RegisterValidationResult } from '../../44.voice.unit/val/register.val.js'
+import {
     runFactScopeMenuAudit,
     runAuthorityLevelMenuAudit,
     runSequenceMenuAudit,
@@ -192,6 +199,10 @@ export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
             process.argv.some((a) => a.includes('leverage-strings-audit')) ||
             (globalThis as any).TEST_JOURNEY === 'leverage-strings-audit'
 
+        const isVoiceRailAuditJourney =
+            process.argv.some((a) => a.includes('voice-rail-audit')) ||
+            (globalThis as any).TEST_JOURNEY === 'voice-rail-audit'
+
         const isMuteInvarianceAuditJourney =
             process.argv.some((a) => a.includes('mute-invariance-audit')) ||
             (globalThis as any).TEST_JOURNEY === 'mute-invariance-audit'
@@ -223,6 +234,23 @@ export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
                 'char_wart',
                 'SPEAK, CLIMB, LOOK, BIMANUAL_LIFT',
             )
+            setTimeout(() => {
+                const screen =
+                    (lib as any)?.screen || (globalThis as any)?.screen
+                if (screen) {
+                    try {
+                        if (typeof screen.leave === 'function') screen.leave()
+                        if (typeof screen.destroy === 'function')
+                            screen.destroy()
+                    } catch {}
+                }
+                process.exit(0)
+            }, 1200)
+            return cpy
+        }
+
+        if (isVoiceRailAuditJourney) {
+            await executeVoiceRailAudit(lib, 'char_spleen')
             setTimeout(() => {
                 const screen =
                     (lib as any)?.screen || (globalThis as any)?.screen
@@ -1223,6 +1251,144 @@ export const executeLeverageSpendProbe = async (
     }
 }
 
+export interface VoiceRailDossierFixture {
+    markdown: string
+    register: string
+    fewShotProse: string
+}
+
+const SPLEEN_FEW_SHOT_LINES = [
+    '"The gasket threading is stripped to exactly three turns."',
+    '"Nightfall is at nineteen hundred hours, not soon."',
+    '"Mum Grissel, the gauge needle rests left of center."',
+    '"Obedience keeps my bunk and my rations."',
+    '"Boiler pressure reads nominal on dial two."',
+    '"I replaced the gasket as the roster commands."',
+]
+
+export const buildVoiceRailDossier = (
+    actorId: string,
+): VoiceRailDossierFixture => {
+    const surface =
+        actorId === 'char_spleen'
+            ? 'Replace the rusted boiler gasket before nightfall'
+            : 'Sweep the ash from the vent shafts before inspection'
+    const actual =
+        actorId === 'char_spleen'
+            ? 'Prevent Mum Grissel from realizing he cannot read the gauges'
+            : 'Keep the crew from noticing the dented ration tin'
+    const blind =
+        actorId === 'char_spleen'
+            ? 'Believes absolute obedience shields him from exile'
+            : 'Believes hard work alone earns a bunk upgrade'
+    const markdown = [
+        '## Wants (surface)',
+        surface,
+        '',
+        '## Wants (actual)',
+        actual,
+        '',
+        '## Blind spot',
+        blind,
+        '',
+        '## Voice notes',
+        'Staccato literalist cadence with pedantic mechanical corrections.',
+        '',
+        '## Few-shot lines',
+        ...SPLEEN_FEW_SHOT_LINES.map((l) => `- ${l}`),
+        '',
+    ].join('\n')
+    return {
+        markdown,
+        register: 'hyper_literal',
+        fewShotProse: SPLEEN_FEW_SHOT_LINES.join('\n'),
+    }
+}
+
+export const executeVoiceRailAudit = async (
+    lib: any,
+    actorId: string = 'char_spleen',
+) => {
+    if (!lib || typeof lib.hunt !== 'function') return
+
+    const dossier = buildVoiceRailDossier(actorId)
+    const model = new VoiceModel()
+
+    let diffResult: WantDifferentiationResult | null = null
+    differentiateWants(
+        model,
+        {
+            idx: actorId,
+            src: dossier.markdown,
+            slv: (res: any) => {
+                diffResult = res?.vceBit?.dat ?? null
+            },
+        },
+        {} as any,
+    )
+
+    let registerResult: RegisterValidationResult | null = null
+    validateComedicRegister(
+        model,
+        {
+            idx: actorId,
+            dat: {
+                register: dossier.register,
+                prose: dossier.fewShotProse,
+            },
+            slv: (res: any) => {
+                registerResult = res?.vceBit?.dat ?? null
+            },
+        },
+        {} as any,
+    )
+
+    if (!diffResult || !registerResult) return
+    const diff: WantDifferentiationResult = diffResult
+    const reg: RegisterValidationResult = registerResult
+
+    const overlapPct = (diff.overlapPercentageBps / 100).toFixed(1)
+    const contrastTag = diff.contrastPass ? '[PASS]' : '[FAIL]'
+    const slopCount = reg.detectedSlopTokens.length
+    const overallValid = diff.isValid && reg.isValid && slopCount === 0
+
+    await lib.hunt(UPDATE_CONSOLE, {
+        idx: 'cns00',
+        src: `>> [VOICE RAIL PROJECTION] ${actorId} (Register: ${reg.register.toUpperCase()})`,
+    })
+    await lib.hunt(UPDATE_CONSOLE, {
+        idx: 'cns00',
+        src: `>> SURFACE WANT    : "${diff.surfaceWant}"`,
+    })
+    await lib.hunt(UPDATE_CONSOLE, {
+        idx: 'cns00',
+        src: `>> ACTUAL WANT     : "${diff.actualWant}"`,
+    })
+    await lib.hunt(UPDATE_CONSOLE, {
+        idx: 'cns00',
+        src: `>> BLIND SPOT      : "${diff.blindSpot}"`,
+    })
+    await lib.hunt(UPDATE_CONSOLE, {
+        idx: 'cns00',
+        src: `>> SUBTEXT CONTRAST: ${contrastTag} ${overlapPct}% Lemma Overlap (Threshold <= 60.0%)`,
+    })
+    await lib.hunt(UPDATE_CONSOLE, {
+        idx: 'cns00',
+        src: `>> FEW-SHOT CORPUS : ${diff.fewShotLineCount} Sample Lines Indexed (${slopCount} Banned Latinate Lemmas)`,
+    })
+    if (overallValid) {
+        await lib.hunt(UPDATE_CONSOLE, {
+            idx: 'cns00',
+            src: '>> STATUS          : [PASS] Voice Rail Validated ($T0 = $0.00)',
+        })
+    } else {
+        await lib.hunt(UPDATE_CONSOLE, {
+            idx: 'cns00',
+            src: `:: STATUS          : [FAIL] ${diff.errorReason ?? reg.errorCode ?? 'VOICE_RAIL_BREACH'}`,
+        })
+    }
+}
+
 export const openCharacterDossierSubmenu = async (
     cpy: MenuModel,
     bal: MenuBit,
@@ -1243,6 +1409,7 @@ export const openCharacterDossierSubmenu = async (
         '[5] RUN RELATIONAL FIELD AUDIT',
         '[6] INSPECT CONVERSATIONAL PROFILE',
         '[7] INSPECT DIRECTIONAL LEVERAGE STRINGS',
+        '[8] AUDIT VOICE RAIL & SUBTEXT',
         'BACK TO ROOT MENU',
     ]
 
@@ -1261,6 +1428,8 @@ export const openCharacterDossierSubmenu = async (
             'Inspect escalation ceilings, personality stats, and subtext attenuation tokens.',
         '[7] INSPECT DIRECTIONAL LEVERAGE STRINGS':
             'Audit directed social debt graph, foreign keys, and string solvency.',
+        '[8] AUDIT VOICE RAIL & SUBTEXT':
+            'Project voice rail wants, subtext contrast, and comedic register.',
         'BACK TO ROOT MENU': 'Return to lore management root.',
     }
 
@@ -1639,6 +1808,29 @@ export const openCharacterDossierSubmenu = async (
                     debtorId,
                     spendCount,
                 )
+                await new Promise((r) => setTimeout(r, 1500))
+                break
+            }
+
+            case '[8] AUDIT VOICE RAIL & SUBTEXT':
+            case '8': {
+                const choiceGrid = await lib.hunt(UPDATE_GRID, {
+                    x: 0,
+                    y: 4,
+                    xSpan: 4,
+                    ySpan: 12,
+                })
+
+                let targetActor = 'char_spleen'
+                const actorInputBit = await lib.hunt(OPEN_INPUT, {
+                    txt: 'ACTOR ID',
+                    src: 'char_spleen',
+                    net: choiceGrid?.grdBit?.dat,
+                })
+                const rawActor = actorInputBit?.putBit?.src?.trim()
+                if (rawActor) targetActor = rawActor
+
+                await executeVoiceRailAudit(lib, targetActor)
                 await new Promise((r) => setTimeout(r, 1500))
                 break
             }
