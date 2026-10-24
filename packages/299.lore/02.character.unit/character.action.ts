@@ -1,5 +1,6 @@
 import { Action } from '../99.core/interface/action.interface.js'
 import CharacterBit from './fce/character.bit.js'
+import type CharacterScaffoldBit from './fce/characterScaffold.bit.js'
 
 export const INIT_CHARACTER = '[Character action] Init Character'
 export class InitCharacter implements Action {
@@ -64,7 +65,15 @@ export class AuditCharacterDossier implements Action {
     constructor(public bale: CharacterBit) {}
 }
 
+
+export const SCAFFOLD_CHARACTER_WIZARD = '[Character action] Scaffold Character Wizard'
+export class ScaffoldCharacterWizard implements Action {
+    readonly type = SCAFFOLD_CHARACTER_WIZARD
+    constructor(public bale: CharacterScaffoldBit) {}
+}
+
 export type Actions =
+    | ScaffoldCharacterWizard
     | InitCharacter
     | UpdateCharacter
     | ProjectSomaticMask

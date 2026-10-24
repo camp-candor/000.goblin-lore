@@ -1,3 +1,4 @@
+import { scaffoldCharacter } from './menu.scaffold.js'
 import { verifyMuteVocalInvariance } from '../../39.verbs.unit/buz/muteInvariance.buzz.js'
 
 export const executeMuteInvarianceAudit = async (
@@ -704,13 +705,7 @@ export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
 
         case '[3] SCAFFOLD ENTITY':
         case 'SCAFFOLD ENTITY': {
-            await ste.hunt(ActEnt.OPEN_HUMAN_SAVE_GATE, {
-                src: targetUnit.activeSeriesSlug,
-                dat: {
-                    entityId: `char_scaffold_${Date.now().toString().slice(-4)}`,
-                    domain: 'characters',
-                },
-            })
+            await scaffoldCharacter(cpy, bal, ste)
             break
         }
 

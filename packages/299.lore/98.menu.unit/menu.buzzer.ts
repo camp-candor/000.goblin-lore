@@ -58,3 +58,5 @@ export { triggerSeedGenesisCorpusMenu } from './buz/genesisSeedMenu.buzz.js'
 export { triggerCompileGenesisMenu } from './buz/compileGenesisMenu.buzz.js'
 export { promptSwitchSeries } from './buz/promptSwitchSeries.buzz.js'
 export { suspendCursesAndSpawnEditor } from './buz/suspendCursesEditor.buzz.js'
+
+export { scaffoldCharacter } from './buz/menu.scaffold.js'
