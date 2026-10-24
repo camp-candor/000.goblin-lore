@@ -1,3 +1,5 @@
+import * as fs from 'node:fs'
+import * as path from 'node:path'
 import { LoreModel } from '../lore.model.js'
 import LoreBit from '../fce/lore.bit.js'
 import State from '../../99.core/state.js'
@@ -62,4 +64,18 @@ export const listLore = async (cpy: LoreModel, bal: LoreBit, ste: State) => {
             },
         })
     return cpy
+}
+
+export function resolveRepoRoot(): string {
+    let curr = process.cwd()
+    while (curr !== path.dirname(curr)) {
+        if (
+            fs.existsSync(path.join(curr, 'series')) ||
+            fs.existsSync(path.join(curr, 'package.json'))
+        ) {
+            return curr
+        }
+        curr = path.dirname(curr)
+    }
+    return process.cwd()
 }

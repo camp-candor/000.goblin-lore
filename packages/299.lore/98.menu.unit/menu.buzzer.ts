@@ -3,6 +3,7 @@ export {
     updateMenu,
     openFactSchemaSubmenu,
     handleGauntletMenuChoice,
+    openCharacterDossierSubmenu,
 } from './buz/00.menu.buzz.js'
 
 export {

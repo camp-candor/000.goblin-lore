@@ -27,6 +27,14 @@ export function reducer(
             )
             break
 
+        case Act.OPEN_CHARACTER_DOSSIER_SUBMENU:
+            result = Buzz.openCharacterDossierSubmenu(
+                clone(model),
+                act.bale,
+                state as any,
+            )
+            break
+
         default:
             return model
     }

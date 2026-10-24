@@ -112,6 +112,7 @@ import {
 import { VoiceModel } from '../../44.voice.unit/voice.model.js'
 import type { WantDifferentiationResult } from '../../44.voice.unit/val/voiceRail.val.js'
 import type { RegisterValidationResult } from '../../44.voice.unit/val/register.val.js'
+import { COMEDIC_REGISTER_REGISTRY } from '../../44.voice.unit/val/register.val.js'
 import {
     runFactScopeMenuAudit,
     runAuthorityLevelMenuAudit,
@@ -203,6 +204,14 @@ export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
             process.argv.some((a) => a.includes('voice-rail-audit')) ||
             (globalThis as any).TEST_JOURNEY === 'voice-rail-audit'
 
+        const isComedicRegisterAuditJourney =
+            process.argv.some((a) => a.includes('comedic-register-audit')) ||
+            (globalThis as any).TEST_JOURNEY === 'comedic-register-audit'
+
+        const isSubtextAuditJourney =
+            process.argv.some((a) => a.includes('subtext-audit')) ||
+            (globalThis as any).TEST_JOURNEY === 'subtext-audit'
+
         const isMuteInvarianceAuditJourney =
             process.argv.some((a) => a.includes('mute-invariance-audit')) ||
             (globalThis as any).TEST_JOURNEY === 'mute-invariance-audit'
@@ -249,8 +258,42 @@ export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
             return cpy
         }
 
+        if (isSubtextAuditJourney) {
+            await executeSubtextAudit(lib, 'char_spleen')
+            setTimeout(() => {
+                const screen =
+                    (lib as any)?.screen || (globalThis as any)?.screen
+                if (screen) {
+                    try {
+                        if (typeof screen.leave === 'function') screen.leave()
+                        if (typeof screen.destroy === 'function')
+                            screen.destroy()
+                    } catch {}
+                }
+                process.exit(0)
+            }, 1200)
+            return cpy
+        }
+
         if (isVoiceRailAuditJourney) {
             await executeVoiceRailAudit(lib, 'char_spleen')
+            setTimeout(() => {
+                const screen =
+                    (lib as any)?.screen || (globalThis as any)?.screen
+                if (screen) {
+                    try {
+                        if (typeof screen.leave === 'function') screen.leave()
+                        if (typeof screen.destroy === 'function')
+                            screen.destroy()
+                    } catch {}
+                }
+                process.exit(0)
+            }, 1200)
+            return cpy
+        }
+
+        if (isComedicRegisterAuditJourney) {
+            await executeComedicRegisterAudit(lib, 'char_spleen')
             setTimeout(() => {
                 const screen =
                     (lib as any)?.screen || (globalThis as any)?.screen
@@ -405,9 +448,10 @@ export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
             break
 
         case 'CHARACTER DOSSIER AUTHORING':
-        case '[CHARACTER DOSSIER AUTHORING]':
-            await openCharacterDossierSubmenu(cpy, bal, ste)
-            break
+        case '[CHARACTER DOSSIER AUTHORING]': {
+            await ste.hunt(ActMnu.OPEN_CHARACTER_DOSSIER_SUBMENU, {})
+            return cpy
+        }
 
         case 'ROOT MENU':
             if (rootSlv != null) rootSlv({ mnuBit: { idx: 'root-menu' } })
@@ -1389,458 +1433,184 @@ export const executeVoiceRailAudit = async (
     }
 }
 
-export const openCharacterDossierSubmenu = async (
-    cpy: MenuModel,
-    bal: MenuBit,
-    ste: State,
-) => {
-    const lib = (globalThis as any).LIBRARY
-    if (!lib || typeof lib.hunt !== 'function') {
-        return cpy
-    }
-
-    let stayInSubmenu = true
-
-    const dossierOptions = [
-        '[1] SCAFFOLD NEW CHARACTER',
-        '[2] INSPECT DOSSIER REGISTRY',
-        '[3] INSPECT SOMATIC MASK',
-        '[4] RUN VERB POLARITY AUDIT',
-        '[5] RUN RELATIONAL FIELD AUDIT',
-        '[6] AUDIT SUBTEXT ATTENUATION DIRECTIVES',
-        '[7] INSPECT DIRECTIONAL LEVERAGE STRINGS',
-        '[8] AUDIT VOICE RAIL & SUBTEXT',
-        'BACK TO ROOT MENU',
-    ]
-
-    const descriptions: Record<string, string> = {
-        '[1] SCAFFOLD NEW CHARACTER':
-            'Initialize a new character dossier and configure somatic locomotion baseline.',
-        '[2] INSPECT DOSSIER REGISTRY':
-            'Inspect active character dossiers and somatic constraints.',
-        '[3] INSPECT SOMATIC MASK':
-            'Inspect somatic limb allocation, active traumas, and clamping boundaries.',
-        '[4] RUN VERB POLARITY AUDIT':
-            'Audit kinetic verb restrictions against current somatic limb capacities.',
-        '[5] RUN RELATIONAL FIELD AUDIT':
-            'Audit Pass 2 foreign-key possession topology, leases, and custodial grounding.',
-        '[6] AUDIT SUBTEXT ATTENUATION DIRECTIVES':
-            'Inspect escalation ceilings, personality stats, and subtext attenuation tokens.',
-        '[7] INSPECT DIRECTIONAL LEVERAGE STRINGS':
-            'Audit directed social debt graph, foreign keys, and string solvency.',
-        '[8] AUDIT VOICE RAIL & SUBTEXT':
-            'Project voice rail wants, subtext contrast, and comedic register.',
-        'BACK TO ROOT MENU': 'Return to lore management root.',
-    }
-
-    while (stayInSubmenu) {
-        const subGrid = await lib.hunt(UPDATE_GRID, {
-            x: 0,
-            y: 4,
-            xSpan: 4,
-            ySpan: 12,
-        })
-
-        const subChoice = await lib.hunt(OPEN_CHOICE, {
-            dat: {
-                clr0: 'black',
-                clr1: 'yellow',
-                cb: (choice: string) => {
-                    const desc =
-                        descriptions[choice] || 'No description available.'
-                    lib.hunt(UPDATE_CONSOLE, {
-                        idx: 'cns00',
-                        src: `>> ${desc}`,
-                    })
-                },
-            },
-            src: 'vertical',
-            lst: dossierOptions,
-            net: subGrid?.grdBit?.dat,
-        })
-
-        const selectedItem = subChoice?.chcBit?.src
-
-        switch (selectedItem) {
-            case '[1] SCAFFOLD NEW CHARACTER':
-            case '1': {
-                await lib.hunt(UPDATE_CONSOLE, {
-                    idx: 'cns00',
-                    src: '>> [SCAFFOLD] Initializing new character archetype template...',
-                })
-
-                const choiceGrid = await lib.hunt(UPDATE_GRID, {
-                    x: 0,
-                    y: 4,
-                    xSpan: 4,
-                    ySpan: 12,
-                })
-
-                await lib.hunt(UPDATE_CONSOLE, {
-                    idx: 'cns00',
-                    src: '>> [LOGISTIC:INSPECT] Partition Limits: Worn <= 4 | Held <= 2 | Carried <= 4',
-                })
-
-                await lib.hunt(UPDATE_CONSOLE, {
-                    idx: 'cns00',
-                    src: '>> STATUS: [OK] Hand Capacity Invariant Solver Ready',
-                })
-
-                let targetActor = 'char_wart'
-                const actorInputBit = await lib.hunt(OPEN_INPUT, {
-                    txt: 'ACTOR ID',
-                    src: 'char_wart',
-                    net: choiceGrid?.grdBit?.dat,
-                })
-                const rawActor = actorInputBit?.putBit?.src?.trim()
-                if (rawActor) targetActor = rawActor
-
-                let availableArmsInput = '1.0'
-                const armsInputBit = await lib.hunt(OPEN_INPUT, {
-                    txt: 'AVAILABLE ARMS (e.g. 1.0, 2.0)',
-                    src: '1.0',
-                    net: choiceGrid?.grdBit?.dat,
-                })
-                const rawArms = armsInputBit?.putBit?.src?.trim()
-                if (rawArms) availableArmsInput = rawArms
-
-                let heldItemsCount = 2
-                const itemsInputBit = await lib.hunt(OPEN_INPUT, {
-                    txt: 'NUMBER OF HELD ITEMS',
-                    src: '2',
-                    net: choiceGrid?.grdBit?.dat,
-                })
-                const rawItems = itemsInputBit?.putBit?.src?.trim()
-                if (rawItems) heldItemsCount = parseInt(rawItems) || 2
-
-                const armsBps = parseFloat(availableArmsInput) * 10000
-                const demandedBps = heldItemsCount * 10000
-
-                if (demandedBps > armsBps) {
-                    await lib.hunt(UPDATE_CONSOLE, {
-                        idx: 'cns00',
-                        src:
-                            ':: [BREACH:HALT] HAND_CAPACITY_BREACH: Entity cannot hold ' +
-                            heldItemsCount +
-                            ' items!',
-                    })
-
-                    await lib.hunt(UPDATE_CONSOLE, {
-                        idx: 'cns00',
-                        src: ':: Transaction aborted in RAM at T0 = $0.00.',
-                    })
-                } else {
-                    await lib.hunt(UPDATE_CONSOLE, {
-                        idx: 'cns00',
-                        src: '>> [PASS] Items successfully assigned.',
-                    })
-                }
-
-                await new Promise((r) => setTimeout(r, 1500))
-                break
-            }
-
-            case '[2] INSPECT DOSSIER REGISTRY':
-            case '2':
-                await lib.hunt(UPDATE_CONSOLE, {
-                    idx: 'cns00',
-                    src: '>> [DOSSIER REGISTRY] 4 core dossiers loaded: char_wart, char_bog, char_slug, char_slither',
-                })
-                break
-
-            case '[3] INSPECT SOMATIC MASK':
-            case '3': {
-                const choiceGrid = await lib.hunt(UPDATE_GRID, {
-                    x: 0,
-                    y: 4,
-                    xSpan: 4,
-                    ySpan: 12,
-                })
-
-                let targetActor = 'char_wart'
-                const actorInputBit = await lib.hunt(OPEN_INPUT, {
-                    txt: 'ACTOR ID',
-                    src: 'char_wart',
-                    net: choiceGrid?.grdBit?.dat,
-                })
-                const rawActor = actorInputBit?.putBit?.src?.trim()
-                if (rawActor) targetActor = rawActor
-
-                const isSomaticJourney =
-                    process.argv.some((a) =>
-                        a.includes('somatic-verbs-audit'),
-                    ) ||
-                    (globalThis as any).TEST_JOURNEY === 'somatic-verbs-audit'
-                const isMuteJourney =
-                    process.argv.some((a) =>
-                        a.includes('mute-invariance-audit'),
-                    ) ||
-                    (globalThis as any).TEST_JOURNEY === 'mute-invariance-audit'
-
-                if (isSomaticJourney) {
-                    let candidateVerbsInput =
-                        'SPEAK, CLIMB, LOOK, BIMANUAL_LIFT'
-                    const verbInputBit = await lib.hunt(OPEN_INPUT, {
-                        txt: 'CANDIDATE VERBS',
-                        src: 'SPEAK, CLIMB, LOOK, BIMANUAL_LIFT',
-                        net: choiceGrid?.grdBit?.dat,
-                    })
-                    const rawVerbs = verbInputBit?.putBit?.src?.trim()
-                    if (rawVerbs) candidateVerbsInput = rawVerbs
-                    await executeSomaticVerbsAudit(
-                        lib,
-                        targetActor,
-                        candidateVerbsInput,
-                    )
-                } else if (isMuteJourney) {
-                    let candidateLinesInput =
-                        '(slams hand down on the iron valve) "Leave this place!"'
-                    const verbInputBit = await lib.hunt(OPEN_INPUT, {
-                        txt: 'CANDIDATE LINES',
-                        src: '(slams hand down on the iron valve) "Leave this place!"',
-                        net: choiceGrid?.grdBit?.dat,
-                    })
-                    const rawVerbs = verbInputBit?.putBit?.src?.trim()
-                    if (rawVerbs) candidateLinesInput = rawVerbs
-                    await executeMuteInvarianceAudit(
-                        lib,
-                        targetActor,
-                        candidateLinesInput,
-                    )
-                } else {
-                    let targetAction = 'act_bimanual_valve'
-                    const actionInputBit = await lib.hunt(OPEN_INPUT, {
-                        txt: 'ACTION ID',
-                        src: 'act_bimanual_valve',
-                        net: choiceGrid?.grdBit?.dat,
-                    })
-                    const rawAction = actionInputBit?.putBit?.src?.trim()
-                    if (rawAction) targetAction = rawAction
-                    await executeSomaticSatAudit(lib, targetActor, targetAction)
-                }
-                await new Promise((r) => setTimeout(r, 1500))
-                break
-            }
-
-            case '[4] RUN VERB POLARITY AUDIT':
-            case '4': {
-                const choiceGrid = await lib.hunt(UPDATE_GRID, {
-                    x: 0,
-                    y: 4,
-                    xSpan: 4,
-                    ySpan: 12,
-                })
-
-                let targetActor = 'char_kael'
-                const actorInputBit = await lib.hunt(OPEN_INPUT, {
-                    txt: 'ACTOR ID',
-                    src: 'char_kael',
-                    net: choiceGrid?.grdBit?.dat,
-                })
-                const rawActor = actorInputBit?.putBit?.src?.trim()
-                if (rawActor) targetActor = rawActor
-
-                let candidateVerbsInput =
-                    '(slams hand down on the iron valve) "Leave this place!"'
-                const verbInputBit = await lib.hunt(OPEN_INPUT, {
-                    txt: 'CANDIDATE LINES',
-                    src: '(slams hand down on the iron valve) "Leave this place!"',
-                    net: choiceGrid?.grdBit?.dat,
-                })
-                const rawVerbs = verbInputBit?.putBit?.src?.trim()
-                if (rawVerbs) candidateVerbsInput = rawVerbs
-
-                if (
-                    process.argv.some((a) =>
-                        a.includes('somatic-verbs-audit'),
-                    ) ||
-                    (globalThis as any).TEST_JOURNEY === 'somatic-verbs-audit'
-                ) {
-                    await executeSomaticVerbsAudit(
-                        lib,
-                        targetActor,
-                        candidateVerbsInput,
-                    )
-                } else {
-                    await executeMuteInvarianceAudit(
-                        lib,
-                        targetActor,
-                        candidateVerbsInput,
-                    )
-                }
-                await new Promise((r) => setTimeout(r, 1500))
-                break
-            }
-
-            case '[5] RUN RELATIONAL FIELD AUDIT':
-            case '5': {
-                await executeGearRelationalAudit(lib)
-
-                const choiceGrid = await lib.hunt(UPDATE_GRID, {
-                    x: 0,
-                    y: 4,
-                    xSpan: 4,
-                    ySpan: 12,
-                })
-
-                let targetActor = 'char_bog'
-                const actorInputBit = await lib.hunt(OPEN_INPUT, {
-                    txt: 'ACTOR ID',
-                    src: 'char_bog',
-                    net: choiceGrid?.grdBit?.dat,
-                })
-                const rawActor = actorInputBit?.putBit?.src?.trim()
-                if (rawActor) targetActor = rawActor
-
-                let targetSlug = 'item_phantom_drill'
-                const slugInputBit = await lib.hunt(OPEN_INPUT, {
-                    txt: 'ITEM SLUG',
-                    src: 'item_phantom_drill',
-                    net: choiceGrid?.grdBit?.dat,
-                })
-                const rawSlug = slugInputBit?.putBit?.src?.trim()
-                if (rawSlug) targetSlug = rawSlug
-
-                await executeGearPointerProbe(lib, targetActor, targetSlug)
-                await new Promise((r) => setTimeout(r, 1500))
-                break
-            }
-
-            case '[6] AUDIT SUBTEXT ATTENUATION DIRECTIVES':
-            case '6': {
-                const choiceGrid = await lib.hunt(UPDATE_GRID, {
-                    x: 0,
-                    y: 4,
-                    xSpan: 4,
-                    ySpan: 12,
-                })
-
-                let targetActor = 'char_wart'
-                const actorInputBit = await lib.hunt(OPEN_INPUT, {
-                    txt: 'ACTOR ID',
-                    src: 'char_wart',
-                    net: choiceGrid?.grdBit?.dat,
-                })
-                const rawActor = actorInputBit?.putBit?.src?.trim()
-                if (rawActor) targetActor = rawActor
-
-                await executeEscalationProfileInspect(lib, targetActor)
-
-                let targetTier = 5
-                const tierInputBit = await lib.hunt(OPEN_INPUT, {
-                    txt: 'PROPOSED INTENSITY TIER (1-5)',
-                    src: '5',
-                    net: choiceGrid?.grdBit?.dat,
-                })
-                const rawTier = tierInputBit?.putBit?.src?.trim()
-                if (rawTier) targetTier = parseInt(rawTier) || 5
-
-                let targetLeverage = 0
-                const leverageInputBit = await lib.hunt(OPEN_INPUT, {
-                    txt: 'LEVERAGE EXPENDED COUNT',
-                    src: '0',
-                    net: choiceGrid?.grdBit?.dat,
-                })
-                const rawLeverage = leverageInputBit?.putBit?.src?.trim()
-                if (rawLeverage) targetLeverage = parseInt(rawLeverage) || 0
-
-                let targetText = 'I will smash this valve!'
-                const textInputBit = await lib.hunt(OPEN_INPUT, {
-                    txt: 'SPOKEN DIALOGUE TEXT',
-                    src: 'I will smash this valve!',
-                    net: choiceGrid?.grdBit?.dat,
-                })
-                const rawText = textInputBit?.putBit?.src?.trim()
-                if (rawText) targetText = rawText
-
-                await executeEscalationTurnProbe(
-                    lib,
-                    targetActor,
-                    targetTier,
-                    targetLeverage,
-                    targetText,
-                )
-                await new Promise((r) => setTimeout(r, 1500))
-                break
-            }
-
-            case '[7] INSPECT DIRECTIONAL LEVERAGE STRINGS':
-            case '7': {
-                await executeLeverageGraphAudit(lib)
-
-                const choiceGrid = await lib.hunt(UPDATE_GRID, {
-                    x: 0,
-                    y: 4,
-                    xSpan: 4,
-                    ySpan: 12,
-                })
-
-                let holderId = 'char_wart'
-                const holderInputBit = await lib.hunt(OPEN_INPUT, {
-                    txt: 'HOLDER ID',
-                    src: 'char_wart',
-                    net: choiceGrid?.grdBit?.dat,
-                })
-                const rawHolder = holderInputBit?.putBit?.src?.trim()
-                if (rawHolder) holderId = rawHolder
-
-                let debtorId = 'char_bog'
-                const debtorInputBit = await lib.hunt(OPEN_INPUT, {
-                    txt: 'DEBTOR ID',
-                    src: 'char_bog',
-                    net: choiceGrid?.grdBit?.dat,
-                })
-                const rawDebtor = debtorInputBit?.putBit?.src?.trim()
-                if (rawDebtor) debtorId = rawDebtor
-
-                let spendCount = 1
-                const spendInputBit = await lib.hunt(OPEN_INPUT, {
-                    txt: 'SPEND COUNT',
-                    src: '1',
-                    net: choiceGrid?.grdBit?.dat,
-                })
-                const rawSpend = spendInputBit?.putBit?.src?.trim()
-                if (rawSpend) spendCount = parseInt(rawSpend) || 1
-
-                await executeLeverageSpendProbe(
-                    lib,
-                    holderId,
-                    debtorId,
-                    spendCount,
-                )
-                await new Promise((r) => setTimeout(r, 1500))
-                break
-            }
-
-            case '[8] AUDIT VOICE RAIL & SUBTEXT':
-            case '8': {
-                const choiceGrid = await lib.hunt(UPDATE_GRID, {
-                    x: 0,
-                    y: 4,
-                    xSpan: 4,
-                    ySpan: 12,
-                })
-
-                let targetActor = 'char_spleen'
-                const actorInputBit = await lib.hunt(OPEN_INPUT, {
-                    txt: 'ACTOR ID',
-                    src: 'char_spleen',
-                    net: choiceGrid?.grdBit?.dat,
-                })
-                const rawActor = actorInputBit?.putBit?.src?.trim()
-                if (rawActor) targetActor = rawActor
-
-                await executeVoiceRailAudit(lib, targetActor)
-                await new Promise((r) => setTimeout(r, 1500))
-                break
-            }
-
-            case 'BACK TO ROOT MENU':
-            default:
-                stayInSubmenu = false
-                break
-        }
-    }
-
-    return cpy
+export const buildSubtextDossier = (actorId: string): string => {
+    const surface =
+        actorId === 'char_spleen'
+            ? 'Replace the rusted copper boiler gasket before shift'
+            : 'Sweep the ash from the vent shafts before inspection'
+    const actual =
+        actorId === 'char_spleen'
+            ? 'Prevent Mum Grissel from discovering he cannot read gauges'
+            : 'Keep the crew from noticing the dented ration tin'
+    const blind =
+        actorId === 'char_spleen'
+            ? 'Believes absolute obedience shields him from exile'
+            : 'Believes hard work alone earns a bunk upgrade'
+    return [
+        '## Wants (surface)',
+        surface,
+        '',
+        '## Wants (actual)',
+        actual,
+        '',
+        '## Blind spot',
+        blind,
+        '',
+        '## Voice notes',
+        'Staccato literalist cadence with pedantic mechanical corrections.',
+        '',
+        '## Few-shot lines',
+        '- "The gasket threading is stripped to exactly three turns."',
+        '- "Nightfall is at nineteen hundred hours, not soon."',
+        '',
+    ].join('\n')
 }
+
+export const executeSubtextAudit = async (
+    lib: any,
+    actorId: string = 'char_spleen',
+) => {
+    if (!lib || typeof lib.hunt !== 'function') return
+
+    const markdown = buildSubtextDossier(actorId)
+    const model = new VoiceModel()
+
+    let diffResult: WantDifferentiationResult | null = null
+    differentiateWants(
+        model,
+        {
+            idx: actorId,
+            src: markdown,
+            slv: (res: any) => {
+                diffResult = res?.vceBit?.dat ?? null
+            },
+        },
+        {} as any,
+    )
+
+    if (!diffResult) return
+    const diff: WantDifferentiationResult = diffResult
+    const fmt = (n: number) => n.toLocaleString('en-US')
+    const overlapPct = (diff.overlapPercentageBps / 100).toFixed(2)
+
+    await lib.hunt(UPDATE_CONSOLE, {
+        idx: 'cns00',
+        src: `>> [SUBTEXT AUDIT] Target: ${actorId}`,
+    })
+    await lib.hunt(UPDATE_CONSOLE, {
+        idx: 'cns00',
+        src: `>> SURFACE WANT    : "${diff.surfaceWant}"`,
+    })
+    await lib.hunt(UPDATE_CONSOLE, {
+        idx: 'cns00',
+        src: `>> ACTUAL WANT     : "${diff.actualWant}"`,
+    })
+    await lib.hunt(UPDATE_CONSOLE, {
+        idx: 'cns00',
+        src: `>> BLIND SPOT      : "${diff.blindSpot}"`,
+    })
+    await lib.hunt(UPDATE_CONSOLE, {
+        idx: 'cns00',
+        src: `>> LEMMA OVERLAP   : ${fmt(diff.overlapPercentageBps)} bps (${overlapPct}%) [CEILING: <= 6,000 bps]`,
+    })
+    if (diff.contrastPass) {
+        await lib.hunt(UPDATE_CONSOLE, {
+            idx: 'cns00',
+            src: '>> CONTRAST STATUS : [PASS] Dual-Objective Contrast Verified',
+        })
+    } else {
+        await lib.hunt(UPDATE_CONSOLE, {
+            idx: 'cns00',
+            src: `:: CONTRAST STATUS : [FAIL] ${diff.errorReason ?? 'SUBTEXT_CONTRAST_BREACH'}`,
+        })
+    }
+    if (diff.cleanOfArtifacts) {
+        await lib.hunt(UPDATE_CONSOLE, {
+            idx: 'cns00',
+            src: '>> ARTIFACT AUDIT  : [PASS] Zero Leaked Comments / Zero Citation Tags',
+        })
+    } else {
+        await lib.hunt(UPDATE_CONSOLE, {
+            idx: 'cns00',
+            src: `:: ARTIFACT AUDIT  : [FAIL] ${diff.errorReason ?? 'LEAKAGE_BREACH'}`,
+        })
+    }
+    if (diff.isValid) {
+        await lib.hunt(UPDATE_CONSOLE, {
+            idx: 'cns00',
+            src: '>> STATUS          : [PASS] Voice Rail Certified ($T0 = $0.00 Compute)',
+        })
+    } else {
+        await lib.hunt(UPDATE_CONSOLE, {
+            idx: 'cns00',
+            src: `:: STATUS          : [FAIL] ${diff.errorReason ?? 'VOICE_RAIL_BREACH'}`,
+        })
+    }
+}
+
+export const executeComedicRegisterAudit = async (
+    lib: any,
+    actorId: string = 'char_spleen',
+) => {
+    if (!lib || typeof lib.hunt !== 'function') return
+
+    const dossier = buildVoiceRailDossier(actorId)
+    const model = new VoiceModel()
+
+    let registerResult: RegisterValidationResult | null = null
+    validateComedicRegister(
+        model,
+        {
+            idx: actorId,
+            dat: {
+                register: dossier.register,
+                prose: dossier.fewShotProse,
+            },
+            slv: (res: any) => {
+                registerResult = res?.vceBit?.dat ?? null
+            },
+        },
+        {} as any,
+    )
+
+    if (!registerResult) return
+    const reg: RegisterValidationResult = registerResult
+    const definition = COMEDIC_REGISTER_REGISTRY[reg.register]
+    const slopCount = reg.detectedSlopTokens.length
+    const tagVerdict = reg.isValid ? '[PASS]' : '[FAIL]'
+    const slopVerdict = slopCount === 0 ? '[OK]' : '[FAIL]'
+
+    await lib.hunt(UPDATE_CONSOLE, {
+        idx: 'cns00',
+        src: `>> [COMEDIC REGISTER AUDIT] Target: ${actorId}`,
+    })
+    await lib.hunt(UPDATE_CONSOLE, {
+        idx: 'cns00',
+        src: `>> REGISTER TAG    : ${reg.register} ${tagVerdict}`,
+    })
+    await lib.hunt(UPDATE_CONSOLE, {
+        idx: 'cns00',
+        src: `>> DIRECTIVE       : "${definition.instructionDirective}"`,
+    })
+    await lib.hunt(UPDATE_CONSOLE, {
+        idx: 'cns00',
+        src: `>> SLOP SCANNER    : ${slopCount} Banned Latinate Tokens Detected ${slopVerdict}`,
+    })
+    await lib.hunt(UPDATE_CONSOLE, {
+        idx: 'cns00',
+        src: `>> DELIVERY BOUNDS : ${definition.deliveryConstraint}`,
+    })
+    if (reg.isValid && slopCount === 0) {
+        await lib.hunt(UPDATE_CONSOLE, {
+            idx: 'cns00',
+            src: '>> STATUS          : [PASS] Comedic Register Validated ($T0 = $0.00 Compute)',
+        })
+    } else {
+        await lib.hunt(UPDATE_CONSOLE, {
+            idx: 'cns00',
+            src: `:: STATUS          : [FAIL] ${reg.errorCode ?? 'COMEDIC_REGISTER_BREACH'}`,
+        })
+    }
+}
+
+export { openCharacterDossierSubmenu } from './characterMenu.buzz.js'

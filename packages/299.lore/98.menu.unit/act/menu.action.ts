@@ -19,4 +19,12 @@ export class FactSchemaMenu implements Action {
     constructor(public bale: MenuBit) {}
 }
 
-export type Actions = InitMenu | UpdateMenu | FactSchemaMenu
+export const OPEN_CHARACTER_DOSSIER_SUBMENU =
+    '[Menu action] Open Character Dossier Submenu'
+export class OpenCharacterDossierSubmenu implements Action {
+    readonly type = OPEN_CHARACTER_DOSSIER_SUBMENU
+    constructor(public bale?: MenuBit) {}
+}
+
+export type Actions =
+    InitMenu | UpdateMenu | FactSchemaMenu | OpenCharacterDossierSubmenu

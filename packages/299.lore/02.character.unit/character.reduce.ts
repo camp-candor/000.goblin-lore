@@ -29,6 +29,8 @@ export function reducer(
                 action.bale,
                 state as State,
             )
+        case Act.RETIRE_CHARACTER:
+            return Buzz.retireCharacter(cpy, action.bale, state as State)
         default:
             return cpy
     }

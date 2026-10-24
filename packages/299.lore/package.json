@@ -16,7 +16,9 @@
             "gear-relational-audit": "Boot the lore menu for the gear relational field audit journey.",
             "escalation-profile-audit": "Boot the lore menu for the escalation profile audit journey.",
             "leverage-strings-audit": "Boot the lore menu for the leverage strings audit journey.",
-            "voice-rail-audit": "Boot the lore menu for the voice rail audit journey."
+            "voice-rail-audit": "Boot the lore menu for the voice rail audit journey.",
+            "subtext-audit": "Boot the lore menu for the subtext contrast audit journey.",
+            "comedic-register-audit": "Boot the lore menu for the comedic register audit journey."
         }
     },
     "exports": {

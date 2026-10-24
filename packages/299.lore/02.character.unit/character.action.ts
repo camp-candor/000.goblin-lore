@@ -33,9 +33,45 @@ export class SerializeCharacterDossier implements Action {
     constructor(public bale: CharacterBit) {}
 }
 
+export const RETIRE_CHARACTER = '[Character action] Retire Character'
+export class RetireCharacter implements Action {
+    readonly type = RETIRE_CHARACTER
+    constructor(public bale: CharacterBit) {}
+}
+
+export const SCAFFOLD_CHARACTER = '[Character action] Scaffold Character'
+export class ScaffoldCharacter implements Action {
+    readonly type = SCAFFOLD_CHARACTER
+    constructor(public bale: CharacterBit) {}
+}
+
+export const SEED_CORE_CHARACTERS = '[Character action] Seed Core Characters'
+export class SeedCoreCharacters implements Action {
+    readonly type = SEED_CORE_CHARACTERS
+    constructor(public bale: CharacterBit) {}
+}
+
+export const INSPECT_SOMATIC = '[Character action] Inspect Somatic'
+export class InspectSomatic implements Action {
+    readonly type = INSPECT_SOMATIC
+    constructor(public bale: CharacterBit) {}
+}
+
+export const AUDIT_CHARACTER_DOSSIER =
+    '[Character action] Audit Character Dossier'
+export class AuditCharacterDossier implements Action {
+    readonly type = AUDIT_CHARACTER_DOSSIER
+    constructor(public bale: CharacterBit) {}
+}
+
 export type Actions =
     | InitCharacter
     | UpdateCharacter
     | ProjectSomaticMask
     | GenerateSeedProtagonist
     | SerializeCharacterDossier
+    | RetireCharacter
+    | ScaffoldCharacter
+    | SeedCoreCharacters
+    | InspectSomatic
+    | AuditCharacterDossier

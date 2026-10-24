@@ -14,3 +14,8 @@ export {
     serializeCharacterDossierToDisk,
     buildCharacterDossierMarkdown,
 } from './buz/serializer.buzz.js'
+export {
+    retireCharacter,
+    retireCharacterDossier,
+    preFlightRetireAudit,
+} from './buz/retireCharacter.buzz.js'
