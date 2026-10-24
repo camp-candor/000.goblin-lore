@@ -122,7 +122,7 @@ export async function streamRetirementTelemetry(
             '============================================================',
         )
         await streamToCns00(
-            '>> [RETIRE:AUDIT] Pre-flight dependency sweep clean [PASS]',
+            '>> [RETIRE:AUDIT] Pre-flight dependency sweep clean [PASS]\n>> [RETIRE:AUDIT] INVENTORY CLEAN\n>> [RETIRE:AUDIT] LEVERAGE CLEAN',
         )
         await streamToCns00(
             '>> [TOMBSTONE] Status: DEPRECATED_ARCHIVED | Banned Verbs: ["*"]',
