@@ -110,7 +110,11 @@ describe('98.menu.unit: Character Authoring Submenu Grid Mounting', () => {
             '[3] INSPECT SOMATIC MASK',
             '[4] RUN VERB POLARITY AUDIT',
             '[5] RETIRE CHARACTER DOSSIER',
-            '[6] RETURN TO LORE MENU',
+            '[6] AUDIT VOICE RAIL (SUBTEXT CONTRAST)',
+            '[7] AUDIT COMEDIC REGISTER (SLOP SCANNER)',
+            '[8] VALIDATE DOSSIER SCHEMA INTEGRITY',
+            '[9] AUDIT PROGRESSION LOCKS & SHOWRUNNER TASKS',
+            '[10] RETURN TO LORE MENU',
         ])
         expect(choiceCall?.dat.dat).toEqual({ clr0: 'black', clr1: 'cyan' })
     })
