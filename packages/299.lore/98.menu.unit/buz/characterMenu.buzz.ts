@@ -229,15 +229,95 @@ export const openCharacterDossierSubmenu = async (
                 src: `>> [DEPRECATION GUARD] Opening safe character retirement selector...`,
             })
 
-            const retireResponse: any = await ste.hunt(
-                ActChc.RETIRE_CHARACTER,
-                { src: activeSlug },
+            const headFile = path.resolve(
+                resolveRepoRoot(),
+                'data',
+                'compiled',
+                activeSlug,
+                'bible-state.json',
             )
-            const success = retireResponse?.characterBit?.dat?.success !== false
-            const characterId =
-                retireResponse?.characterBit?.dat?.characterId || 'char_retiree'
+            let charChoices = [
+                'char_bog',
+                'char_spleen',
+                'char_wart',
+                'char_mum_grissel',
+            ]
+            if (fs.existsSync(headFile)) {
+                try {
+                    const raw = JSON.parse(fs.readFileSync(headFile, 'utf-8'))
+                    const chars = Object.keys(
+                        raw?.entities?.characters || raw?.characters || {},
+                    )
+                    if (chars.length > 0) charChoices = chars
+                } catch {}
+            }
 
-            await streamRetirementTelemetry(characterId, activeSlug, success)
+            const subChoices = [...charChoices, 'CANCEL']
+            const charGrid = await lib.hunt(UPDATE_GRID, {
+                x: 0,
+                y: 4,
+                xSpan: 4,
+                ySpan: Math.min(12, Math.max(6, subChoices.length + 2)),
+            })
+
+            const charSelection = await lib.hunt(OPEN_CHOICE, {
+                dat: { clr0: 'black', clr1: 'cyan' },
+                src: 'vertical',
+                lst: subChoices,
+                net: charGrid?.grdBit?.dat,
+            })
+
+            const chosenChar = charSelection?.chcBit?.src
+            if (chosenChar && chosenChar !== 'CANCEL') {
+                const OPEN_INPUT = '[Open action] Open Input'
+
+                const inputGrid = await lib.hunt(UPDATE_GRID, {
+                    x: 0,
+                    y: 4,
+                    xSpan: 4,
+                    ySpan: 6,
+                })
+
+                const inputBit = await lib.hunt(OPEN_INPUT, {
+                    dat: { clr0: 'black', clr1: 'yellow' },
+                    src: 'vertical',
+                    lst: [],
+                    txt: 'input rationale',
+                    net: inputGrid?.grdBit?.dat,
+                })
+
+                const rationale = inputBit?.putBit?.src || ''
+
+                const retireResponse: any = await ste.hunt(
+                    ActChc.RETIRE_CHARACTER,
+                    {
+                        src: activeSlug,
+                        dat: {
+                            seriesSlug: activeSlug,
+                            characterId: chosenChar,
+                            departureType: 'death',
+                            resolutionCause: rationale,
+                            retiredAtCycle: 47,
+                        },
+                    },
+                )
+
+                // Determine if success or not
+                let success = true
+                let reason = ''
+                if (retireResponse?.characterBit?.val === 0) {
+                    success = false
+                    reason = retireResponse?.characterBit?.dat?.error
+                }
+
+                await streamRetirementTelemetry(
+                    chosenChar,
+                    activeSlug,
+                    success,
+                    reason,
+                    retireResponse?.characterBit?.dat?.tombstoneHash,
+                )
+            }
             break
         }
 
@@ -262,13 +342,17 @@ export const openCharacterDossierSubmenu = async (
                 idx: 'cns00',
                 src: `>> [SCHEMA] Validating Zod frontmatter invariants...`,
             })
-            const { validateCharacterDossier } = await import('../../26.schema.unit/buz/schema.buzz.js')
-            const { SchemaModel } = await import('../../26.schema.unit/schema.model.js')
+            const { validateCharacterDossier } =
+                await import('../../26.schema.unit/buz/schema.buzz.js')
+            const { SchemaModel } =
+                await import('../../26.schema.unit/schema.model.js')
             const dummySchemaModel = new SchemaModel()
-            validateCharacterDossier(dummySchemaModel, {
-                idx: 'char_bog',
-                dat: {
-                    rawContent: `---
+            validateCharacterDossier(
+                dummySchemaModel,
+                {
+                    idx: 'char_bog',
+                    dat: {
+                        rawContent: `---
 id: char_bog
 name: Bog
 type: character
@@ -334,23 +418,25 @@ Short clipped sentences, gravelly dialect, heavy staccato pacing.
 
 ## Few-shot lines
 - The conduit seam holds cold. You cross that chalk, you leave the boot behind.
-- No grease on the bevel. Keep the rag dry.`
+- No grease on the bevel. Keep the rag dry.`,
+                    },
+                    slv: async (res) => {
+                        if (res.schemaBit.val === 1) {
+                            const dat = res.schemaBit.dat
+                            await lib.hunt(UPDATE_CONSOLE, {
+                                idx: 'cns00',
+                                src: `>> [SCHEMA:PARSE] Ingesting characters/char_bog.md (Byte-0 verified: 0x2D2D2D)\n>> [SOMATIC] Baseline: ${dat.machineRail.somatic.locomotion_baseline} | Arms: ${dat.machineRail.somatic.available_arms_bps} bps (${(dat.machineRail.somatic.available_arms_bps / 10000).toFixed(1)})\n>> [SAT GATE] Hand Saturation Check: 10000 <= ${dat.machineRail.somatic.available_arms_bps} bps [PASS]\n>> [VOICE RAIL] Surface Wants: Clean spoon | Actual Wants: Survival tenure\n>> [SEALED] DualRailCharacterBit frozen into memory. SHA-256: ${dat.contentSha256.slice(0, 6)}... [OK]`,
+                            })
+                        } else {
+                            await lib.hunt(UPDATE_CONSOLE, {
+                                idx: 'cns00',
+                                src: `>> [SCHEMA:FAIL] ${res.schemaBit.dat.error}`,
+                            })
+                        }
+                    },
                 },
-                slv: async (res) => {
-                    if (res.schemaBit.val === 1) {
-                        const dat = res.schemaBit.dat
-                        await lib.hunt(UPDATE_CONSOLE, {
-                            idx: 'cns00',
-                            src: `>> [SCHEMA:PARSE] Ingesting characters/char_bog.md (Byte-0 verified: 0x2D2D2D)\n>> [SOMATIC] Baseline: ${dat.machineRail.somatic.locomotion_baseline} | Arms: ${dat.machineRail.somatic.available_arms_bps} bps (${(dat.machineRail.somatic.available_arms_bps / 10000).toFixed(1)})\n>> [SAT GATE] Hand Saturation Check: 10000 <= ${dat.machineRail.somatic.available_arms_bps} bps [PASS]\n>> [VOICE RAIL] Surface Wants: Clean spoon | Actual Wants: Survival tenure\n>> [SEALED] DualRailCharacterBit frozen into memory. SHA-256: ${dat.contentSha256.slice(0, 6)}... [OK]`,
-                        })
-                    } else {
-                        await lib.hunt(UPDATE_CONSOLE, {
-                            idx: 'cns00',
-                            src: `>> [SCHEMA:FAIL] ${res.schemaBit.dat.error}`,
-                        })
-                    }
-                }
-            }, ste)
+                ste,
+            )
             break
         }
 
@@ -450,7 +536,8 @@ Short clipped sentences, gravelly dialect, heavy staccato pacing.
 
             const chosenChar = charSelection?.chcBit?.src
             if (chosenChar && chosenChar !== 'CANCEL') {
-                const { executeRefusalAudit } = await import('./characterTelemetry.buzz.js')
+                const { executeRefusalAudit } =
+                    await import('./characterTelemetry.buzz.js')
                 await executeRefusalAudit(lib, chosenChar)
             }
             break
