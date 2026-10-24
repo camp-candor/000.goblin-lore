@@ -8,12 +8,10 @@ export {
     BasisPointScalarSchema,
     BasisPointDeltaSchema,
     RefusalStrainEvaluationPayloadSchema,
+    type RefusalStrainEvaluationPayload,
     RefusalStrainReceiptSchema,
+    type RefusalStrainReceipt,
     clampBasisPoints,
-} from './val/strain.val'
-export type {
-    RefusalStrainEvaluationPayload,
-    RefusalStrainReceipt,
 } from './val/strain.val'
 export * from './refusal.action'
 export * from './refusal.model'

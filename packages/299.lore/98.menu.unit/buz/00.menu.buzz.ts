@@ -1407,7 +1407,7 @@ export const openCharacterDossierSubmenu = async (
         '[3] INSPECT SOMATIC MASK',
         '[4] RUN VERB POLARITY AUDIT',
         '[5] RUN RELATIONAL FIELD AUDIT',
-        '[6] INSPECT CONVERSATIONAL PROFILE',
+        '[6] AUDIT SUBTEXT ATTENUATION DIRECTIVES',
         '[7] INSPECT DIRECTIONAL LEVERAGE STRINGS',
         '[8] AUDIT VOICE RAIL & SUBTEXT',
         'BACK TO ROOT MENU',
@@ -1424,7 +1424,7 @@ export const openCharacterDossierSubmenu = async (
             'Audit kinetic verb restrictions against current somatic limb capacities.',
         '[5] RUN RELATIONAL FIELD AUDIT':
             'Audit Pass 2 foreign-key possession topology, leases, and custodial grounding.',
-        '[6] INSPECT CONVERSATIONAL PROFILE':
+        '[6] AUDIT SUBTEXT ATTENUATION DIRECTIVES':
             'Inspect escalation ceilings, personality stats, and subtext attenuation tokens.',
         '[7] INSPECT DIRECTIONAL LEVERAGE STRINGS':
             'Audit directed social debt graph, foreign keys, and string solvency.',
@@ -1706,7 +1706,7 @@ export const openCharacterDossierSubmenu = async (
                 break
             }
 
-            case '[6] INSPECT CONVERSATIONAL PROFILE':
+            case '[6] AUDIT SUBTEXT ATTENUATION DIRECTIVES':
             case '6': {
                 const choiceGrid = await lib.hunt(UPDATE_GRID, {
                     x: 0,
