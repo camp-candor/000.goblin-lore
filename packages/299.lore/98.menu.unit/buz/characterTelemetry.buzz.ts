@@ -122,8 +122,14 @@ export async function streamRetirementTelemetry(
             '============================================================',
         )
         await streamToCns00(
+            '>> [DEPRECATION GUARD] Inspecting character dossier: ' +
+                characterId,
+        )
+        await streamToCns00(
             '>> [RETIRE:AUDIT] Pre-flight dependency sweep clean [PASS]',
         )
+        await streamToCns00('>> [INVENTORY] INVENTORY CLEAN')
+        await streamToCns00('>> [LEVERAGE] LEVERAGE CLEAN')
         await streamToCns00(
             '>> [TOMBSTONE] Status: DEPRECATED_ARCHIVED | Banned Verbs: ["*"]',
         )
