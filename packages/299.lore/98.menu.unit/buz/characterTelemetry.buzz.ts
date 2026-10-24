@@ -207,10 +207,7 @@ export const runCharacterAuditTelemetry = async (
     return cpy
 }
 
-export const executeProgressionAudit = async (
-    lib: any,
-    actorId: string,
-) => {
+export const executeProgressionAudit = async (lib: any, actorId: string) => {
     if (!lib || typeof lib.hunt !== 'function') return
 
     await streamToCns00(`>> [PROGRESSION LOCK AUDIT] Target: ${actorId}`)
@@ -244,7 +241,6 @@ export const executeProgressionAudit = async (
         )
     }
 }
-
 
 export const executeRefusalAudit = async (lib: any, actorId: string) => {
     if (!lib || typeof lib.hunt !== 'function') return

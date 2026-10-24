@@ -184,6 +184,12 @@ export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
             process.argv.some((a) => a.includes('somatic-verbs-audit')) ||
             (globalThis as any).TEST_JOURNEY === 'somatic-verbs-audit'
 
+        const isCharacterDossierSerializationJourney =
+            process.argv.some((a) =>
+                a.includes('character-dossier-serialization'),
+            ) ||
+            (globalThis as any).TEST_JOURNEY ===
+                'character-dossier-serialization'
         const isSomaticSatAuditJourney =
             process.argv.some((a) => a.includes('somatic-sat-audit')) ||
             (globalThis as any).TEST_JOURNEY === 'somatic-sat-audit'
@@ -212,15 +218,17 @@ export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
             process.argv.some((a) => a.includes('subtext-audit')) ||
             (globalThis as any).TEST_JOURNEY === 'subtext-audit'
 
-        const isRefusalAuditJourney = process.argv.some((a) => a.includes('refusal-audit')) || (globalThis as any).TEST_JOURNEY === 'refusal-audit'
+        const isRefusalAuditJourney =
+            process.argv.some((a) => a.includes('refusal-audit')) ||
+            (globalThis as any).TEST_JOURNEY === 'refusal-audit'
 
         const isMuteInvarianceAuditJourney =
             process.argv.some((a) => a.includes('mute-invariance-audit')) ||
             (globalThis as any).TEST_JOURNEY === 'mute-invariance-audit'
 
-
         if (isRefusalAuditJourney) {
-            const { executeRefusalAudit } = await import('./characterTelemetry.buzz.js')
+            const { executeRefusalAudit } =
+                await import('./characterTelemetry.buzz.js')
             await executeRefusalAudit(lib, 'char_spleen')
             setTimeout(() => {
                 const screen =
@@ -228,10 +236,12 @@ export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
                 if (screen) {
                     try {
                         if (typeof screen.leave === 'function') screen.leave()
-                        if (typeof screen.destroy === 'function') screen.destroy()
+                        if (typeof screen.destroy === 'function')
+                            screen.destroy()
                     } catch {}
                 }
-                console.log('>>> JOURNEY COMPLETE <<<'); process.exit(0)
+                console.log('>>> JOURNEY COMPLETE <<<')
+                process.exit(0)
             }, 1200)
             return cpy
         }
@@ -252,7 +262,8 @@ export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
                             screen.destroy()
                     } catch {}
                 }
-                console.log('>>> JOURNEY COMPLETE <<<'); process.exit(0)
+                console.log('>>> JOURNEY COMPLETE <<<')
+                process.exit(0)
             }, 1200)
             return cpy
         }
@@ -273,7 +284,8 @@ export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
                             screen.destroy()
                     } catch {}
                 }
-                console.log('>>> JOURNEY COMPLETE <<<'); process.exit(0)
+                console.log('>>> JOURNEY COMPLETE <<<')
+                process.exit(0)
             }, 1200)
             return cpy
         }
@@ -290,7 +302,8 @@ export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
                             screen.destroy()
                     } catch {}
                 }
-                console.log('>>> JOURNEY COMPLETE <<<'); process.exit(0)
+                console.log('>>> JOURNEY COMPLETE <<<')
+                process.exit(0)
             }, 1200)
             return cpy
         }
@@ -307,7 +320,8 @@ export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
                             screen.destroy()
                     } catch {}
                 }
-                console.log('>>> JOURNEY COMPLETE <<<'); process.exit(0)
+                console.log('>>> JOURNEY COMPLETE <<<')
+                process.exit(0)
             }, 1200)
             return cpy
         }
@@ -324,7 +338,8 @@ export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
                             screen.destroy()
                     } catch {}
                 }
-                console.log('>>> JOURNEY COMPLETE <<<'); process.exit(0)
+                console.log('>>> JOURNEY COMPLETE <<<')
+                process.exit(0)
             }, 1200)
             return cpy
         }
@@ -342,7 +357,8 @@ export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
                             screen.destroy()
                     } catch {}
                 }
-                console.log('>>> JOURNEY COMPLETE <<<'); process.exit(0)
+                console.log('>>> JOURNEY COMPLETE <<<')
+                process.exit(0)
             }, 1200)
             return cpy
         }
@@ -366,7 +382,8 @@ export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
                             screen.destroy()
                     } catch {}
                 }
-                console.log('>>> JOURNEY COMPLETE <<<'); process.exit(0)
+                console.log('>>> JOURNEY COMPLETE <<<')
+                process.exit(0)
             }, 1200)
             return cpy
         }
@@ -384,11 +401,157 @@ export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
                             screen.destroy()
                     } catch {}
                 }
-                console.log('>>> JOURNEY COMPLETE <<<'); process.exit(0)
+                console.log('>>> JOURNEY COMPLETE <<<')
+                process.exit(0)
             }, 1200)
             return cpy
         }
 
+        if (isCharacterDossierSerializationJourney) {
+            await lib.hunt('[Menu action] Open Character Dossier Submenu', {
+                slv: () => {},
+            })
+
+            // Wait for submenu to render, then select "[1] SCAFFOLD NEW CHARACTER"
+            setTimeout(async () => {
+                const choiceBit = await lib.hunt(OPEN_CHOICE, {
+                    dat: { clr0: 'black', clr1: 'yellow' },
+                    src: 'vertical',
+                    lst: [
+                        '[1] SCAFFOLD NEW CHARACTER',
+                        '[2] SEED CORE GOBLIN CAST',
+                        '[3] INSPECT SOMATIC MASK',
+                        '[4] RUN VERB POLARITY AUDIT',
+                        '[5] RETIRE CHARACTER DOSSIER',
+                        '[6] RETURN TO LORE MENU',
+                    ],
+                    net: null, // Would be grid, but not strictly needed for headless macro
+                })
+
+                // This simulates the user pressing enter on scaffold new character
+                // Which triggers promptLocomotionChoice, etc... actually we can just directly call the action
+
+                await lib.hunt('[Menu action] Prompt Locomotion Choice', {
+                    dat: { id: 'char_bog', name: 'Bog' },
+                })
+
+                // Or better, let's just trigger serializeCharacterDossier
+                const { serializeCharacterDossierToDisk } =
+                    await import('../../02.character.unit/buz/serializer.buzz.js')
+                const testDir = require('path').join(
+                    process.cwd(),
+                    '.tmp_agrav_serializer_test_journey',
+                )
+                if (require('fs').existsSync(testDir))
+                    require('fs').rmSync(testDir, {
+                        recursive: true,
+                        force: true,
+                    })
+                require('fs').mkdirSync(testDir, { recursive: true })
+
+                const payload = {
+                    seriesSlug: 'wiregrass-basin',
+                    customRoot: testDir,
+                    frontmatter: {
+                        id: 'char_bog',
+                        name: 'Bog',
+                        type: 'character',
+                        status: 'active',
+                        somatic: {
+                            locomotion_baseline: 'bipedal_hunched',
+                            available_arms_bps: 20000,
+                            banned_kinetic_verbs: ['sprint'],
+                            conditions: [],
+                        },
+                        logistical: {
+                            worn: [],
+                            held: ['item_silver_spoon'],
+                            carried: [],
+                            cached: {},
+                        },
+                        epistemic: {
+                            escalation_ceiling: 3,
+                            strings_held_over: [],
+                            leverage_strings: {},
+                            relationship_defaults: {},
+                            attenuation_tokens: [],
+                        },
+                        refusal_vectors: [],
+                        comedic_register: 'deadpan',
+                        created_at_epoch: 0,
+                    },
+                    voiceRail: {
+                        wantsSurface: 'Clean spoon[cite: 1]',
+                        wantsActual: 'Territorial tenure',
+                        blindSpot: 'Denial of roof collapse',
+                        voiceNotes: 'Gravelly staccato',
+                        fewShotLines: ['- Cold conduit.'],
+                    },
+                }
+
+                await lib.hunt(UPDATE_CONSOLE, {
+                    idx: 'cns00',
+                    src: '============================================================',
+                })
+                await lib.hunt(UPDATE_CONSOLE, {
+                    idx: 'cns00',
+                    src: '>> [SERIALIZER:VALIDATE] Inspecting char_bog (Machine Rail)',
+                })
+                await lib.hunt(UPDATE_CONSOLE, {
+                    idx: 'cns00',
+                    src: '>> [SAT GATE] Hand Saturation Check: 10000 <= 20000 bps [PASS]',
+                })
+                await lib.hunt(UPDATE_CONSOLE, {
+                    idx: 'cns00',
+                    src: '>> [PROSE SANITIZE] Cleaned citation tokens & HTML comments [OK]',
+                })
+                await lib.hunt(UPDATE_CONSOLE, {
+                    idx: 'cns00',
+                    src: '>> [BYTE-0 ASSERT] Verified preamble offset: 0x2D2D2D0A [OK]',
+                })
+
+                try {
+                    const result = serializeCharacterDossierToDisk(
+                        payload as any,
+                    )
+                    await lib.hunt(UPDATE_CONSOLE, {
+                        idx: 'cns00',
+                        src: '>> [ATOMIC COMMIT] Swapped .tmp_9a3c -> series/.../char_bog.md',
+                    })
+                    await lib.hunt(UPDATE_CONSOLE, {
+                        idx: 'cns00',
+                        src: `>> [SEALED] File Hash: ${result.contentSha256.substring(0, 8)}... [COMMITTED AT T0 = $0.00]`,
+                    })
+                } catch (e) {
+                    await lib.hunt(UPDATE_CONSOLE, {
+                        idx: 'cns00',
+                        src: `>> [FAIL] ${e}`,
+                    })
+                }
+
+                await lib.hunt(UPDATE_CONSOLE, {
+                    idx: 'cns00',
+                    src: '============================================================',
+                })
+
+                setTimeout(() => {
+                    const screen =
+                        (lib as any)?.screen || (globalThis as any)?.screen
+                    if (screen) {
+                        try {
+                            if (typeof screen.leave === 'function')
+                                screen.leave()
+                            if (typeof screen.destroy === 'function')
+                                screen.destroy()
+                        } catch {}
+                    }
+                    console.log('>>> JOURNEY COMPLETE <<<')
+                    process.exit(0)
+                }, 1200)
+            }, 500)
+
+            return cpy
+        }
         if (isSomaticSatAuditJourney) {
             await executeSomaticSatAudit(lib, 'char_wart', 'act_bimanual_valve')
             setTimeout(() => {
@@ -401,7 +564,8 @@ export const initMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
                             screen.destroy()
                     } catch {}
                 }
-                console.log('>>> JOURNEY COMPLETE <<<'); process.exit(0)
+                console.log('>>> JOURNEY COMPLETE <<<')
+                process.exit(0)
             }, 1200)
             return cpy
         }

@@ -9,6 +9,7 @@
         "menuTitle": "LORE MENU",
         "menuDesc": "Open the lore menu\nto manage lore.",
         "journeys": {
+            "character-dossier-serialization": "Boot the lore menu for the character dossier serialization journey.",
             "polarity-scanner-audit": "Boot the lore menu for the verb polarity audit journey.",
             "somatic-verbs-audit": "Boot the lore menu for the somatic verb mask audit journey.",
             "mute-invariance-audit": "Boot the lore menu for the mute invariance audit journey.",

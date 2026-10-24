@@ -262,13 +262,17 @@ export const openCharacterDossierSubmenu = async (
                 idx: 'cns00',
                 src: `>> [SCHEMA] Validating Zod frontmatter invariants...`,
             })
-            const { validateCharacterDossier } = await import('../../26.schema.unit/buz/schema.buzz.js')
-            const { SchemaModel } = await import('../../26.schema.unit/schema.model.js')
+            const { validateCharacterDossier } =
+                await import('../../26.schema.unit/buz/schema.buzz.js')
+            const { SchemaModel } =
+                await import('../../26.schema.unit/schema.model.js')
             const dummySchemaModel = new SchemaModel()
-            validateCharacterDossier(dummySchemaModel, {
-                idx: 'char_bog',
-                dat: {
-                    rawContent: `---
+            validateCharacterDossier(
+                dummySchemaModel,
+                {
+                    idx: 'char_bog',
+                    dat: {
+                        rawContent: `---
 id: char_bog
 name: Bog
 type: character
@@ -334,23 +338,25 @@ Short clipped sentences, gravelly dialect, heavy staccato pacing.
 
 ## Few-shot lines
 - The conduit seam holds cold. You cross that chalk, you leave the boot behind.
-- No grease on the bevel. Keep the rag dry.`
+- No grease on the bevel. Keep the rag dry.`,
+                    },
+                    slv: async (res) => {
+                        if (res.schemaBit.val === 1) {
+                            const dat = res.schemaBit.dat
+                            await lib.hunt(UPDATE_CONSOLE, {
+                                idx: 'cns00',
+                                src: `>> [SCHEMA:PARSE] Ingesting characters/char_bog.md (Byte-0 verified: 0x2D2D2D)\n>> [SOMATIC] Baseline: ${dat.machineRail.somatic.locomotion_baseline} | Arms: ${dat.machineRail.somatic.available_arms_bps} bps (${(dat.machineRail.somatic.available_arms_bps / 10000).toFixed(1)})\n>> [SAT GATE] Hand Saturation Check: 10000 <= ${dat.machineRail.somatic.available_arms_bps} bps [PASS]\n>> [VOICE RAIL] Surface Wants: Clean spoon | Actual Wants: Survival tenure\n>> [SEALED] DualRailCharacterBit frozen into memory. SHA-256: ${dat.contentSha256.slice(0, 6)}... [OK]`,
+                            })
+                        } else {
+                            await lib.hunt(UPDATE_CONSOLE, {
+                                idx: 'cns00',
+                                src: `>> [SCHEMA:FAIL] ${res.schemaBit.dat.error}`,
+                            })
+                        }
+                    },
                 },
-                slv: async (res) => {
-                    if (res.schemaBit.val === 1) {
-                        const dat = res.schemaBit.dat
-                        await lib.hunt(UPDATE_CONSOLE, {
-                            idx: 'cns00',
-                            src: `>> [SCHEMA:PARSE] Ingesting characters/char_bog.md (Byte-0 verified: 0x2D2D2D)\n>> [SOMATIC] Baseline: ${dat.machineRail.somatic.locomotion_baseline} | Arms: ${dat.machineRail.somatic.available_arms_bps} bps (${(dat.machineRail.somatic.available_arms_bps / 10000).toFixed(1)})\n>> [SAT GATE] Hand Saturation Check: 10000 <= ${dat.machineRail.somatic.available_arms_bps} bps [PASS]\n>> [VOICE RAIL] Surface Wants: Clean spoon | Actual Wants: Survival tenure\n>> [SEALED] DualRailCharacterBit frozen into memory. SHA-256: ${dat.contentSha256.slice(0, 6)}... [OK]`,
-                        })
-                    } else {
-                        await lib.hunt(UPDATE_CONSOLE, {
-                            idx: 'cns00',
-                            src: `>> [SCHEMA:FAIL] ${res.schemaBit.dat.error}`,
-                        })
-                    }
-                }
-            }, ste)
+                ste,
+            )
             break
         }
 
@@ -450,7 +456,8 @@ Short clipped sentences, gravelly dialect, heavy staccato pacing.
 
             const chosenChar = charSelection?.chcBit?.src
             if (chosenChar && chosenChar !== 'CANCEL') {
-                const { executeRefusalAudit } = await import('./characterTelemetry.buzz.js')
+                const { executeRefusalAudit } =
+                    await import('./characterTelemetry.buzz.js')
                 await executeRefusalAudit(lib, chosenChar)
             }
             break
