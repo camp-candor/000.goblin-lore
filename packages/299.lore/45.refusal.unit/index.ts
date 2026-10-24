@@ -3,7 +3,15 @@ export * from './fce/refusal.interface'
 export * from './fce/refusalRule.bit'
 export * from './fce/strainReceipt.bit'
 export * from './val/refusal.val'
-export * from './val/strain.val'
+export {
+    BasisPointScalarSchema,
+    BasisPointDeltaSchema,
+    RefusalStrainEvaluationPayloadSchema,
+    type RefusalStrainEvaluationPayload,
+    RefusalStrainReceiptSchema,
+    type RefusalStrainReceipt,
+    clampBasisPoints,
+} from './val/strain.val'
 export * from './refusal.action'
 export * from './refusal.model'
 export * from './refusal.buzzer'
