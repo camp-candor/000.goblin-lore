@@ -2,6 +2,11 @@ import { VoiceModel } from '../voice.model'
 import type VoiceBit from '../fce/voice.bit'
 import type State from '../../99.core/state'
 import {
+    CharacterRiskProfileSchema,
+    type RiskProfileValidationResult,
+    type CharacterRiskProfile,
+} from '../val/riskProfile.val'
+import {
     ComedicRegisterEnum,
     COMEDIC_REGISTER_REGISTRY,
     BANNED_LATINATE_LEMMAS,
@@ -254,6 +259,70 @@ export const validateComedicRegister = (
             vceBit: {
                 idx: 'validate-comedic-register',
                 val: isValid ? 1 : 0,
+                dat: result,
+            },
+        })
+    }
+
+    return cpy
+}
+
+/**
+ * Validates character risk profile schema conformance and cross-field integrity rules.
+ */
+export const validateRiskProfile = (
+    cpy: VoiceModel,
+    bal: VoiceBit,
+    ste: State,
+): VoiceModel => {
+    const characterId = String(bal.idx ?? 'char_unknown')
+    const payload = bal.dat ?? {}
+
+    const parseResult = CharacterRiskProfileSchema.safeParse({
+        characterId,
+        ...payload,
+    })
+
+    if (!parseResult.success) {
+        const issue = parseResult.error.issues[0]
+        const failure: RiskProfileValidationResult = {
+            characterId,
+            isValid: false,
+            isExempt: Boolean(payload.isExempt),
+            errorCode:
+                issue?.message?.split(':')[0] ??
+                'RISK_PROFILE_VALIDATION_ERROR',
+            message: issue?.message ?? 'Invalid risk profile payload',
+        }
+
+        if (bal.slv != null) {
+            bal.slv({
+                vceBit: {
+                    idx: 'validate-risk-profile',
+                    val: 0,
+                    dat: failure,
+                },
+            })
+        }
+        return cpy
+    }
+
+    const validatedData: CharacterRiskProfile = parseResult.data
+    const result: RiskProfileValidationResult = {
+        characterId,
+        isValid: true,
+        isExempt: validatedData.isExempt,
+        message: validatedData.isExempt
+            ? `Character '${characterId}' is certified exempt from risk profile mechanics.`
+            : `Risk profile for '${characterId}' successfully validated and sealed at T0.`,
+        parsedProfile: validatedData,
+    }
+
+    if (bal.slv != null) {
+        bal.slv({
+            vceBit: {
+                idx: 'validate-risk-profile',
+                val: 1,
                 dat: result,
             },
         })

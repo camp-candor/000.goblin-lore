@@ -32,9 +32,31 @@ export class ValidateComedicRegister implements Action {
     constructor(public bale: VoiceBit) {}
 }
 
+export const VALIDATE_RISK_PROFILE = '[Voice action] Validate Risk Profile'
+export class ValidateRiskProfile implements Action {
+    readonly type = VALIDATE_RISK_PROFILE
+    constructor(public bale: VoiceBit) {}
+}
+
+export const CHECK_PROGRESSION_LOCK = '[Voice action] Check Progression Lock'
+export class CheckProgressionLock implements Action {
+    readonly type = CHECK_PROGRESSION_LOCK
+    constructor(public bale: VoiceBit) {}
+}
+
+export const RESOLVE_PROGRESSION_LOCK =
+    '[Voice action] Resolve Progression Lock'
+export class ResolveProgressionLock implements Action {
+    readonly type = RESOLVE_PROGRESSION_LOCK
+    constructor(public bale: VoiceBit) {}
+}
+
 export type Actions =
     | InitVoice
     | UpdateVoice
     | ParseVoiceRail
     | DifferentiateWants
     | ValidateComedicRegister
+    | ValidateRiskProfile
+    | CheckProgressionLock
+    | ResolveProgressionLock

@@ -29,6 +29,15 @@ export function reducer(
         case Act.VALIDATE_COMEDIC_REGISTER:
             return Buzz.validateComedicRegister(cpy, act.bale, ste)
 
+        case Act.VALIDATE_RISK_PROFILE:
+            return Buzz.validateRiskProfile(cpy, act.bale, ste)
+
+        case Act.CHECK_PROGRESSION_LOCK:
+            return Buzz.checkProgressionLock(cpy, act.bale, ste)
+
+        case Act.RESOLVE_PROGRESSION_LOCK:
+            return Buzz.resolveProgressionLock(cpy, act.bale, ste)
+
         default:
             return cpy
     }
