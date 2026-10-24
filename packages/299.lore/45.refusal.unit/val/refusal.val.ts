@@ -3,7 +3,7 @@ import { z } from 'zod'
 /**
  * 7-bit clean ASCII claim text schema.
  */
-export const AsciiTextSchema = z
+const AsciiTextSchema = z
     .string()
     .min(1, 'Text cannot be empty')
     .regex(
