@@ -54,7 +54,7 @@ describe('98.menu.unit: Character Authoring Submenu Grid Mounting', () => {
         })
     })
 
-    it('Check 2.2 & 2.3: Interacts with 12x12 Blessed Grid and 6-item choice array', async () => {
+    it('Check 2.2 & 2.3: Interacts with 12x12 Blessed Grid and 7-item choice array', async () => {
         const calls: { action: string; dat: any }[] = []
         ;(globalThis as any).LIBRARY = {
             hunt: async (action: string, dat: any) => {
@@ -110,6 +110,7 @@ describe('98.menu.unit: Character Authoring Submenu Grid Mounting', () => {
             '[3] INSPECT SOMATIC MASK',
             '[4] RUN VERB POLARITY AUDIT',
             '[5] RETIRE CHARACTER DOSSIER',
+            '[10] AUDIT REFUSAL UNIT ANATOMY & BUZZERS',
             '[6] RETURN TO LORE MENU',
         ])
         expect(choiceCall?.dat.dat).toEqual({ clr0: 'black', clr1: 'cyan' })
