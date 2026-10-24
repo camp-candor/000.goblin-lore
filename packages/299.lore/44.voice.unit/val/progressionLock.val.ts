@@ -6,6 +6,8 @@ import { z } from 'zod'
  */
 export const ShowrunnerTaskIdSchema = z
     .string()
+    .min(3, 'Task ID must be at least 3 characters')
+    .max(64, 'Task ID must be at most 64 characters')
     .regex(
         /^[a-z0-9_]{3,64}$/,
         'Task ID must be lowercase alphanumeric ASCII between 3 and 64 characters',
