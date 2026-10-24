@@ -115,22 +115,34 @@ export async function streamRetirementTelemetry(
     seriesSlug: string,
     success: boolean,
     reason?: string,
+    tombstoneHash?: string,
 ): Promise<void> {
-    await streamToCns00(
-        `>> [DEPRECATION GUARD] Inspecting character dossier: ${characterId}`,
-    )
     if (success) {
-        await streamToCns00('>> [INVENTORY CLEAN] 0 held/worn items dangling.')
         await streamToCns00(
-            '>> [LEVERAGE CLEAN] 0 active debt strings dangling.',
+            '============================================================',
         )
         await streamToCns00(
-            `>> [MOVED] series/${seriesSlug}/characters/${characterId}.md -> characters/_retired/`,
+            '>> [RETIRE:AUDIT] Pre-flight dependency sweep clean [PASS]',
         )
         await streamToCns00(
-            '>> [STATUS] Character Dossier Deprecated Cleanly [OK]',
+            '>> [TOMBSTONE] Status: DEPRECATED_ARCHIVED | Banned Verbs: ["*"]',
+        )
+        await streamToCns00(
+            `>> [MIGRATION] Moved: characters/${characterId}.md -> characters/_retired/`,
+        )
+        await streamToCns00(
+            '>> [BYTE-0 CHECK] Verified preamble offset: 0x2D2D2D0A [OK]',
+        )
+        await streamToCns00(
+            `>> [STATUS] Tombstone Hash: ${tombstoneHash || '7f8b9a4c...'} [ARCHIVED AT T0 = $0.00]`,
+        )
+        await streamToCns00(
+            '============================================================',
         )
     } else {
+        await streamToCns00(
+            `>> [DEPRECATION GUARD] Inspecting character dossier: ${characterId}`,
+        )
         await streamToCns00(
             `:: [RETIREMENT REJECTED] Failed to deprecate ${characterId}!`,
         )

@@ -229,15 +229,95 @@ export const openCharacterDossierSubmenu = async (
                 src: `>> [DEPRECATION GUARD] Opening safe character retirement selector...`,
             })
 
-            const retireResponse: any = await ste.hunt(
-                ActChc.RETIRE_CHARACTER,
-                { src: activeSlug },
+            const headFile = path.resolve(
+                resolveRepoRoot(),
+                'data',
+                'compiled',
+                activeSlug,
+                'bible-state.json',
             )
-            const success = retireResponse?.characterBit?.dat?.success !== false
-            const characterId =
-                retireResponse?.characterBit?.dat?.characterId || 'char_retiree'
+            let charChoices = [
+                'char_bog',
+                'char_spleen',
+                'char_wart',
+                'char_mum_grissel',
+            ]
+            if (fs.existsSync(headFile)) {
+                try {
+                    const raw = JSON.parse(fs.readFileSync(headFile, 'utf-8'))
+                    const chars = Object.keys(
+                        raw?.entities?.characters || raw?.characters || {},
+                    )
+                    if (chars.length > 0) charChoices = chars
+                } catch {}
+            }
 
-            await streamRetirementTelemetry(characterId, activeSlug, success)
+            const subChoices = [...charChoices, 'CANCEL']
+            const charGrid = await lib.hunt(UPDATE_GRID, {
+                x: 0,
+                y: 4,
+                xSpan: 4,
+                ySpan: Math.min(12, Math.max(6, subChoices.length + 2)),
+            })
+
+            const charSelection = await lib.hunt(OPEN_CHOICE, {
+                dat: { clr0: 'black', clr1: 'cyan' },
+                src: 'vertical',
+                lst: subChoices,
+                net: charGrid?.grdBit?.dat,
+            })
+
+            const chosenChar = charSelection?.chcBit?.src
+            if (chosenChar && chosenChar !== 'CANCEL') {
+                const OPEN_INPUT = '[Open action] Open Input'
+
+                const inputGrid = await lib.hunt(UPDATE_GRID, {
+                    x: 0,
+                    y: 4,
+                    xSpan: 4,
+                    ySpan: 6,
+                })
+
+                const inputBit = await lib.hunt(OPEN_INPUT, {
+                    dat: { clr0: 'black', clr1: 'yellow' },
+                    src: 'vertical',
+                    lst: [],
+                    txt: 'input rationale',
+                    net: inputGrid?.grdBit?.dat,
+                })
+
+                const rationale = inputBit?.putBit?.src || ''
+
+                const retireResponse: any = await ste.hunt(
+                    ActChc.RETIRE_CHARACTER,
+                    {
+                        src: activeSlug,
+                        dat: {
+                            seriesSlug: activeSlug,
+                            characterId: chosenChar,
+                            departureType: 'death',
+                            resolutionCause: rationale,
+                            retiredAtCycle: 47,
+                        },
+                    },
+                )
+
+                // Determine if success or not
+                let success = true
+                let reason = ''
+                if (retireResponse?.characterBit?.val === 0) {
+                    success = false
+                    reason = retireResponse?.characterBit?.dat?.error
+                }
+
+                await streamRetirementTelemetry(
+                    chosenChar,
+                    activeSlug,
+                    success,
+                    reason,
+                    retireResponse?.characterBit?.dat?.tombstoneHash,
+                )
+            }
             break
         }
 
