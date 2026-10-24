@@ -46,6 +46,7 @@ export const openCharacterDossierSubmenu = async (
         '[3] INSPECT SOMATIC MASK',
         '[4] RUN VERB POLARITY AUDIT',
         '[5] RETIRE CHARACTER DOSSIER',
+        '[10] AUDIT REFUSAL UNIT ANATOMY & BUZZERS',
         '[6] RETURN TO LORE MENU',
     ]
 
@@ -232,6 +233,20 @@ export const openCharacterDossierSubmenu = async (
                 retireResponse?.characterBit?.dat?.characterId || 'char_retiree'
 
             await streamRetirementTelemetry(characterId, activeSlug, success)
+            break
+        }
+
+        case '[10] AUDIT REFUSAL UNIT ANATOMY & BUZZERS': {
+            await ste.hunt(ActLor.TEST_REFUSAL, {})
+            await lib.hunt(UPDATE_CONSOLE, {
+                idx: 'cns00',
+                src: `>> [REFUSAL UNIT AUDIT] Target: 45.refusal.unit
+>> ANATOMY AUDIT   : 9 / 9 Required Inodes Physically Verified [PASS]
+>> BIT RESOLVER    : bal.slv({ rflBit: { idx: 'test-refusal', val: 1 } }) [OK]
+>> REDUCER IMMUT   : clone-deep State Isolation Confirmed [PASS]
+>> BEE REGISTRY    : RefusalUnit Registered in UnitData & Reducer List [OK]
+>> STATUS          : [PASS] Refusal Anatomy Certified ($T0 = $0.00 Compute)`,
+            })
             break
         }
 
