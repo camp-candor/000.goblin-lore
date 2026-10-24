@@ -261,6 +261,95 @@ export const openCharacterDossierSubmenu = async (
                 idx: 'cns00',
                 src: `>> [SCHEMA] Validating Zod frontmatter invariants...`,
             })
+            const { validateCharacterDossier } = await import('../../26.schema.unit/buz/schema.buzz.js')
+            const { SchemaModel } = await import('../../26.schema.unit/schema.model.js')
+            const dummySchemaModel = new SchemaModel()
+            validateCharacterDossier(dummySchemaModel, {
+                idx: 'char_bog',
+                dat: {
+                    rawContent: `---
+id: char_bog
+name: Bog
+type: character
+status: active
+somatic:
+  locomotion_baseline: bipedal_hunched
+  available_arms_bps: 20000
+  banned_kinetic_verbs:
+    - sprint
+    - vault
+  conditions: []
+  motor_limitations:
+    - NO_SPRINT
+  signature_tics:
+    - rubs grease off knuckles
+  sensory:
+    optical_state: NORMAL
+    blind_cone_degrees: 0
+    auditory_floor_debuff_cdb: 0
+  vocal_dsp:
+    pitch_shift_centitones: -150
+    speed_multiplier_bps: 9000
+    pause_frequency_bps: 14000
+logistical:
+  worn: []
+  held:
+    - item_silver_spoon
+  carried: []
+  cached: {}
+epistemic:
+  escalation_ceiling: 3
+  strings_held_over:
+    - char_wart
+  leverage_strings:
+    char_wart: 2
+  relationship_defaults:
+    char_wart: suspicious
+  attenuation_tokens:
+    - famine
+refusal_vectors:
+  - refusal_id: ref_bog_food_admission
+    trigger: Accused of hiding salt pork rations
+    mandatory_refusal: Never admits hunger or hidden cache
+    unavoidable_cost: Takes physical blow from interlocutor
+    strain_threshold_bps: 7500
+    post_break_state: Weeping collapse over cellar drain
+comedic_register: deadpan
+pending_showrunner_task: null
+created_at_epoch: 0
+---
+
+## Wants (surface)
+Clean the tarnished spoon before Mum Grissel returns.
+
+## Wants (actual)
+Secure territorial survival tenure without acknowledging the famine.
+
+## Blind spot
+Refuses to believe the crawlspace roof is collapsing.
+
+## Voice notes
+Short clipped sentences, gravelly dialect, heavy staccato pacing.
+
+## Few-shot lines
+- The conduit seam holds cold. You cross that chalk, you leave the boot behind.
+- No grease on the bevel. Keep the rag dry.`
+                },
+                slv: async (res) => {
+                    if (res.schemaBit.val === 1) {
+                        const dat = res.schemaBit.dat
+                        await lib.hunt(UPDATE_CONSOLE, {
+                            idx: 'cns00',
+                            src: `>> [SCHEMA:PARSE] Ingesting characters/char_bog.md (Byte-0 verified: 0x2D2D2D)\n>> [SOMATIC] Baseline: ${dat.machineRail.somatic.locomotion_baseline} | Arms: ${dat.machineRail.somatic.available_arms_bps} bps (${(dat.machineRail.somatic.available_arms_bps / 10000).toFixed(1)})\n>> [SAT GATE] Hand Saturation Check: 10000 <= ${dat.machineRail.somatic.available_arms_bps} bps [PASS]\n>> [VOICE RAIL] Surface Wants: Clean spoon | Actual Wants: Survival tenure\n>> [SEALED] DualRailCharacterBit frozen into memory. SHA-256: ${dat.contentSha256.slice(0, 6)}... [OK]`,
+                        })
+                    } else {
+                        await lib.hunt(UPDATE_CONSOLE, {
+                            idx: 'cns00',
+                            src: `>> [SCHEMA:FAIL] ${res.schemaBit.dat.error}`,
+                        })
+                    }
+                }
+            }, ste)
             break
         }
 
