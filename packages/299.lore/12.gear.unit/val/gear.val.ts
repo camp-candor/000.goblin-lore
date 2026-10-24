@@ -24,7 +24,7 @@ export type GearWeightClass = z.infer<typeof GearWeightClassEnum>
 /**
  * Frontmatter schema for parsed possessions/*.md files on local disk.
  */
-export const PossessionDossierFrontmatterSchema = z
+export const CanonicalPossessionDossierFrontmatterSchema = z
     .object({
         id: z.string().regex(ItemSlugRegex, {
             message: 'Item ID must match ^item_[a-z0-9_]+$',
@@ -61,6 +61,27 @@ export const PossessionDossierFrontmatterSchema = z
             'UNGROUNDED_POSSESSION_BREACH: Item must declare either an owner or location_id',
         path: ['owner'],
     })
+
+export const GenesisPossessionDossierFrontmatterSchema = z
+    .object({
+        id: z.string().regex(ItemSlugRegex, {
+            message: 'Item ID must match ^item_[a-z0-9_]+$',
+        }),
+        name: z.string().min(1),
+        mass_grams: z.number().int().nonnegative(),
+        weight_class: GearWeightClassEnum,
+        slot_category: z.string().optional(),
+        hands_required_bps: z.number().int().min(0).max(20000),
+        custody_holder: z.string().regex(CharacterSlugRegex),
+        material: z.string().optional(),
+        tags: z.array(z.string()).optional(),
+    })
+    .passthrough()
+
+export const PossessionDossierFrontmatterSchema = z.union([
+    CanonicalPossessionDossierFrontmatterSchema,
+    GenesisPossessionDossierFrontmatterSchema,
+])
 export type PossessionDossierFrontmatter = z.infer<
     typeof PossessionDossierFrontmatterSchema
 >
@@ -92,3 +113,26 @@ export const ResolveGearPointersInputSchema = z
 export type ResolveGearPointersInput = z.infer<
     typeof ResolveGearPointersInputSchema
 >
+
+export const WeightClassSchema = z.enum(['scrap', 'shine', 'weight', 'bulk'])
+export type WeightClass = z.infer<typeof WeightClassSchema>
+
+export const EquipSlotSchema = z.enum([
+    'held_primary',
+    'held_offhand',
+    'worn',
+    'carried',
+    'cached',
+])
+export type EquipSlot = z.infer<typeof EquipSlotSchema>
+
+/**
+ * Hand allocation requirement represented in integer basis points:
+ * 0 bp = free hands; 10000 bp = 1 full hand; 20000 bp = two-handed carry.
+ */
+export const OccupiesHandsSchema = z.union([
+    z.literal(0),
+    z.literal(10000),
+    z.literal(20000),
+])
+export type OccupiesHands = z.infer<typeof OccupiesHandsSchema>

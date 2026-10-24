@@ -1,7 +1,6 @@
-import { Action } from '../99.core/interface/action.interface'
-import EntityBit from './fce/entity.bit'
-
-// Entity actions
+import type { Action } from '../99.core/interface/action.interface.js'
+import type EntityBit from './fce/entity.bit.js'
+import type HumanGateBit from './fce/humanGate.bit.js'
 
 export const INIT_ENTITY = '[Entity action] Init Entity'
 export class InitEntity implements Action {
@@ -15,4 +14,10 @@ export class UpdateEntity implements Action {
     constructor(public bale: EntityBit) {}
 }
 
-export type Actions = InitEntity | UpdateEntity
+export const OPEN_HUMAN_SAVE_GATE = '[Entity action] Open Human Save Gate'
+export class OpenHumanSaveGate implements Action {
+    readonly type = OPEN_HUMAN_SAVE_GATE
+    constructor(public bale: HumanGateBit) {}
+}
+
+export type Actions = InitEntity | UpdateEntity | OpenHumanSaveGate

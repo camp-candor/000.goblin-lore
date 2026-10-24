@@ -6,6 +6,7 @@ import {
     SomaticArchetypeSchema,
 } from '../val/archetype.val.js'
 import { ZodError } from 'zod'
+import { writeSeriesConfig } from './writeSeriesConfig.buzz.js'
 
 export const initSeries = (
     cpy: SeriesModel,
@@ -28,7 +29,10 @@ export const updateSeries = (
     cpy: SeriesModel,
     bal: SeriesBit,
     ste: State,
-): SeriesModel => {
+): any => {
+    if (bal.dat?.config) {
+        return writeSeriesConfig(cpy, bal, ste)
+    }
     if (bal.slv) {
         bal.slv({
             seriesBit: {

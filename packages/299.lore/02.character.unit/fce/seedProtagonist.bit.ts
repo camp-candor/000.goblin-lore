@@ -4,6 +4,8 @@ export interface SeedProtagonistConfigBit {
     readonly characterName?: string
     readonly locationId?: string
     readonly founderTokenItemId?: string
+    readonly heldItemId?: string
+    readonly availableArmsBps?: number
     readonly surfaceWant?: string
     readonly actualWant?: string
     readonly blindSpot?: string

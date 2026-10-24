@@ -125,6 +125,17 @@ import {
     runFullNegativeControlGauntlet,
 } from './menu.buzz.js'
 import { executeNegativeControlSchemaGauntlet } from './schemaGauntlet.buzz.js'
+import { inspectGenesisHudStatus } from './genesisHudMenu.buzz.js'
+import * as ActSer from '../../29.series.unit/series.action.js'
+import { promptSeriesNameBuzz } from './promptSeriesName.buzz.js'
+import { triggerSeedGenesisCorpusMenu } from './genesisSeedMenu.buzz.js'
+import { triggerCompileGenesisMenu } from './compileGenesisMenu.buzz.js'
+import { promptSwitchSeries } from './promptSwitchSeries.buzz.js'
+import * as ActEnt from '../../09.entity.unit/entity.action.js'
+import {
+    verifyFrontmatterContractBuzz,
+    validateScalarBoundsBuzz,
+} from '../../26.schema.unit/buz/schema.buzz.js'
 import {
     compileSomaticMask,
     assertKineticVerbs,
@@ -600,14 +611,38 @@ export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
         return cpy
     }
 
+    const targetUnit = (ste as any)?.value?.target || {}
+    const activeSlug = targetUnit.activeSeriesSlug || '[NONE (UNBOUND)]'
+
     const lst = [
-        'FACT SCHEMA CONTRACT',
-        '[CHARACTER DOSSIER AUTHORING]',
-        'COMPILE LORE INSTANCE',
-        'INSPECT CANON BIBLE',
-        'AUDIT CORPUS INTEGRITY',
-        'ROOT MENU',
+        `SERIES: [${activeSlug}]`,
+        '[1] CREATE SERIES',
+        '[2] SWITCH SERIES [S]',
+        '[3] SCAFFOLD ENTITY',
+        '[4] COMPILE LORE',
+        '[5] INSPECT HUD STATUS',
+        '[6] CHECK SERIES SLUG AVAILABILITY',
+        '[0] ROOT MENU',
     ]
+
+    const descriptions: Record<string, string> = {
+        [`SERIES: [${activeSlug}]`]: 'Currently active canon series context.',
+        '[1] CREATE SERIES':
+            'Scaffold a new storyworld series with 4 Byte-0 seed dossiers.',
+        '[2] SWITCH SERIES [S]':
+            'Switch active series context and bind Merkle state hash.',
+        '[3] SCAFFOLD ENTITY':
+            'Open character, location, grievance, or possession creator wizard.',
+        '[4] COMPILE LORE':
+            'Execute 3-pass offline compiler and seal bible-state.json ($0.00).',
+        '[5] INSPECT HUD STATUS':
+            'Audit Cold-Start Void State, dispatch lockout, and terminal HUD.',
+        '[6] CHECK SERIES SLUG AVAILABILITY':
+            'Verify availability of a candidate series slug.',
+        'CHECK SERIES SLUG AVAILABILITY':
+            'Verify availability of a candidate series slug.',
+        '[0] ROOT MENU': 'Return to the main 995.library runner switchboard.',
+    }
 
     const gridBit = await lib.hunt(UPDATE_GRID, {
         x: 0,
@@ -616,7 +651,14 @@ export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
         ySpan: 8,
     })
     const choiceBit = await lib.hunt(OPEN_CHOICE, {
-        dat: { clr0: 'black', clr1: 'yellow' },
+        dat: {
+            clr0: 'black',
+            clr1: targetUnit.themeColor || 'yellow',
+            cb: (choice: string) => {
+                const text = descriptions[choice] || 'No description available.'
+                lib.hunt(UPDATE_CONSOLE, { idx: 'cns00', src: text })
+            },
+        },
         src: 'vertical',
         lst,
         net: gridBit?.grdBit?.dat,
@@ -626,10 +668,51 @@ export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
     cpy.lastSelection = selection
 
     switch (selection) {
+        case '[1] CREATE SERIES':
+        case 'CREATE SERIES':
+        case '[EDIT SERIES CONFIG TUPLE]': {
+            await ste.hunt(ActMnu.OPEN_TUPLE_WIZARD, {})
+            break
+        }
+
+        case '[2] SWITCH SERIES [S]':
+        case 'SWITCH SERIES [S]':
+        case '[2] SWITCH SERIES':
+        case 'SWITCH SERIES': {
+            await promptSwitchSeries(cpy, bal, ste)
+            break
+        }
+
+        case '[4] COMPILE LORE':
+        case 'COMPILE LORE':
+        case '[COMPILE ACTIVE SERIES]':
+        case 'COMPILE ACTIVE SERIES': {
+            await triggerCompileGenesisMenu(cpy, bal, ste)
+            break
+        }
+
+        case '[SEED STARTER DOSSIERS]':
+        case 'SEED STARTER DOSSIERS': {
+            await triggerSeedGenesisCorpusMenu(cpy, bal, ste)
+            break
+        }
+
         case 'FACT SCHEMA CONTRACT':
         case '[FACT SCHEMA CONTRACT]':
             await openFactSchemaSubmenu(cpy, bal, ste)
             break
+
+        case '[3] SCAFFOLD ENTITY':
+        case 'SCAFFOLD ENTITY': {
+            await ste.hunt(ActEnt.OPEN_HUMAN_SAVE_GATE, {
+                src: targetUnit.activeSeriesSlug,
+                dat: {
+                    entityId: `char_scaffold_${Date.now().toString().slice(-4)}`,
+                    domain: 'characters',
+                },
+            })
+            break
+        }
 
         case 'CHARACTER DOSSIER AUTHORING':
         case '[CHARACTER DOSSIER AUTHORING]': {
@@ -637,6 +720,28 @@ export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
             return cpy
         }
 
+        case '[5] INSPECT HUD STATUS': {
+            await inspectGenesisHudStatus(cpy, bal, ste)
+            await new Promise((resolve) => setTimeout(resolve, 1500))
+            break
+        }
+
+        case 'CHECK SERIES SLUG AVAILABILITY':
+        case '[CHECK SERIES SLUG AVAILABILITY]':
+        case '[6] CHECK SERIES SLUG AVAILABILITY': {
+            const promptRes = await promptSeriesNameBuzz({
+                label: 'Enter Slug to Verify Availability:',
+            })
+
+            if (!promptRes.cancelled && promptRes.rawName) {
+                await ste.hunt(ActSer.CHECK_SERIES_SLUG_AVAILABILITY, {
+                    src: promptRes.rawName,
+                })
+            }
+            break
+        }
+
+        case '[0] ROOT MENU':
         case 'ROOT MENU':
             if (rootSlv != null) rootSlv({ mnuBit: { idx: 'root-menu' } })
             return cpy
@@ -652,6 +757,167 @@ export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
     }, 333)
 
     return cpy
+}
+
+export interface MenuActionContext {
+    readonly log: (msg: string) => void
+    readonly ste: {
+        readonly hunt: (action: string, payload?: unknown) => Promise<unknown>
+    }
+}
+
+/**
+ * Handles terminal menu dispatches for Phase 1 foundational schema audits.
+ */
+export async function handleSchemaMenuActionBuzz(
+    actionId: string,
+    context: MenuActionContext,
+): Promise<void> {
+    const { log } = context
+
+    switch (actionId) {
+        case 'VALIDATE_SCALAR_THRESHOLDS': {
+            log('>> [SCHEMA] Auditing integer scalar bounds...')
+            const sample = {
+                basis_point_value: 7500,
+                escalation_ceiling: 4,
+                intensity_score: 3,
+            }
+            const res = validateScalarBoundsBuzz(sample)
+            log(`>> [SCHEMA] Result: ${res.code} :: ${res.message}`)
+            break
+        }
+        case 'AUDIT_CHARACTER_SCHEMA': {
+            log('>> [SCHEMA] Auditing character frontmatter contract...')
+            const sample = {
+                id: 'char_bog',
+                type: 'character',
+                name: 'Bog',
+                status: 'active',
+                somatic: {
+                    arms_available_bp: 10000,
+                    locomotion_baseline: 'limping',
+                    motor_limitations: ['nerve_damage'],
+                    banned_kinetic_verbs: ['sprint', 'vault'],
+                },
+                logistical: {
+                    max_mass_grams: 5000,
+                    worn_slots: ['rough_tunic'],
+                    carried_inventory: ['item_iron_knife'],
+                },
+                epistemic: {
+                    active_strings_held: ['str_wart_debt'],
+                    conversation_refusal_triggers: ['theft_accusation'],
+                    forbidden_disclosure_tokens: ['hidden_cache'],
+                },
+                created_epoch: 0,
+                last_updated_epoch: 0,
+            }
+            const report = verifyFrontmatterContractBuzz('character', sample)
+            if (report.success) {
+                log(
+                    `>> [OK] :: Character contract verified: ${report.entity_id}`,
+                )
+            } else {
+                log(
+                    `>> [FAIL] :: Character verification failed: ${report.errors.join(', ')}`,
+                )
+            }
+            break
+        }
+        case 'AUDIT_LOCATION_SCHEMA': {
+            log('>> [SCHEMA] Auditing spatial location frontmatter contract...')
+            const sample = {
+                id: 'loc_warm_pipe',
+                type: 'location',
+                name: 'The Warm Pipe',
+                max_adult_goblins: 2,
+                acoustic_damping_cdb: 1500,
+                ambient_noise_cdb: 450,
+                connected_locations: ['loc_culvert_basin'],
+                dynamic_occluders: [
+                    {
+                        occluder_id: 'hatch_valve_04',
+                        default_state: 'SHUT',
+                        acoustic_damping_penalty_cdb: 2000,
+                    },
+                ],
+                created_epoch: 0,
+                last_updated_epoch: 0,
+            }
+            const report = verifyFrontmatterContractBuzz('location', sample)
+            if (report.success) {
+                log(
+                    `>> [OK] :: Location contract verified: ${report.entity_id}`,
+                )
+            } else {
+                log(
+                    `>> [FAIL] :: Location verification failed: ${report.errors.join(', ')}`,
+                )
+            }
+            break
+        }
+        case 'AUDIT_POSSESSION_SCHEMA': {
+            log(
+                '>> [SCHEMA] Auditing tracked possession frontmatter contract...',
+            )
+            const sample = {
+                id: 'item_iron_knife',
+                type: 'possession',
+                name: 'Iron Knife',
+                mass_grams: 120,
+                weight_class: 'scrap',
+                equip_slot: 'held_primary',
+                occupies_hands: 10000,
+                custody_holder: 'char_bog',
+                created_epoch: 0,
+                last_updated_epoch: 0,
+            }
+            const report = verifyFrontmatterContractBuzz('possession', sample)
+            if (report.success) {
+                log(
+                    `>> [OK] :: Possession contract verified: ${report.entity_id}`,
+                )
+            } else {
+                log(
+                    `>> [FAIL] :: Possession verification failed: ${report.errors.join(', ')}`,
+                )
+            }
+            break
+        }
+        case 'AUDIT_GRIEVANCE_SCHEMA': {
+            log(
+                '>> [SCHEMA] Auditing interpersonal grievance frontmatter contract...',
+            )
+            const sample = {
+                id: 'grv_fuel_siphon',
+                type: 'grievance',
+                title: 'Fuel Siphon Theft',
+                category: 'contraband_theft',
+                participants_primary: ['char_bog', 'char_wart'],
+                physical_anchor_prop: 'item_iron_knife',
+                intensity_min: 1,
+                intensity_max: 3,
+                cooldown_ticks: 120,
+                spawns_on_max_escalation: 'grievance:grv_open_violence',
+                created_epoch: 0,
+                last_updated_epoch: 0,
+            }
+            const report = verifyFrontmatterContractBuzz('grievance', sample)
+            if (report.success) {
+                log(
+                    `>> [OK] :: Grievance contract verified: ${report.entity_id}`,
+                )
+            } else {
+                log(
+                    `>> [FAIL] :: Grievance verification failed: ${report.errors.join(', ')}`,
+                )
+            }
+            break
+        }
+        default:
+            log(`>> [WARN] :: Unknown schema action: ${actionId}`)
+    }
 }
 
 export const openFactSchemaSubmenu = async (

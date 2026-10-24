@@ -1,5 +1,16 @@
 import type { Action } from '../../99.core/interface/action.interface.js'
 import type MenuBit from '../fce/menu.bit.js'
+import {
+    OPEN_SERIES_GENESIS_WIZARD,
+    OpenSeriesGenesisWizard,
+    CLOSE_SERIES_GENESIS_WIZARD,
+    CloseSeriesGenesisWizard,
+    type GenesisMenuActions,
+} from './genesisMenu.action.js'
+
+export * from './genesisMenu.action.js'
+export * from './tupleWizard.action.js'
+import type { TupleWizardActions } from './tupleWizard.action.js'
 
 export const INIT_MENU = '[Menu action] Init Menu'
 export class InitMenu implements Action {
@@ -45,6 +56,25 @@ export class RunCharacterAuditTelemetry implements Action {
     constructor(public bale?: MenuBit) {}
 }
 
+export const INSPECT_HUD_STATUS = '[Menu action] Inspect Hud Status'
+export class InspectHudStatus implements Action {
+    readonly type = INSPECT_HUD_STATUS
+    constructor(public bale: MenuBit) {}
+}
+
+export const BIND_DISCOVERY_PROVENANCE =
+    '[Refusal action] Bind Discovery Provenance'
+export class BindDiscoveryProvenance implements Action {
+    readonly type = BIND_DISCOVERY_PROVENANCE
+    constructor(public bale?: any) {}
+}
+
+export const PROMPT_SWITCH_SERIES = '[Menu action] Prompt Switch Series'
+export class PromptSwitchSeries implements Action {
+    readonly type = PROMPT_SWITCH_SERIES
+    constructor(public bale?: MenuBit) {}
+}
+
 export type Actions =
     | InitMenu
     | UpdateMenu
@@ -53,11 +83,8 @@ export type Actions =
     | PromptLocomotionChoice
     | PromptEquipmentSlots
     | RunCharacterAuditTelemetry
+    | InspectHudStatus
     | BindDiscoveryProvenance
-
-export const BIND_DISCOVERY_PROVENANCE =
-    '[Refusal action] Bind Discovery Provenance'
-export class BindDiscoveryProvenance implements Action {
-    readonly type = BIND_DISCOVERY_PROVENANCE
-    constructor(public bale?: any) {}
-}
+    | PromptSwitchSeries
+    | GenesisMenuActions
+    | TupleWizardActions

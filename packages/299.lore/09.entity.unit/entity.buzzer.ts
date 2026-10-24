@@ -1,2 +1,3 @@
-export { initEntity } from './buz/entity.buzz'
-export { updateEntity } from './buz/entity.buzz'
+export { initEntity, updateEntity } from './buz/entity.buzz.js'
+export { stageEntityScratchpad } from './buz/stageEntityScratchpad.buzz.js'
+export { threeStrikeSaveGate } from './buz/threeStrikeSaveGate.buzz.js'

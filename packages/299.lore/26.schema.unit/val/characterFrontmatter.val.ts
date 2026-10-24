@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { BasisPointSchema } from '../../35.threshold.unit/val/threshold.val.js'
 
 /**
  * 7-bit ASCII string validation enforcing pure POSIX terminal compatibility.
@@ -7,20 +8,28 @@ export const AsciiStringSchema = z
     .string()
     .regex(/^[\x20-\x7E]*$/, 'STRING_NOT_7BIT_ASCII')
 
+export const CharacterIdentifierSchema = z
+    .string()
+    .regex(
+        /^char_[a-z0-9_]+$/,
+        'Character ID must match regex ^char_[a-z0-9_]+$',
+    )
+
 /**
  * Locomotion baseline enum defining foundational physiological movement capability.
  */
-export const LocomotionBaselineEnum = z.enum([
+export const LocomotionBaselineSchema = z.enum([
     'bipedal_standard',
     'bipedal_hunched',
+    'limping',
     'quadrupedal',
     'slithering',
     'brachiation',
     'sessile',
-    'limping',
     'heavy_grounded_slog',
 ])
-export type LocomotionBaseline = z.infer<typeof LocomotionBaselineEnum>
+export const LocomotionBaselineEnum = LocomotionBaselineSchema
+export type LocomotionBaseline = z.infer<typeof LocomotionBaselineSchema>
 
 /**
  * Comedic Register Enum guarding against model tone regression.
@@ -92,13 +101,19 @@ export const VocalDspModifierSchema = z
     })
     .strict()
 
-/**
- * Somatic Vector Schema (Biological & Kinematic Limits).
- */
-export const SomaticVectorSchema = z
+export const FoundationalSomaticVectorSchema = z
     .object({
-        locomotion_baseline: LocomotionBaselineEnum,
-        available_arms_bps: z.number().int().min(0).max(20000).default(20000), // 20000 = 2.0 arms
+        arms_available_bp: BasisPointSchema,
+        locomotion_baseline: LocomotionBaselineSchema,
+        motor_limitations: z.array(z.string().min(1)).default([]),
+        banned_kinetic_verbs: z.array(z.string().min(1)).default([]),
+    })
+    .strict()
+
+export const CanonicalSomaticVectorSchema = z
+    .object({
+        locomotion_baseline: LocomotionBaselineSchema,
+        available_arms_bps: z.number().int().min(0).max(20000).default(20000),
         banned_kinetic_verbs: z
             .array(z.string().regex(/^[a-z_]+$/))
             .default([]),
@@ -110,10 +125,25 @@ export const SomaticVectorSchema = z
     })
     .strict()
 
-/**
- * Logistical Vector Schema (Equipment Slots & Carrying Limits).
- */
-export const LogisticalVectorSchema = z
+export const SomaticVectorSchema = z.union([
+    FoundationalSomaticVectorSchema,
+    CanonicalSomaticVectorSchema,
+])
+
+export const FoundationalLogisticalVectorSchema = z
+    .object({
+        max_mass_grams: z
+            .number()
+            .int()
+            .min(0, 'Mass must be non-negative integer grams'),
+        worn_slots: z.array(z.string().min(1)).default([]),
+        carried_inventory: z
+            .array(z.string().regex(/^item_[a-z0-9_]+$/))
+            .default([]),
+    })
+    .strict()
+
+export const CanonicalLogisticalVectorSchema = z
     .object({
         worn: z
             .array(z.string().regex(/^item_[a-z0-9_]+$/))
@@ -136,10 +166,20 @@ export const LogisticalVectorSchema = z
     })
     .strict()
 
-/**
- * Epistemic Vector Schema (Information Horizons & Leverage Strings).
- */
-export const EpistemicVectorSchema = z
+export const LogisticalVectorSchema = z.union([
+    FoundationalLogisticalVectorSchema,
+    CanonicalLogisticalVectorSchema,
+])
+
+export const FoundationalEpistemicVectorSchema = z
+    .object({
+        active_strings_held: z.array(z.string().min(1)).default([]),
+        conversation_refusal_triggers: z.array(z.string().min(1)).default([]),
+        forbidden_disclosure_tokens: z.array(z.string().min(1)).default([]),
+    })
+    .strict()
+
+export const CanonicalEpistemicVectorSchema = z
     .object({
         escalation_ceiling: z.number().int().min(1).max(5).default(3),
         strings_held_over: z
@@ -157,6 +197,11 @@ export const EpistemicVectorSchema = z
         attenuation_tokens: z.array(AsciiStringSchema).default([]),
     })
     .strict()
+
+export const EpistemicVectorSchema = z.union([
+    FoundationalEpistemicVectorSchema,
+    CanonicalEpistemicVectorSchema,
+])
 
 /**
  * Refusal Vector Rule Schema (Three-Stage Refusal Triad).
@@ -203,15 +248,23 @@ export const CharacterRiskProfileSchema = z
     })
     .strict()
 
-/**
- * Master Character Frontmatter Schema (The Machine Rail).
- * Enforces byte-0 parser compliance, exact identifier formats, and structural isolation.
- */
-export const CharacterFrontmatterSchema = z
+export const FoundationalCharacterFrontmatterSchema = z
     .object({
-        id: z
-            .string()
-            .regex(/^char_[a-z0-9_]+$/, 'INVALID_CHARACTER_ID_FORMAT'),
+        id: CharacterIdentifierSchema,
+        type: z.literal('character'),
+        name: z.string().min(1, 'Character display name is required'),
+        status: z.enum(['active', 'departed', 'dormant']).default('active'),
+        somatic: FoundationalSomaticVectorSchema,
+        logistical: FoundationalLogisticalVectorSchema,
+        epistemic: FoundationalEpistemicVectorSchema,
+        created_epoch: z.number().int().min(0).default(0),
+        last_updated_epoch: z.number().int().min(0).default(0),
+    })
+    .strict()
+
+export const CanonicalCharacterFrontmatterSchema = z
+    .object({
+        id: CharacterIdentifierSchema,
         name: AsciiStringSchema.min(1, 'NAME_REQUIRED'),
         type: z.literal('character'),
         status: z
@@ -221,9 +274,9 @@ export const CharacterFrontmatterSchema = z
             .string()
             .regex(/^arch_[a-z0-9_]+$/)
             .optional(),
-        somatic: SomaticVectorSchema,
-        logistical: LogisticalVectorSchema.default({}),
-        epistemic: EpistemicVectorSchema.default({}),
+        somatic: CanonicalSomaticVectorSchema,
+        logistical: CanonicalLogisticalVectorSchema.default({}),
+        epistemic: CanonicalEpistemicVectorSchema.default({}),
         refusal_vectors: z.array(RefusalVectorRuleSchema).default([]),
         comedic_register: ComedicRegisterEnum.default('deadpan'),
         risk_profile: CharacterRiskProfileSchema.optional(),
@@ -231,8 +284,25 @@ export const CharacterFrontmatterSchema = z
         emotion_visual_mapping: z
             .record(z.string(), z.string().nullable())
             .default({}),
-        created_at_epoch: z.number().int().nonnegative().default(0), // Deterministic epoch; rejects ambient clocks
+        created_at_epoch: z.number().int().nonnegative().default(0),
+        staged_location_id: z.string().optional(),
+        inventory: z
+            .object({
+                held_primary: z.string().optional(),
+                held_secondary: z.string().optional(),
+                worn: z.array(z.string()).optional(),
+            })
+            .passthrough()
+            .optional(),
     })
     .strict()
+
+/**
+ * Master Character Frontmatter Schema.
+ */
+export const CharacterFrontmatterSchema = z.union([
+    FoundationalCharacterFrontmatterSchema,
+    CanonicalCharacterFrontmatterSchema,
+])
 
 export type CharacterFrontmatter = z.infer<typeof CharacterFrontmatterSchema>

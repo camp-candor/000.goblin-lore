@@ -1,7 +1,7 @@
-import StreamBit from './stream.bit'
+import type StreamBit from './stream.bit.js'
 
 export default interface Stream {
-    // idx:string;
-    // streamBitList: StreamBit[];
-    // streamBits:any;
+    idx: string
+    lastEmittedWarning: string[]
+    warningCount: number
 }

@@ -1,7 +1,5 @@
-import { Action } from '../99.core/interface/action.interface'
-import StreamBit from './fce/stream.bit'
-
-// Stream actions
+import type { Action } from '../99.core/interface/action.interface.js'
+import type StreamBit from './fce/stream.bit.js'
 
 export const INIT_STREAM = '[Stream action] Init Stream'
 export class InitStream implements Action {
@@ -15,4 +13,10 @@ export class UpdateStream implements Action {
     constructor(public bale: StreamBit) {}
 }
 
-export type Actions = InitStream | UpdateStream
+export const STREAM_VOID_WARNING = '[Stream action] Stream Void Warning'
+export class StreamVoidWarning implements Action {
+    readonly type = STREAM_VOID_WARNING
+    constructor(public bale: StreamBit) {}
+}
+
+export type Actions = InitStream | UpdateStream | StreamVoidWarning

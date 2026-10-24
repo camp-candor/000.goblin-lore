@@ -1,4 +1,43 @@
-import { CharacterFrontmatter } from '../val/characterFrontmatter.val.js'
+import type { CharacterFrontmatter } from '../val/characterFrontmatter.val.js'
+
+export type CharacterStatus = 'active' | 'departed' | 'dormant'
+export type LocomotionBaseline =
+    | 'bipedal_standard'
+    | 'bipedal_hunched'
+    | 'limping'
+    | 'quadrupedal'
+    | 'slithering'
+
+export interface CharacterSomaticVectorBit {
+    readonly arms_available_bp: number
+    readonly locomotion_baseline: LocomotionBaseline
+    readonly motor_limitations: readonly string[]
+    readonly banned_kinetic_verbs: readonly string[]
+}
+
+export interface CharacterLogisticalVectorBit {
+    readonly max_mass_grams: number
+    readonly worn_slots: readonly string[]
+    readonly carried_inventory: readonly string[]
+}
+
+export interface CharacterEpistemicVectorBit {
+    readonly active_strings_held: readonly string[]
+    readonly conversation_refusal_triggers: readonly string[]
+    readonly forbidden_disclosure_tokens: readonly string[]
+}
+
+export interface CharacterDossierFrontmatterBit {
+    readonly id: string
+    readonly type: 'character'
+    readonly name: string
+    readonly status: CharacterStatus
+    readonly somatic: CharacterSomaticVectorBit
+    readonly logistical: CharacterLogisticalVectorBit
+    readonly epistemic: CharacterEpistemicVectorBit
+    readonly created_epoch: number
+    readonly last_updated_epoch: number
+}
 
 export interface VoiceRailSectionsBit {
     readonly wantsSurface: string

@@ -1,5 +1,6 @@
-import { Action } from '../99.core/interface/action.interface'
-import TargetBit from './fce/target.bit'
+import type { Action } from '../99.core/interface/action.interface.js'
+import type TargetBit from './fce/target.bit.js'
+import type { TargetSeriesBit } from './fce/targetSeries.bit.js'
 
 // Target actions
 
@@ -15,4 +16,10 @@ export class UpdateTarget implements Action {
     constructor(public bale: TargetBit) {}
 }
 
-export type Actions = InitTarget | UpdateTarget
+export const SELECT_TARGET_SERIES = '[Target action] Select Target Series'
+export class SelectTargetSeries implements Action {
+    readonly type = SELECT_TARGET_SERIES
+    constructor(public bale: TargetSeriesBit | any) {}
+}
+
+export type Actions = InitTarget | UpdateTarget | SelectTargetSeries

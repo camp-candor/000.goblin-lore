@@ -69,16 +69,19 @@ export function buildSeedProtagonistDossier(config: SeedProtagonistConfigBit): {
 } {
     const characterId = config.characterId || 'char_protagonist'
     const characterName = config.characterName || 'Kaelen'
-    const founderTokenItemId = config.founderTokenItemId || 'item_founder_token'
+    const founderTokenItemId =
+        config.heldItemId || config.founderTokenItemId || 'item_founder_token'
+    const locationId = config.locationId || undefined
+    const availableArmsBps = config.availableArmsBps || 20000
 
-    const frontmatterData = {
+    const frontmatterData: any = {
         id: characterId,
         name: characterName,
         type: 'character',
         status: 'active',
         somatic: {
             locomotion_baseline: 'bipedal_hunched',
-            available_arms_bps: 20000,
+            available_arms_bps: availableArmsBps,
             banned_kinetic_verbs: ['leap', 'sprint', 'vault'],
             conditions: [],
             motor_limitations: ['UNSTEADY_GAIT'],
@@ -124,6 +127,10 @@ export function buildSeedProtagonistDossier(config: SeedProtagonistConfigBit): {
         pending_showrunner_task: null,
         emotion_visual_mapping: {},
         created_at_epoch: 0,
+        ...(locationId ? { staged_location_id: locationId } : {}),
+        inventory: {
+            held_primary: founderTokenItemId,
+        },
     }
 
     // Compile-Time Invariant Check (T0 = $0.00)

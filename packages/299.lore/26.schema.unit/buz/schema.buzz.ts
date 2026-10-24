@@ -1,13 +1,20 @@
 import * as yaml from 'js-yaml'
 import { createHash } from 'node:crypto'
 import { CharacterFrontmatterSchema } from '../val/characterFrontmatter.val.js'
+import { LocationFrontmatterSchema } from '../val/locationFrontmatter.val.js'
+import { PossessionFrontmatterSchema } from '../../15.item.unit/val/item.val.js'
+import { GrievanceFrontmatterSchema } from '../../13.grievance.unit/val/grievance.val.js'
 import {
-    DualRailCharacterBit,
-    VoiceRailSectionsBit,
+    validateScalarBoundsBuzz,
+    type ThresholdValidationResult,
+} from '../../35.threshold.unit/buz/threshold.buzz.js'
+import {
+    type DualRailCharacterBit,
+    type VoiceRailSectionsBit,
 } from '../fce/characterDossier.bit.js'
-import SchemaBit from '../fce/schema.bit.js'
+import type SchemaBit from '../fce/schema.bit.js'
 import { SchemaModel } from '../schema.model.js'
-import State from '../../99.core/state.js'
+import type State from '../../99.core/state.js'
 
 export const initSchema = (cpy: SchemaModel, bal: SchemaBit, ste: State) => {
     return cpy
@@ -188,3 +195,75 @@ export const validateCharacterDossier = (
     }
     return cpy
 }
+
+export interface SchemaVerificationReport {
+    readonly success: boolean
+    readonly entity_type: string
+    readonly entity_id: string
+    readonly code: string
+    readonly errors: readonly string[]
+}
+
+/**
+ * Validates candidate frontmatter payloads against their strict Zod contracts.
+ */
+export function verifyFrontmatterContractBuzz(
+    entityType: 'character' | 'location' | 'possession' | 'grievance',
+    payload: unknown,
+): SchemaVerificationReport {
+    let schema: any
+    switch (entityType) {
+        case 'character':
+            schema = CharacterFrontmatterSchema
+            break
+        case 'location':
+            schema = LocationFrontmatterSchema
+            break
+        case 'possession':
+            schema = PossessionFrontmatterSchema
+            break
+        case 'grievance':
+            schema = GrievanceFrontmatterSchema
+            break
+        default:
+            return {
+                success: false,
+                entity_type: 'unknown',
+                entity_id: 'unknown',
+                code: 'UNSUPPORTED_ENTITY_TYPE',
+                errors: [`Entity type "${entityType}" is not supported`],
+            }
+    }
+
+    const result = schema.safeParse(payload)
+    if (!result.success) {
+        const errors = result.error.issues.map(
+            (issue: any) =>
+                `${issue.path.join('.') || 'root'}: ${issue.message}`,
+        )
+        const candidateId =
+            typeof payload === 'object' && payload !== null && 'id' in payload
+                ? String((payload as { id: unknown }).id)
+                : 'unknown'
+
+        return {
+            success: false,
+            entity_type: entityType,
+            entity_id: candidateId,
+            code: 'SCHEMA_VALIDATION_FAILURE',
+            errors,
+        }
+    }
+
+    const validData = result.data as { id: string }
+    return {
+        success: true,
+        entity_type: entityType,
+        entity_id: validData.id,
+        code: 'OK',
+        errors: [],
+    }
+}
+
+export { validateScalarBoundsBuzz }
+export type { ThresholdValidationResult }

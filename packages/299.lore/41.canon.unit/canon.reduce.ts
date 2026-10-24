@@ -1,22 +1,23 @@
 import clone from 'clone-deep'
-import * as Act from './canon.action'
-import { CanonModel } from './canon.model'
-import * as Buzz from './canon.buzzer'
-import State from '../99.core/state'
+import * as Act from './canon.action.js'
+import { CanonModel } from './canon.model.js'
+import * as Buzz from './canon.buzzer.js'
+import type State from '../99.core/state.js'
 
-export function reducer(
+export const reducer = (
     model: CanonModel = new CanonModel(),
-    act: Act.Actions,
+    action: any,
     state?: State,
-) {
-    switch (act.type) {
-        case Act.UPDATE_CANON:
-            return Buzz.updateCanon(clone(model), act.bale, state)
-
+): any => {
+    const cpy = clone(model)
+    switch (action.type) {
         case Act.INIT_CANON:
-            return Buzz.initCanon(clone(model), act.bale, state)
-
+            return Buzz.initCanon(cpy, action.bale, state as State)
+        case Act.UPDATE_CANON:
+            return Buzz.updateCanon(cpy, action.bale, state as State)
+        case Act.COMPILE_GENESIS_SEAL:
+            return Buzz.compileGenesisMaster(cpy, action.bale, state as State)
         default:
-            return model
+            return cpy
     }
 }

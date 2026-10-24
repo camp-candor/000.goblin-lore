@@ -1,8 +1,7 @@
-import Stream from './fce/stream.interface'
-import StreamBit from './fce/stream.interface'
+import type Stream from './fce/stream.interface.js'
 
 export class StreamModel implements Stream {
-    //idx:string;
-    //streamBitList: StreamBit[] = [];
-    //streamBits: any = {};
+    idx: string = '33.stream.unit'
+    lastEmittedWarning: string[] = []
+    warningCount: number = 0
 }

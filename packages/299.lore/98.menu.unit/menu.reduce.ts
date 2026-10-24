@@ -63,6 +63,50 @@ export function reducer(
             )
             break
 
+        case Act.INSPECT_HUD_STATUS:
+            result = Buzz.inspectGenesisHudStatus(
+                clone(model),
+                act.bale,
+                state as any,
+            )
+            break
+
+        case Act.OPEN_TUPLE_WIZARD:
+            result = Buzz.openTupleWizard(clone(model), act.bale, state as any)
+            break
+
+        case Act.PROMPT_GENRE_MODALITY:
+            result = Buzz.promptGenreModality(
+                clone(model),
+                act.bale,
+                state as any,
+            )
+            break
+
+        case Act.PROMPT_SCARCITY_PRESET:
+            result = Buzz.promptScarcityPreset(
+                clone(model),
+                act.bale,
+                state as any,
+            )
+            break
+
+        case Act.PROMPT_ACOUSTIC_FLOOR:
+            result = Buzz.promptAcousticFloor(
+                clone(model),
+                act.bale,
+                state as any,
+            )
+            break
+
+        case Act.PROMPT_SWITCH_SERIES:
+            result = Buzz.promptSwitchSeries(
+                clone(model),
+                act.bale,
+                state as any,
+            )
+            break
+
         default:
             return model
     }

@@ -19,4 +19,12 @@ export class ResolveArchetype implements Action {
     constructor(public bale: SeriesBit) {}
 }
 
-export type Actions = InitSeries | UpdateSeries | ResolveArchetype
+export const CHECK_SERIES_SLUG_AVAILABILITY =
+    '[Series action] Check Series Slug Availability'
+export class CheckSeriesSlugAvailability implements Action {
+    readonly type = CHECK_SERIES_SLUG_AVAILABILITY
+    constructor(public bale: SeriesBit) {}
+}
+
+export type Actions =
+    InitSeries | UpdateSeries | ResolveArchetype | CheckSeriesSlugAvailability

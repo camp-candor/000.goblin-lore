@@ -4,4 +4,5 @@ export default interface StreamBit {
     val?: number
     dat?: any
     slv?: Function
+    lst?: any
 }
