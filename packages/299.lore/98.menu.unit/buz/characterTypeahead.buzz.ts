@@ -126,8 +126,8 @@ export const promptEquipmentSlots = async (
     const gridBit = await lib.hunt(UPDATE_GRID, {
         x: 0,
         y: 4,
-        xSpan: 4,
-        ySpan: 11,
+        w: 4,
+        h: 11,
     })
 
     await lib.hunt(UPDATE_CONSOLE, {
