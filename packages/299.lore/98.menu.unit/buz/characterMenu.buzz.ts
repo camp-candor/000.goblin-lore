@@ -177,7 +177,7 @@ export const openCharacterDossierSubmenu = async (
                     ?.somaticMask || {
                     characterId: chosenChar,
                     locomotionBaseline:
-                        chosenChar === 'char_wart'
+                        chosenChar === 'char_wart' || chosenChar === 'char_bog'
                             ? 'bipedal_hunched'
                             : 'bipedal_standard',
                     availableArmsBps:
@@ -185,11 +185,15 @@ export const openCharacterDossierSubmenu = async (
                     conditions:
                         chosenChar === 'char_wart'
                             ? ['cnd_severed_left_arm']
-                            : [],
+                            : chosenChar === 'char_bog'
+                              ? ['cnd_crushed_collarbone']
+                              : [],
                     bannedVerbs:
                         chosenChar === 'char_wart'
                             ? ['bimanual_lift', 'dual_wield', 'sprint']
-                            : [],
+                            : chosenChar === 'char_bog'
+                              ? ['leap', 'sprint', 'vault']
+                              : [],
                     opticalState: 'NORMAL',
                     blindConeDegrees: 0,
                     canSpeak: true,
