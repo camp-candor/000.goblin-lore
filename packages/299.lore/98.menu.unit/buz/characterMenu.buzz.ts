@@ -173,27 +173,48 @@ export const openCharacterDossierSubmenu = async (
                     dat: { characterId: chosenChar },
                 })
 
-                const somaticMask = response?.characterBit?.dat
-                    ?.somaticMask || {
-                    characterId: chosenChar,
-                    locomotionBaseline:
-                        chosenChar === 'char_wart'
-                            ? 'bipedal_hunched'
-                            : 'bipedal_standard',
-                    availableArmsBps:
-                        chosenChar === 'char_wart' ? 10000 : 20000,
-                    conditions:
-                        chosenChar === 'char_wart'
-                            ? ['cnd_severed_left_arm']
-                            : [],
-                    bannedVerbs:
-                        chosenChar === 'char_wart'
-                            ? ['bimanual_lift', 'dual_wield', 'sprint']
-                            : [],
-                    opticalState: 'NORMAL',
-                    blindConeDegrees: 0,
-                    canSpeak: true,
-                }
+                const rawDat = response?.characterBit?.dat
+                const liveMask =
+                    rawDat && typeof rawDat.availableArmsBps === 'number'
+                        ? {
+                              characterId: rawDat.characterId || chosenChar,
+                              locomotionBaseline:
+                                  rawDat.locomotionBaseline ||
+                                  'bipedal_standard',
+                              availableArmsBps: rawDat.availableArmsBps,
+                              conditions: [...(rawDat.conditions || [])],
+                              bannedVerbs: [
+                                  ...(rawDat.bannedKineticVerbs || []),
+                              ],
+                              opticalState:
+                                  rawDat.sensoryAcuity?.opticalState ||
+                                  'NORMAL',
+                              blindConeDegrees:
+                                  rawDat.sensoryAcuity?.blindConeDegrees ?? 0,
+                              canSpeak: rawDat.canSpeak !== false,
+                          }
+                        : null
+                const somaticMask = rawDat?.somaticMask ||
+                    liveMask || {
+                        characterId: chosenChar,
+                        locomotionBaseline:
+                            chosenChar === 'char_wart'
+                                ? 'bipedal_hunched'
+                                : 'bipedal_standard',
+                        availableArmsBps:
+                            chosenChar === 'char_wart' ? 10000 : 20000,
+                        conditions:
+                            chosenChar === 'char_wart'
+                                ? ['cnd_severed_left_arm']
+                                : [],
+                        bannedVerbs:
+                            chosenChar === 'char_wart'
+                                ? ['bimanual_lift', 'dual_wield', 'sprint']
+                                : [],
+                        opticalState: 'NORMAL',
+                        blindConeDegrees: 0,
+                        canSpeak: true,
+                    }
 
                 await streamSomaticMaskTelemetry(somaticMask)
             }

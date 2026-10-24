@@ -120,4 +120,75 @@ describe('98.menu.unit: Character Authoring Submenu Grid Mounting', () => {
         ])
         expect(choiceCall?.dat.dat).toEqual({ clr0: 'black', clr1: 'cyan' })
     })
+
+    it('Check 3.x: [3] INSPECT SOMATIC MASK streams the live projection, never stale fallback verbs', async () => {
+        const cns00: string[] = []
+        let choiceCalls = 0
+        ;(globalThis as any).LIBRARY = {
+            hunt: async (action: string, dat: any) => {
+                if (
+                    action === '[Console action] Update Console' &&
+                    dat.idx === 'cns00'
+                ) {
+                    cns00.push(dat.src)
+                    return {}
+                }
+                if (action === '[Grid action] Update Grid') {
+                    return { grdBit: { dat: 'mock-grid-net' } }
+                }
+                if (action === '[Open action] Open Choice') {
+                    choiceCalls++
+                    if (choiceCalls === 1) {
+                        return {
+                            chcBit: { src: '[3] INSPECT SOMATIC MASK' },
+                        }
+                    }
+                    return { chcBit: { src: 'char_wart' } }
+                }
+                return {}
+            },
+        }
+
+        const mockSte = {
+            hunt: async () => ({
+                characterBit: {
+                    val: 1,
+                    dat: {
+                        characterId: 'char_wart',
+                        locomotionBaseline: 'bipedal_hunched',
+                        availableArmsBps: 10000,
+                        conditions: ['cnd_severed_left_arm'],
+                        bannedKineticVerbs: [
+                            'bimanual_lift',
+                            'climb',
+                            'dual_wield',
+                            'embrace',
+                            'two_handed_strike',
+                        ],
+                        sensoryAcuity: {
+                            opticalState: 'MONOCULAR',
+                            blindConeDegrees: 60,
+                        },
+                        canSpeak: true,
+                    },
+                },
+            }),
+            value: { lore: { activeSeriesSlug: 'under-the-floorboards' } },
+        }
+
+        const model = new MenuModel()
+        await openCharacterDossierSubmenu(model, {} as any, mockSte)
+
+        expect(cns00).toContain(
+            '>> [SOMATIC PROJECTION] char_wart (Gait: bipedal_hunched)',
+        )
+        expect(cns00).toContain(
+            '>> BANNED VERBS     : [bimanual_lift, climb, dual_wield, embrace, two_handed_strike]',
+        )
+        expect(
+            cns00.some(
+                (line) => line.includes('BANNED') && line.includes('sprint'),
+            ),
+        ).toBe(false)
+    })
 })
