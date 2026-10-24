@@ -115,4 +115,26 @@ describe('44.voice.unit: Showrunner Progression Task Lock Enforcer', () => {
         expect(result.vceBit.dat.resolved).toBe(true)
         expect(result.vceBit.dat.resolvedTask).toBe('class_shift_150')
     })
-})
+
+    it('fails resolution on malformed input trap', () => {
+        let result: any = null
+        const model = new VoiceModel()
+
+        resolveProgressionLock(
+            model,
+            {
+                idx: 'char_spleen',
+                src: 'ab',
+                slv: (res: any) => {
+                    result = res
+                },
+            },
+            {} as any,
+        )
+
+        expect(result).not.toBeNull()
+        expect(result.vceBit.val).toBe(0)
+        expect(result.vceBit.dat.resolved).toBe(false)
+        expect(result.vceBit.dat.errorCode).toBe('INVALID_SHOWRUNNER_TASK_FORMAT_BREACH')
+    })
+});
