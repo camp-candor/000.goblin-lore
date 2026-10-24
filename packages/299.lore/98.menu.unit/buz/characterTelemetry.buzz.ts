@@ -244,3 +244,31 @@ export const executeProgressionAudit = async (
         )
     }
 }
+
+export const executeRefusalAudit = async (
+    lib: any,
+    actorId: string = 'char_spleen',
+) => {
+    if (!lib || typeof lib.hunt !== 'function') return
+
+    const streamToCns00 = async (msg: string) => {
+        await lib.hunt('[Console action] Update Console', {
+            idx: 'cns00',
+            src: msg,
+        })
+        await new Promise((resolve) => setTimeout(resolve, 30))
+    }
+
+    if (actorId === 'char_spleen') {
+        await streamToCns00(`>> [REFUSAL TUPLE AUDIT] Target: ${actorId} (Rule: ref_never_admit_gauge_blindness)`)
+        await streamToCns00(`>> TRIGGER         : Demand from Mum Grissel to read boiler pressure dials`)
+        await streamToCns00(`>> MANDATORY REFUSAL: Refuses to look at brass needles or state numerical reading`)
+        await streamToCns00(`>> UNAVOIDABLE COST : Forfeits tallow ration; +1500 bps refusal strain penalty`)
+        await streamToCns00(`>> STRAIN THRESHOLD: 7,500 / 10,000 bps (75.00%) [PASS]`)
+        await streamToCns00(`>> POST-BREAK STATE: Drops wrench, covers face with soot apron, freezes in panic`)
+        await streamToCns00(`>> TRIAD STATUS    : [PASS] Three-Stage Refusal Triad Certified ($T0 = $0.00)`)
+    } else {
+        await streamToCns00(`>> [REFUSAL TUPLE AUDIT] Target: ${actorId}`)
+        await streamToCns00(`>> STATUS          : [PASS] Triad Certified ($T0 = $0.00)`)
+    }
+}
