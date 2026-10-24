@@ -31,6 +31,7 @@ jobs:
             - name: Checkout Repository with Tags
               uses: actions/checkout@v4
               with:
+                  ref: main
                   fetch-depth: 0
                   token: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
 
@@ -80,5 +81,5 @@ jobs:
                   GH_TOKEN: ${{ secrets.GH_TOKEN || secrets.GITHUB_TOKEN }}
               run: |
                   echo ">> Pushing bump commit and tag to origin main..."
-                  git push origin main --follow-tags
+                  git push origin HEAD:main --follow-tags
                   echo ">> [OK] Tag pushed successfully. Companion release.yml workflow will handle publication."
