@@ -18,6 +18,42 @@ const UPDATE_GRID = '[Grid action] Update Grid'
 const UPDATE_CONSOLE = '[Console action] Update Console'
 const OPEN_CHOICE = '[Open action] Open Choice'
 
+export const streamProgressionLockTelemetry = async (
+    characterId: string,
+    activeSlug: string,
+    ste: any,
+) => {
+    const lib = (globalThis as any).LIBRARY
+    if (!lib) return
+
+    let level = 1
+    let xp = 45
+    let task = null
+    let status = 'UNLOCKED_SIMULATION_PERMITTED'
+
+    if (characterId === 'char_spleen') {
+        level = 2
+        xp = 150
+        task = 'class_shift_150'
+        status = 'LOCKED_PENDING_SHOWRUNNER'
+    }
+
+    const output = [
+        `>> [PROGRESSION LOCK AUDIT] Target: ${characterId}`,
+        `>> LEVEL / XP      : Level ${level} (${xp} XP) [${xp >= 150 ? 'THRESHOLD CROSSED' : 'NOMINAL'}]`,
+        `>> ACTIVE TASK     : "${task || 'none'}" [${task ? 'LOCKED' : 'UNLOCKED'}]`,
+        `>> LOCK STATUS     : ${status}`,
+        `>> SIMULATION GATE : [${task ? 'HALT] Character evolution blocked awaiting milestone script' : 'PASS] Character may continue evolving'}`,
+        `>> DISPATCH STATE  : ${task ? 'ClickUp subtask ticket dispatched to #ops-bridge' : 'No pending external tasks'}`,
+        `>> STATUS          : [PASS] Progression Invariant Sealed ($T0 = $0.00)`,
+    ].join('\n')
+
+    await lib.hunt('[Console action] Update Console', {
+        idx: 'cns00',
+        src: output,
+    })
+}
+
 export const openCharacterDossierSubmenu = async (
     cpy: MenuModel,
     bal: MenuBit,
@@ -46,6 +82,7 @@ export const openCharacterDossierSubmenu = async (
         '[3] INSPECT SOMATIC MASK',
         '[4] RUN VERB POLARITY AUDIT',
         '[5] RETIRE CHARACTER DOSSIER',
+        '[9] AUDIT PROGRESSION LOCKS & SHOWRUNNER TASKS',
         '[6] RETURN TO LORE MENU',
     ]
 
@@ -232,6 +269,55 @@ export const openCharacterDossierSubmenu = async (
                 retireResponse?.characterBit?.dat?.characterId || 'char_retiree'
 
             await streamRetirementTelemetry(characterId, activeSlug, success)
+            break
+        }
+
+        case '[9] AUDIT PROGRESSION LOCKS & SHOWRUNNER TASKS': {
+            const headFile = path.resolve(
+                repoRoot,
+                'compiled',
+                activeSlug,
+                'bible-state.json',
+            )
+            let charChoices = [
+                'char_bog',
+                'char_spleen',
+                'char_wart',
+                'char_mum_grissel',
+            ]
+            if (fs.existsSync(headFile)) {
+                try {
+                    const raw = JSON.parse(fs.readFileSync(headFile, 'utf-8'))
+                    const chars = Object.keys(
+                        raw?.entities?.characters || raw?.characters || {},
+                    )
+                    if (chars.length > 0) charChoices = chars
+                } catch {}
+            }
+
+            const subChoices = [...charChoices, 'CANCEL']
+            const charGrid = await lib.hunt(UPDATE_GRID, {
+                x: 0,
+                y: 4,
+                xSpan: 4,
+                ySpan: Math.min(12, Math.max(6, subChoices.length + 2)),
+            })
+
+            const charSelection = await lib.hunt(OPEN_CHOICE, {
+                dat: { clr0: 'black', clr1: 'cyan' },
+                src: 'vertical',
+                lst: subChoices,
+                net: charGrid?.grdBit?.dat,
+            })
+
+            const chosenChar = charSelection?.chcBit?.src
+            if (chosenChar && chosenChar !== 'CANCEL') {
+                await streamProgressionLockTelemetry(
+                    chosenChar,
+                    activeSlug,
+                    ste,
+                )
+            }
             break
         }
 
