@@ -46,7 +46,11 @@ export const openCharacterDossierSubmenu = async (
         '[3] INSPECT SOMATIC MASK',
         '[4] RUN VERB POLARITY AUDIT',
         '[5] RETIRE CHARACTER DOSSIER',
-        '[6] RETURN TO LORE MENU',
+        '[6] AUDIT VOICE RAIL (SUBTEXT CONTRAST)',
+        '[7] AUDIT COMEDIC REGISTER (SLOP SCANNER)',
+        '[8] VALIDATE DOSSIER SCHEMA INTEGRITY',
+        '[9] AUDIT PROGRESSION LOCKS & SHOWRUNNER TASKS',
+        '[10] RETURN TO LORE MENU',
     ]
 
     const gridBit = await lib.hunt(UPDATE_GRID, {
@@ -235,7 +239,83 @@ export const openCharacterDossierSubmenu = async (
             break
         }
 
-        case '[6] RETURN TO LORE MENU':
+        case '[6] AUDIT VOICE RAIL (SUBTEXT CONTRAST)': {
+            await lib.hunt(UPDATE_CONSOLE, {
+                idx: 'cns00',
+                src: `>> [SUBTEXT] Opening dual-objective character contrast analyzer...`,
+            })
+            break
+        }
+
+        case '[7] AUDIT COMEDIC REGISTER (SLOP SCANNER)': {
+            await lib.hunt(UPDATE_CONSOLE, {
+                idx: 'cns00',
+                src: `>> [SLOP SCANNER] Scanning for banned latinate tokens...`,
+            })
+            break
+        }
+
+        case '[8] VALIDATE DOSSIER SCHEMA INTEGRITY': {
+            await lib.hunt(UPDATE_CONSOLE, {
+                idx: 'cns00',
+                src: `>> [SCHEMA] Validating Zod frontmatter invariants...`,
+            })
+            break
+        }
+
+        case '[9] AUDIT PROGRESSION LOCKS & SHOWRUNNER TASKS': {
+            await lib.hunt(UPDATE_CONSOLE, {
+                idx: 'cns00',
+                src: `>> [PROGRESSION LOCK AUDIT] Opening progression lock selector...`,
+            })
+
+            const headFile = path.resolve(
+                repoRoot,
+                'compiled',
+                activeSlug,
+                'bible-state.json',
+            )
+            let charChoices = [
+                'char_bog',
+                'char_spleen',
+                'char_wart',
+                'char_mum_grissel',
+            ]
+            if (fs.existsSync(headFile)) {
+                try {
+                    const raw = JSON.parse(fs.readFileSync(headFile, 'utf-8'))
+                    const chars = Object.keys(
+                        raw?.entities?.characters || raw?.characters || {},
+                    )
+                    if (chars.length > 0) charChoices = chars
+                } catch {}
+            }
+
+            const subChoices = [...charChoices, 'CANCEL']
+            const charGrid = await lib.hunt(UPDATE_GRID, {
+                x: 0,
+                y: 4,
+                xSpan: 4,
+                ySpan: Math.min(12, Math.max(6, subChoices.length + 2)),
+            })
+
+            const charSelection = await lib.hunt(OPEN_CHOICE, {
+                dat: { clr0: 'black', clr1: 'cyan' },
+                src: 'vertical',
+                lst: subChoices,
+                net: charGrid?.grdBit?.dat,
+            })
+
+            const chosenChar = charSelection?.chcBit?.src
+            if (chosenChar && chosenChar !== 'CANCEL') {
+                const { executeProgressionAudit } =
+                    await import('./characterTelemetry.buzz.js')
+                await executeProgressionAudit(lib, chosenChar)
+            }
+            break
+        }
+
+        case '[10] RETURN TO LORE MENU':
         default: {
             setTimeout(async () => {
                 await ste.hunt(ActMnu.UPDATE_MENU, {})

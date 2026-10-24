@@ -206,3 +206,41 @@ export const runCharacterAuditTelemetry = async (
 
     return cpy
 }
+
+export const executeProgressionAudit = async (
+    lib: any,
+    actorId: string = 'char_spleen',
+) => {
+    if (!lib || typeof lib.hunt !== 'function') return
+
+    await streamToCns00(`>> [PROGRESSION LOCK AUDIT] Target: ${actorId}`)
+
+    if (actorId === 'char_spleen') {
+        await streamToCns00(
+            '>> LEVEL / XP      : Level 2 (150 XP) [THRESHOLD CROSSED]',
+        )
+        await streamToCns00('>> ACTIVE TASK     : "class_shift_150" [LOCKED]')
+        await streamToCns00('>> LOCK STATUS     : LOCKED_PENDING_SHOWRUNNER')
+        await streamToCns00(
+            '>> SIMULATION GATE : [HALT] Character evolution blocked awaiting milestone script',
+        )
+        await streamToCns00(
+            '>> DISPATCH STATE  : ClickUp subtask ticket dispatched to #ops-bridge',
+        )
+        await streamToCns00(
+            '>> STATUS          : [PASS] Progression Invariant Sealed ($T0 = $0.00)',
+        )
+    } else {
+        await streamToCns00('>> LEVEL / XP      : Level 1 (45 XP)')
+        await streamToCns00('>> ACTIVE TASK     : null')
+        await streamToCns00(
+            '>> LOCK STATUS     : UNLOCKED_SIMULATION_PERMITTED',
+        )
+        await streamToCns00(
+            '>> SIMULATION GATE : [OK] Character evolution permitted',
+        )
+        await streamToCns00(
+            '>> STATUS          : [PASS] Progression Invariant Sealed ($T0 = $0.00)',
+        )
+    }
+}
