@@ -76,7 +76,36 @@ export function sanitizeVoiceRailProse(text: string): string {
  */
 export function buildCharacterDossierMarkdown(
     config: SerializeCharacterDossierConfigBit,
-): { characterId: string; markdownContent: string } {
+): { characterId: string; markdownContent: string }
+export function buildCharacterDossierMarkdown(
+    frontmatter: any,
+    voiceRailProse?: string,
+): string
+export function buildCharacterDossierMarkdown(
+    configOrFrontmatter: any,
+    voiceRailProse?: string,
+): any {
+    if (typeof voiceRailProse === 'string') {
+        const validatedFrontmatter =
+            CharacterFrontmatterSchema.parse(configOrFrontmatter)
+        const heldItemsCount = validatedFrontmatter.logistical.held.length
+        const availableArms =
+            (validatedFrontmatter.somatic.available_arms_bps ?? 20000) / 10000
+        if (heldItemsCount > availableArms) {
+            throw new Error(
+                `[HAND_CAPACITY_SAT_VIOLATION]: Held items (${heldItemsCount}) exceed available arms (${availableArms})`,
+            )
+        }
+        const yamlString = yaml.dump(validatedFrontmatter, {
+            indent: 2,
+            lineWidth: -1,
+            noRefs: true,
+            sortKeys: false,
+        })
+        return `---\n${yamlString}---\n\n${voiceRailProse}\n`
+    }
+
+    const config = configOrFrontmatter as SerializeCharacterDossierConfigBit
     // Validate Machine Rail Frontmatter Schema at T0 ($0.00)
     const validatedFrontmatter = CharacterFrontmatterSchema.parse(
         config.frontmatter,
@@ -85,7 +114,7 @@ export function buildCharacterDossierMarkdown(
     // Hand Saturation SAT Invariant Check
     const heldItemsCount = validatedFrontmatter.logistical.held.length
     const availableArms =
-        validatedFrontmatter.somatic.available_arms_bps / 10000
+        (validatedFrontmatter.somatic.available_arms_bps ?? 20000) / 10000
     if (heldItemsCount > availableArms) {
         throw new Error(
             `[HAND_CAPACITY_SAT_VIOLATION]: Held items (${heldItemsCount}) exceed available arms (${availableArms})`,

@@ -51,9 +51,14 @@ export function verifyByteZeroIntegrity(
           ? Buffer.from(content, 'utf8')
           : Buffer.from(content)
 
+    const firstFourBytesHex =
+        buf.length >= 4 ? buf.subarray(0, 4).toString('hex') : ''
+
     if (buf.length < 4) {
         return {
             valid: false,
+            isValid: false,
+            firstFourBytesHex,
             byteOffset: 0,
             hasBom: false,
             hasCarriageReturns: false,
@@ -68,6 +73,8 @@ export function verifyByteZeroIntegrity(
     if (hasBom) {
         return {
             valid: false,
+            isValid: false,
+            firstFourBytesHex,
             byteOffset: 3,
             hasBom: true,
             hasCarriageReturns: false,
@@ -85,6 +92,8 @@ export function verifyByteZeroIntegrity(
     ) {
         return {
             valid: false,
+            isValid: false,
+            firstFourBytesHex,
             byteOffset: 0,
             hasBom: false,
             hasCarriageReturns: buf[0] === 0x0d,
@@ -100,6 +109,8 @@ export function verifyByteZeroIntegrity(
     if (!startsWithDelimiter) {
         return {
             valid: false,
+            isValid: false,
+            firstFourBytesHex,
             byteOffset: 0,
             hasBom: false,
             hasCarriageReturns: false,
@@ -114,6 +125,8 @@ export function verifyByteZeroIntegrity(
         const isCrLf = buf[3] === 0x0d && buf[4] === 0x0a
         return {
             valid: false,
+            isValid: false,
+            firstFourBytesHex,
             byteOffset: 3,
             hasBom: false,
             hasCarriageReturns: buf[3] === 0x0d,
@@ -161,6 +174,8 @@ export function verifyByteZeroIntegrity(
     if (hasCarriageReturns) {
         return {
             valid: false,
+            isValid: false,
+            firstFourBytesHex,
             byteOffset: 0,
             hasBom: false,
             hasCarriageReturns: true,
@@ -172,6 +187,8 @@ export function verifyByteZeroIntegrity(
 
     return {
         valid: true,
+        isValid: true,
+        firstFourBytesHex,
         byteOffset: 0,
         hasBom: false,
         hasCarriageReturns: false,

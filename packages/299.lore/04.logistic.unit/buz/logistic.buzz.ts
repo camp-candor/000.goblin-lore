@@ -61,14 +61,62 @@ export const updateLogistic = (
  */
 export function verifyHandSaturationSat(
     input: HandCapacityEvaluationInput,
-): HandCapacityAuditResultBit {
-    const parsed = HandCapacityEvaluationInputSchema.safeParse(input)
+): HandCapacityAuditResultBit
+export function verifyHandSaturationSat(
+    availableArmsBps: number,
+    heldItems: Array<{
+        id?: string
+        handsRequiredBps?: number
+        occupies_hands_bps?: number
+    }>,
+): HandCapacityAuditResultBit & {
+    isSatisfiable: boolean
+    demandedArmsBps: number
+}
+export function verifyHandSaturationSat(
+    inputOrArms: HandCapacityEvaluationInput | number,
+    heldItemsArg?: Array<{
+        id?: string
+        handsRequiredBps?: number
+        occupies_hands_bps?: number
+    }>,
+): HandCapacityAuditResultBit & {
+    isSatisfiable: boolean
+    demandedArmsBps: number
+} {
+    if (typeof inputOrArms === 'number') {
+        const availableArmsBps = inputOrArms
+        const heldItems = heldItemsArg || []
+        let demandedBps = 0
+        for (const item of heldItems) {
+            demandedBps += item.handsRequiredBps ?? item.occupies_hands_bps ?? 0
+        }
+        const isSatisfiable = demandedBps <= availableArmsBps
+        return {
+            valid: isSatisfiable,
+            isSatisfiable,
+            entity_id: 'char_unknown',
+            arms_available_bps: availableArmsBps,
+            demanded_hands_bps: demandedBps,
+            demandedArmsBps: demandedBps,
+            errorCode: isSatisfiable
+                ? undefined
+                : 'HAND_CAPACITY_SAT_VIOLATION',
+            reason: isSatisfiable
+                ? undefined
+                : `Demanded upper-limb capacity (${demandedBps} bps) exceeds available biological arms (${availableArmsBps} bps)`,
+        }
+    }
+
+    const parsed = HandCapacityEvaluationInputSchema.safeParse(inputOrArms)
     if (!parsed.success) {
         return {
             valid: false,
-            entity_id: input.entity_id || 'char_unknown',
-            arms_available_bps: input.arms_available_bps ?? 0,
+            isSatisfiable: false,
+            entity_id: inputOrArms.entity_id || 'char_unknown',
+            arms_available_bps: inputOrArms.arms_available_bps ?? 0,
             demanded_hands_bps: 0,
+            demandedArmsBps: 0,
             errorCode: 'HAND_CAPACITY_INPUT_INVALID',
             reason:
                 parsed.error.issues[0]?.message ??
@@ -86,9 +134,11 @@ export function verifyHandSaturationSat(
     if (demandedBps > arms_available_bps) {
         return {
             valid: false,
+            isSatisfiable: false,
             entity_id,
             arms_available_bps,
             demanded_hands_bps: demandedBps,
+            demandedArmsBps: demandedBps,
             errorCode: 'HAND_CAPACITY_BREACH',
             reason: `Demanded upper-limb capacity (${demandedBps} bps) exceeds available biological arms (${arms_available_bps} bps)`,
         }
@@ -96,9 +146,11 @@ export function verifyHandSaturationSat(
 
     return {
         valid: true,
+        isSatisfiable: true,
         entity_id,
         arms_available_bps,
         demanded_hands_bps: demandedBps,
+        demandedArmsBps: demandedBps,
     }
 }
 

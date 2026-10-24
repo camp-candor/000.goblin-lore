@@ -2,6 +2,8 @@ import { ByteZeroErrorCode } from '../val/byteZero.val.js'
 
 export interface ByteZeroCheckResult {
     readonly valid: boolean
+    readonly isValid?: boolean
+    readonly firstFourBytesHex?: string
     readonly byteOffset: number
     readonly hasBom: boolean
     readonly hasCarriageReturns: boolean

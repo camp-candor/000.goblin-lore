@@ -251,14 +251,48 @@ export function parseClauseDependency(
  */
 export function scanVoiceRailVerbPolarity(
     payload: ScanProsePolarityPayload,
-): PolarityScanResult {
-    const {
-        entityId,
-        characterName,
-        characterAliases = [],
-        markdownProse,
-        bannedKineticVerbs,
-    } = payload
+): PolarityScanResult
+export function scanVoiceRailVerbPolarity(
+    entityId: string,
+    characterName: string,
+    markdownProse: string,
+    bannedKineticVerbs: string[],
+): PolarityScanResult & {
+    isValid: boolean
+    violations: ErrorSignatureVector[]
+    errorCode?: string
+    offendingVerb?: string
+}
+export function scanVoiceRailVerbPolarity(
+    payloadOrEntityId: ScanProsePolarityPayload | string,
+    characterNameArg?: string,
+    markdownProseArg?: string,
+    bannedKineticVerbsArg?: string[],
+): PolarityScanResult & {
+    isValid: boolean
+    violations: ErrorSignatureVector[]
+    errorCode?: string
+    offendingVerb?: string
+} {
+    let entityId: string
+    let characterName: string
+    let characterAliases: string[] = []
+    let markdownProse: string
+    let bannedKineticVerbs: string[]
+
+    if (typeof payloadOrEntityId === 'string') {
+        entityId = payloadOrEntityId
+        characterName = characterNameArg || ''
+        markdownProse = markdownProseArg || ''
+        bannedKineticVerbs = bannedKineticVerbsArg || []
+    } else {
+        entityId = payloadOrEntityId.entityId
+        characterName = payloadOrEntityId.characterName
+        characterAliases = payloadOrEntityId.characterAliases || []
+        markdownProse = payloadOrEntityId.markdownProse
+        bannedKineticVerbs = payloadOrEntityId.bannedKineticVerbs
+    }
+
     const bannedSet = new Set(
         bannedKineticVerbs.map((v) => v.trim().toUpperCase()),
     )
@@ -316,10 +350,22 @@ export function scanVoiceRailVerbPolarity(
         }
     }
 
+    const allowed = breaches.length === 0
+    const errorCode =
+        breaches.length > 0 ? 'FATAL_SOMATIC_POLARITY_BREACH' : undefined
+    const offendingVerb =
+        breaches.length > 0 && breaches[0].offendingTokens.length > 0
+            ? breaches[0].offendingTokens[0].toLowerCase()
+            : undefined
+
     return {
-        allowed: breaches.length === 0,
+        allowed,
+        isValid: allowed,
         targetEntity: entityId,
         breaches,
+        violations: breaches,
+        errorCode,
+        offendingVerb,
         parsedClauses,
         totalClausesEvaluated: clauses.length,
     }

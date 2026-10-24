@@ -178,6 +178,7 @@ export const RefusalVectorRuleSchema = z
             .string()
             .regex(/^[a-f0-9]{64}$/)
             .optional(),
+        discovery_take_id: AsciiStringSchema.optional(),
     })
     .strict()
 

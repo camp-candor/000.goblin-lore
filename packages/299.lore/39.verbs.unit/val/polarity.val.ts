@@ -114,8 +114,12 @@ export type ErrorSignatureVector = z.infer<typeof ErrorSignatureVectorSchema>
 export const PolarityScanResultSchema = z
     .object({
         allowed: z.boolean(),
+        isValid: z.boolean().optional(),
         targetEntity: z.string(),
         breaches: z.array(ErrorSignatureVectorSchema),
+        violations: z.array(ErrorSignatureVectorSchema).optional(),
+        errorCode: z.string().optional(),
+        offendingVerb: z.string().optional(),
         parsedClauses: z.array(ParsedActionClauseSchema),
         totalClausesEvaluated: z.number().int().nonnegative(),
     })

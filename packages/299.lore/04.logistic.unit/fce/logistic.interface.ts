@@ -6,9 +6,11 @@ import {
 
 export interface HandCapacityAuditResultBit {
     readonly valid: boolean
+    readonly isSatisfiable?: boolean
     readonly entity_id: string
     readonly arms_available_bps: number
     readonly demanded_hands_bps: number
+    readonly demandedArmsBps?: number
     readonly errorCode?: string
     readonly reason?: string
 }
