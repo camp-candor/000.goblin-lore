@@ -125,6 +125,12 @@ export async function streamRetirementTelemetry(
             '>> [RETIRE:AUDIT] Pre-flight dependency sweep clean [PASS]',
         )
         await streamToCns00(
+            '>> [INVENTORY CLEAN] Verified: 0 active item references',
+        )
+        await streamToCns00(
+            '>> [LEVERAGE CLEAN] Verified: 0 active faction obligations',
+        )
+        await streamToCns00(
             '>> [TOMBSTONE] Status: DEPRECATED_ARCHIVED | Banned Verbs: ["*"]',
         )
         await streamToCns00(
