@@ -170,12 +170,10 @@ describe('Deep-Frozen Somatic Mask Roll-Up Projection', () => {
         }).toThrow(TypeError)
 
         expect(() => {
-            // @ts-expect-error - Runtime Array Mutation Trap
             ;(mask.bannedKineticVerbs as string[]).push('dance')
         }).toThrow(TypeError)
 
         expect(() => {
-            // @ts-expect-error - Runtime Nested Mutation Trap
             ;(mask.sensoryAcuity as any).opticalState = 'BLIND'
         }).toThrow(TypeError)
     })
