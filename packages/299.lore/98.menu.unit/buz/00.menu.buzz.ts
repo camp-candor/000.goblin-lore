@@ -577,13 +577,81 @@ export const openCharacterDossierSubmenu = async (
         const selectedItem = subChoice?.chcBit?.src
 
         switch (selectedItem) {
+
             case '[1] SCAFFOLD NEW CHARACTER':
-            case '1':
+            case '1': {
                 await lib.hunt(UPDATE_CONSOLE, {
                     idx: 'cns00',
                     src: '>> [SCAFFOLD] Initializing new character archetype template...',
                 })
-                break
+
+                const choiceGrid = await lib.hunt(UPDATE_GRID, {
+                    x: 0,
+                    y: 4,
+                    xSpan: 4,
+                    ySpan: 12,
+                })
+
+                await lib.hunt(UPDATE_CONSOLE, {
+                    idx: 'cns00',
+                    src: '>> [LOGISTIC:INSPECT] Partition Limits: Worn <= 4 | Held <= 2 | Carried <= 4'
+                })
+
+                await lib.hunt(UPDATE_CONSOLE, {
+                    idx: 'cns00',
+                    src: '>> STATUS: [OK] Hand Capacity Invariant Solver Ready'
+                })
+
+                let targetActor = 'char_wart'
+                const actorInputBit = await lib.hunt(OPEN_INPUT, {
+                    txt: 'ACTOR ID',
+                    src: 'char_wart',
+                    net: choiceGrid?.grdBit?.dat,
+                })
+                const rawActor = actorInputBit?.putBit?.src?.trim()
+                if (rawActor) targetActor = rawActor
+
+                let availableArmsInput = '1.0'
+                const armsInputBit = await lib.hunt(OPEN_INPUT, {
+                    txt: 'AVAILABLE ARMS (e.g. 1.0, 2.0)',
+                    src: '1.0',
+                    net: choiceGrid?.grdBit?.dat,
+                })
+                const rawArms = armsInputBit?.putBit?.src?.trim()
+                if (rawArms) availableArmsInput = rawArms
+
+                let heldItemsCount = 2
+                const itemsInputBit = await lib.hunt(OPEN_INPUT, {
+                    txt: 'NUMBER OF HELD ITEMS',
+                    src: '2',
+                    net: choiceGrid?.grdBit?.dat,
+                })
+                const rawItems = itemsInputBit?.putBit?.src?.trim()
+                if (rawItems) heldItemsCount = parseInt(rawItems) || 2
+
+                const armsBps = parseFloat(availableArmsInput) * 10000;
+                const demandedBps = heldItemsCount * 10000;
+
+                if (demandedBps > armsBps) {
+                    await lib.hunt(UPDATE_CONSOLE, {
+                        idx: 'cns00',
+                        src: ':: [BREACH:HALT] HAND_CAPACITY_BREACH: Entity cannot hold ' + heldItemsCount + ' items!'
+                    })
+
+                    await lib.hunt(UPDATE_CONSOLE, {
+                        idx: 'cns00',
+                        src: ':: Transaction aborted in RAM at T0 = $0.00.'
+                    })
+                } else {
+                    await lib.hunt(UPDATE_CONSOLE, {
+                        idx: 'cns00',
+                        src: '>> [PASS] Items successfully assigned.'
+                    })
+                }
+
+                await new Promise((r) => setTimeout(r, 1500))
+                break;
+            }
 
             case '[2] INSPECT DOSSIER REGISTRY':
             case '2':
