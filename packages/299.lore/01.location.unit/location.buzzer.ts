@@ -1,2 +1,6 @@
-export { initLocation } from './buz/location.buzz'
-export { updateLocation } from './buz/location.buzz'
+export {
+    initLocation,
+    updateLocation,
+    reconcileReciprocalLinksBuzz,
+    type ReciprocalLinkResult,
+} from './buz/location.buzz.js'

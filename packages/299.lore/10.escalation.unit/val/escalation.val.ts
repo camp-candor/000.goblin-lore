@@ -83,3 +83,17 @@ export const DialogueTurnEvaluationInputSchema = z
 export type DialogueTurnEvaluationInput = z.infer<
     typeof DialogueTurnEvaluationInputSchema
 >
+
+/**
+ * Closed-world validation schema for namespaced child escalation pointers.
+ */
+export const SpawnEscalationTargetStringSchema = z
+    .string()
+    .regex(
+        /^(grievance:grv_[a-z0-9_]+|secret:sec_[a-z0-9_]+)$/,
+        'Target must match namespace format ^(grievance:grv_[a-z0-9_]+|secret:sec_[a-z0-9_]+)$',
+    )
+
+export type SpawnEscalationTargetString = z.infer<
+    typeof SpawnEscalationTargetStringSchema
+>

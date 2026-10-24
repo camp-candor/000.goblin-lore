@@ -2064,3 +2064,79 @@ export const executeComedicRegisterAudit = async (
 }
 
 export { openCharacterDossierSubmenu } from './characterMenu.buzz.js'
+
+import { resolveActiveSeriesDirBuzz } from '../../29.series.unit/buz/series.buzz.js'
+import {
+    bootstrapGraphRegistryBuzz,
+    queryForeignKeyCandidatesBuzz,
+} from '../../34.target.unit/buz/target.buzz.js'
+import { validateNamespacedSpawnTargetBuzz } from '../../10.escalation.unit/buz/escalation.buzz.js'
+import { reconcileReciprocalLinksBuzz } from '../../01.location.unit/buz/location.buzz.js'
+
+export interface MenuActionContext {
+    readonly log: (msg: string) => void
+    readonly ste: {
+        readonly hunt: (action: string, payload?: unknown) => Promise<unknown>
+    }
+}
+
+/**
+ * Handles terminal menu dispatches for Phase 2 in-memory multigraph actions.
+ */
+export async function handleGraphMenuActionBuzz(
+    actionId: string,
+    context: MenuActionContext,
+    payload?: Record<string, string>,
+): Promise<void> {
+    const { log } = context
+
+    switch (actionId) {
+        case 'SELECT_ACTIVE_SERIES': {
+            const slug = payload?.slug || 'wiregrass-basin'
+            log(`>> [SERIES] Resolving series root for '${slug}'...`)
+            const res = resolveActiveSeriesDirBuzz(slug)
+            log(`>> [SERIES] Result: ${res.message}`)
+            break
+        }
+        case 'BOOTSTRAP_CORPUS_INDEX': {
+            const seriesPath = payload?.seriesPath || process.cwd()
+            log(
+                `>> [GRAPH] Bootstrapping in-memory multigraph from ${seriesPath}...`,
+            )
+            const res = bootstrapGraphRegistryBuzz(seriesPath)
+            log(
+                `>> [GRAPH] Result: ${res.message} (Characters: ${res.domainCounts.character}, Locations: ${res.domainCounts.location}, Items: ${res.domainCounts.possession}, Grievances: ${res.domainCounts.grievance})`,
+            )
+            break
+        }
+        case 'TEST_FOREIGN_KEY_TYPEAHEAD': {
+            const prefix = payload?.prefix || 'char_'
+            const q = payload?.query || ''
+            log(
+                `>> [TARGET] Querying foreign keys for prefix '${prefix}' and query '${q}'...`,
+            )
+            const candidates = queryForeignKeyCandidatesBuzz(prefix, q)
+            log(`>> [TARGET] Matches: ${candidates.join(', ') || '(none)'}`)
+            break
+        }
+        case 'VERIFY_SPAWN_NAMESPACE': {
+            const target = payload?.target || 'grievance:grv_open_brawl'
+            log(`>> [ESCALATION] Validating spawn target: ${target}`)
+            const res = validateNamespacedSpawnTargetBuzz(target)
+            log(`>> [ESCALATION] Result: ${res.code} :: ${res.message}`)
+            break
+        }
+        case 'RECONCILE_SPATIAL_LINKS': {
+            const src = payload?.source || 'loc_new_crawlway'
+            const target = payload?.target || 'loc_warm_pipe'
+            log(
+                `>> [LOCATION] Reconciling reciprocal link: ${src} <-> ${target}`,
+            )
+            const res = reconcileReciprocalLinksBuzz(src, target)
+            log(`>> [LOCATION] Result: ${res.message}`)
+            break
+        }
+        default:
+            log(`>> [WARN] :: Unknown graph action: ${actionId}`)
+    }
+}

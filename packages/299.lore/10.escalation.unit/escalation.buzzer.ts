@@ -4,5 +4,7 @@ export {
     registerConversationalProfileBuzz,
     validateEscalationCeilingBuzz,
     evaluateDialogueTurnBuzz,
-} from './buz/escalation.buzz'
+    validateNamespacedSpawnTargetBuzz,
+    type SpawnTargetValidationResult,
+} from './buz/escalation.buzz.js'
 export { auditDialogueAttenuationBuzz } from './buz/attenuation.buzz'

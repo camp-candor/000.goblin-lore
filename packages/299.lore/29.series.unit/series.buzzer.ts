@@ -2,6 +2,9 @@ export {
     initSeries,
     updateSeries,
     resolveArchetype,
+    findRepoRoot,
+    resolveActiveSeriesDirBuzz,
+    type SeriesResolutionResult,
 } from './buz/series.buzz.js'
 export { validateSeriesSlug, assertSeriesSlug } from './buz/seriesSlug.buzz.js'
 export {

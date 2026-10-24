@@ -23,3 +23,12 @@ export class SelectTargetSeries implements Action {
 }
 
 export type Actions = InitTarget | UpdateTarget | SelectTargetSeries
+
+export const BOOTSTRAP_GRAPH = 'target/BOOTSTRAP_GRAPH'
+export const QUERY_FOREIGN_KEYS = 'target/QUERY_FOREIGN_KEYS'
+
+export interface QueryForeignKeysPayload {
+    readonly domainPrefix?: string
+    readonly query?: string
+    readonly limit?: number
+}

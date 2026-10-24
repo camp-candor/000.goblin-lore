@@ -26,5 +26,18 @@ export class CheckSeriesSlugAvailability implements Action {
     constructor(public bale: SeriesBit) {}
 }
 
+export const SET_ACTIVE_SERIES = 'series/SET_ACTIVE_SERIES'
+export const RESOLVE_SERIES_PATH = 'series/RESOLVE_SERIES_PATH'
+
+export interface SetActiveSeriesPayload {
+    readonly seriesSlug: string
+    readonly customRepoRoot?: string
+}
+
+export interface SetActiveSeriesAction {
+    readonly type: typeof SET_ACTIVE_SERIES
+    readonly payload: SetActiveSeriesPayload
+}
+
 export type Actions =
     InitSeries | UpdateSeries | ResolveArchetype | CheckSeriesSlugAvailability

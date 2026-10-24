@@ -16,3 +16,11 @@ export class UpdateLocation implements Action {
 }
 
 export type Actions = InitLocation | UpdateLocation
+
+export const RECONCILE_RECIPROCAL_SPATIAL_LINKS =
+    'location/RECONCILE_RECIPROCAL_SPATIAL_LINKS'
+
+export interface ReconcileReciprocalLinksPayload {
+    readonly sourceLocationId: string
+    readonly targetLocationId: string
+}

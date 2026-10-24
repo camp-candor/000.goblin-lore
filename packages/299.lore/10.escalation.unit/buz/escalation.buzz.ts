@@ -8,7 +8,9 @@ import {
     DialogueTurnEvaluationInput,
     EscalationCeilingSchema,
     BaseStatsSchema,
-} from '../val/escalation.val'
+    SpawnEscalationTargetStringSchema,
+} from '../val/escalation.val.js'
+import { TargetModel } from '../../34.target.unit/target.model.js'
 import {
     EscalationEvaluationResultBit,
     AttenuationLeakDiagnosticBit,
@@ -288,4 +290,63 @@ export const evaluateDialogueTurnBuzz = async (
         })
     }
     return cpy
+}
+
+export interface SpawnTargetValidationResult {
+    readonly success: boolean
+    readonly target: string
+    readonly targetType: 'grievance' | 'secret' | 'unknown'
+    readonly targetId: string
+    readonly code: string
+    readonly message: string
+}
+
+/**
+ * Validates escalation spawn targets for namespace syntax and graph registry existence.
+ */
+export function validateNamespacedSpawnTargetBuzz(
+    targetString: unknown,
+): SpawnTargetValidationResult {
+    const parseResult =
+        SpawnEscalationTargetStringSchema.safeParse(targetString)
+
+    if (!parseResult.success) {
+        return {
+            success: false,
+            target: String(targetString),
+            targetType: 'unknown',
+            targetId: 'unknown',
+            code: 'INVALID_SPAWN_NAMESPACE',
+            message: `[FAIL] :: Invalid escalation spawn target format: ${String(targetString)}`,
+        }
+    }
+
+    const validTarget = parseResult.data
+    const [namespace, targetId] = validTarget.split(':') as [
+        'grievance' | 'secret',
+        string,
+    ]
+
+    if (namespace === 'grievance') {
+        const model = TargetModel.getInstance()
+        if (!model.hasNode(targetId)) {
+            return {
+                success: false,
+                target: validTarget,
+                targetType: namespace,
+                targetId,
+                code: 'TARGET_NOT_FOUND',
+                message: `[FAIL] :: Referenced child grievance does not exist in graph index: ${targetId}`,
+            }
+        }
+    }
+
+    return {
+        success: true,
+        target: validTarget,
+        targetType: namespace,
+        targetId,
+        code: 'OK',
+        message: `[OK] :: Valid escalation spawn pointer: ${validTarget}`,
+    }
 }

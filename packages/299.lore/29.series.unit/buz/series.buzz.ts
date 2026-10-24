@@ -1,3 +1,5 @@
+import * as fs from 'node:fs'
+import * as path from 'node:path'
 import { SeriesModel } from '../series.model.js'
 import type SeriesBit from '../fce/series.bit.js'
 import type State from '../../99.core/state.js'
@@ -102,4 +104,71 @@ export const resolveArchetype = (
         }
     }
     return cpy
+}
+
+export interface SeriesResolutionResult {
+    readonly success: boolean
+    readonly seriesSlug: string
+    readonly seriesPath: string
+    readonly repoRoot: string
+    readonly message: string
+}
+
+/**
+ * Traverses upward to locate the monorepo root containing the series directory.
+ */
+export function findRepoRoot(startDir: string = process.cwd()): string {
+    let current = path.resolve(startDir)
+    while (true) {
+        const candidateSeriesDir = path.join(current, 'series')
+        const candidatePackageJson = path.join(current, 'package.json')
+        if (
+            fs.existsSync(candidateSeriesDir) ||
+            fs.existsSync(candidatePackageJson)
+        ) {
+            if (fs.existsSync(candidateSeriesDir)) {
+                return current
+            }
+        }
+        const parent = path.dirname(current)
+        if (parent === current) {
+            break
+        }
+        current = parent
+    }
+    return path.resolve(startDir)
+}
+
+/**
+ * Resolves and binds the active series workspace path.
+ */
+export function resolveActiveSeriesDirBuzz(
+    seriesSlug: string,
+    explicitRepoRoot?: string,
+): SeriesResolutionResult {
+    const repoRoot = explicitRepoRoot
+        ? path.resolve(explicitRepoRoot)
+        : findRepoRoot()
+    const seriesPath = path.join(repoRoot, 'series', seriesSlug)
+
+    if (!fs.existsSync(seriesPath)) {
+        return {
+            success: false,
+            seriesSlug,
+            seriesPath,
+            repoRoot,
+            message: `[FAIL] :: Series directory does not exist: ${seriesPath}`,
+        }
+    }
+
+    const model = SeriesModel.getInstance()
+    model.setActiveSeries(seriesSlug, seriesPath, repoRoot)
+
+    return {
+        success: true,
+        seriesSlug,
+        seriesPath,
+        repoRoot,
+        message: `[OK] :: Active series bound to ${seriesPath}`,
+    }
 }
