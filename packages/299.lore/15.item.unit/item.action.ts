@@ -1,5 +1,6 @@
 import { Action } from '../99.core/interface/action.interface'
 import ItemBit from './fce/item.bit'
+import ItemScaffoldBit from './fce/itemScaffold.bit'
 
 // Item actions
 
@@ -15,4 +16,10 @@ export class UpdateItem implements Action {
     constructor(public bale: ItemBit) {}
 }
 
-export type Actions = InitItem | UpdateItem
+export const SCAFFOLD_POSSESSION_WIZARD = '[Item action] Scaffold Possession Wizard'
+export class ScaffoldPossessionWizard implements Action {
+    readonly type = SCAFFOLD_POSSESSION_WIZARD
+    constructor(public bale: ItemScaffoldBit) {}
+}
+
+export type Actions = InitItem | UpdateItem | ScaffoldPossessionWizard

@@ -3,6 +3,7 @@ import type MenuBit from '../fce/menu.bit.js'
 import type State from '../../99.core/state.js'
 import * as ActChr from '../../02.character.unit/character.action.js'
 import * as ActLoc from '../../01.location.unit/location.action.js'
+import * as ActItm from '../../15.item.unit/item.action.js'
 
 const UPDATE_CONSOLE = '[Console action] Update Console'
 
@@ -45,5 +46,26 @@ export const scaffoldLocation = async (
 
     if (bal.slv)
         bal.slv({ mnuBit: { idx: 'scaffold-location', src: 'completed' } })
+    return cpy
+}
+
+export const scaffoldPossession = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste: State,
+): Promise<MenuModel> => {
+    await ste.hunt(UPDATE_CONSOLE, {
+        idx: 'cns00',
+        src: '>> [SCAFFOLD:POSSESSION] Launching Tracked Possession Interview...',
+    })
+
+    // Dispatch into 15.item.unit wizard
+    await ste.hunt(ActItm.SCAFFOLD_POSSESSION_WIZARD, {
+        idx: 'menu-item-scaffold',
+        dat: bal.dat,
+    })
+
+    if (bal.slv)
+        bal.slv({ mnuBit: { idx: 'scaffold-possession', src: 'completed' } })
     return cpy
 }
