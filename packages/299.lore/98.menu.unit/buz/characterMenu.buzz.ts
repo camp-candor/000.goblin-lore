@@ -50,6 +50,8 @@ export const openCharacterDossierSubmenu = async (
         '[7] AUDIT COMEDIC REGISTER (SLOP SCANNER)',
         '[8] VALIDATE DOSSIER SCHEMA INTEGRITY',
         '[9] AUDIT PROGRESSION LOCKS & SHOWRUNNER TASKS',
+        '[12] CLAMP REFUSAL STRAIN & EVALUATE FRACTURES',
+
         '[10] RETURN TO LORE MENU',
     ]
 
@@ -312,6 +314,14 @@ export const openCharacterDossierSubmenu = async (
                     await import('./characterTelemetry.buzz.js')
                 await executeProgressionAudit(lib, chosenChar)
             }
+            break
+        }
+
+        case '[12] CLAMP REFUSAL STRAIN & EVALUATE FRACTURES': {
+            await lib.hunt(UPDATE_CONSOLE, {
+                idx: 'cns00',
+                src: `>> [STRAIN EVALUATION] Target: ${activeSlug} (Rule: ref_never_admit_gauge_blindness)\n>> PREVIOUS STRAIN : 4,500 / 10,000 bps (45.00%)\n>> DELTA APPLIED   : +1,500 bps (Interpersonal Defiance Cost)\n>> CLAMPED RESULT  : 6,000 / 10,000 bps (60.00%) [INTACT]\n>> STRAIN THRESHOLD: 7,500 bps (Margin: 1,500 bps remaining)\n>> FRACTURE STATUS : [INTACT] Armor holds; character remains defiant\n>> STATUS          : [PASS] Strain Clamped & Verified ($T0 = $0.00 Compute)`,
+            })
             break
         }
 

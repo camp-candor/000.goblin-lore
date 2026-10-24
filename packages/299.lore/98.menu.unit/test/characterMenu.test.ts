@@ -114,6 +114,8 @@ describe('98.menu.unit: Character Authoring Submenu Grid Mounting', () => {
             '[7] AUDIT COMEDIC REGISTER (SLOP SCANNER)',
             '[8] VALIDATE DOSSIER SCHEMA INTEGRITY',
             '[9] AUDIT PROGRESSION LOCKS & SHOWRUNNER TASKS',
+            '[12] CLAMP REFUSAL STRAIN & EVALUATE FRACTURES',
+
             '[10] RETURN TO LORE MENU',
         ])
         expect(choiceCall?.dat.dat).toEqual({ clr0: 'black', clr1: 'cyan' })
