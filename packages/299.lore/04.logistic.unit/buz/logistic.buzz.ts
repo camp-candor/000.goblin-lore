@@ -1,4 +1,4 @@
-import { LogisticModel } from '../logistic.model'
+import { LogisticModel } from '../logistic.model.js'
 import LogisticBit from '../fce/logistic.bit'
 import State from '../../99.core/state'
 import {
