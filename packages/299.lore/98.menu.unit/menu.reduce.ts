@@ -51,6 +51,10 @@ export function reducer(
             )
             break
 
+        case Act.BIND_DISCOVERY_PROVENANCE:
+            // Delegate logic handled via headless prompt or action route
+            break
+
         case Act.RUN_CHARACTER_AUDIT_TELEMETRY:
             result = Buzz.runCharacterAuditTelemetry(
                 clone(model),

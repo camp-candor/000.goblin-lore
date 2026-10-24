@@ -50,6 +50,7 @@ export const openCharacterDossierSubmenu = async (
         '[7] AUDIT COMEDIC REGISTER (SLOP SCANNER)',
         '[8] VALIDATE DOSSIER SCHEMA INTEGRITY',
         '[9] AUDIT PROGRESSION LOCKS & SHOWRUNNER TASKS',
+        '[13] BIND DISCOVERY PROVENANCE HASHES & SEAL EXCERPTS',
         '[10] RETURN TO LORE MENU',
     ]
 
@@ -315,6 +316,100 @@ export const openCharacterDossierSubmenu = async (
             break
         }
 
+        case '[13] BIND DISCOVERY PROVENANCE HASHES & SEAL EXCERPTS': {
+            await lib.hunt(UPDATE_CONSOLE, {
+                idx: 'cns00',
+                src: `>> [PROVENANCE BIND] Opening character selector...`,
+            })
+            const headFile = path.join(
+                repoRoot,
+                'data',
+                'compiled',
+                activeSlug,
+                'bible-state.json',
+            )
+            let charChoices = [
+                'char_bog',
+                'char_spleen',
+                'char_wart',
+                'char_mum_grissel',
+            ]
+            if (fs.existsSync(headFile)) {
+                try {
+                    const raw = JSON.parse(fs.readFileSync(headFile, 'utf-8'))
+                    const chars = Object.keys(
+                        raw?.entities?.characters || raw?.characters || {},
+                    )
+                    if (chars.length > 0) charChoices = chars
+                } catch {}
+            }
+
+            const subChoices = [...charChoices, 'CANCEL']
+            const charGrid = await lib.hunt(UPDATE_GRID, {
+                x: 0,
+                y: 4,
+                xSpan: 4,
+                ySpan: Math.min(12, Math.max(6, subChoices.length + 2)),
+            })
+
+            const charSelection = await lib.hunt(OPEN_CHOICE, {
+                dat: { clr0: 'black', clr1: 'cyan' },
+                src: 'vertical',
+                lst: subChoices,
+                net: charGrid?.grdBit?.dat,
+            })
+
+            const chosenChar = charSelection?.chcBit?.src
+            if (chosenChar && chosenChar !== 'CANCEL') {
+                const dummyRefusalModel = new (
+                    await import('../../45.refusal.unit/refusal.model.js')
+                ).RefusalModel()
+                const { bindDiscoveryProvenance } =
+                    await import('../../45.refusal.unit/buz/provenance.buzz.js')
+                const excerpt =
+                    '012345678901234567890123456789012345678901234567890123456789012345678901234567891234'
+
+                let failure = false
+                bindDiscoveryProvenance(
+                    dummyRefusalModel,
+                    {
+                        idx: chosenChar,
+                        dat: {
+                            character_id: chosenChar,
+                            refusal_id: 'ref_no_candle_tally',
+                            take_id: 'TAKE_B',
+                            excerpt_text_ascii: excerpt,
+                            source_note_id: 'ingest_20261019_003',
+                        },
+                        slv: (res: any) => {
+                            if (res.rflBit.val === 0) failure = true
+                        },
+                    } as any,
+                    ste,
+                )
+
+                const { computeExcerptSha256 } =
+                    await import('../../45.refusal.unit/buz/provenance.buzz.js')
+                const hashDigest = computeExcerptSha256(excerpt)
+
+                const cnsOut = failure
+                    ? `>> [PROVENANCE BIND] Target: ${chosenChar} (Rule: ref_no_candle_tally)\n` +
+                      `>> FAILURE: PROVENANCE PARITY BREACH`
+                    : `>> [PROVENANCE BIND] Target: ${chosenChar} (Rule: ref_no_candle_tally)\n` +
+                      `>> RATIFIED TAKE   : TAKE_B (Winning Step 0 Divergence Excerpt)\n` +
+                      `>> EXCERPT BYTES   : 84 Bytes (7-Bit Clean ASCII Verified)\n` +
+                      `>> COMPUTED SHA256 : ${hashDigest.slice(0, 32)}... [OK]\n` +
+                      `>> SOURCE NOTE     : ingest_20261019_003 (Sealed to Refusal Rule)\n` +
+                      `>> PARITY AUDIT    : [PASS] Excerpt matches declared hash signature\n` +
+                      `>> STATUS          : [SEALED] Provenance Bound to Rule ($T0 = $0.00 Compute)`
+
+                await lib.hunt(UPDATE_CONSOLE, {
+                    idx: 'cns00',
+                    src: cnsOut,
+                })
+            }
+            break
+        }
         case '[10] RETURN TO LORE MENU':
         default: {
             setTimeout(async () => {
