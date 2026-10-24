@@ -114,6 +114,7 @@ describe('98.menu.unit: Character Authoring Submenu Grid Mounting', () => {
             '[7] AUDIT COMEDIC REGISTER (SLOP SCANNER)',
             '[8] VALIDATE DOSSIER SCHEMA INTEGRITY',
             '[9] AUDIT PROGRESSION LOCKS & SHOWRUNNER TASKS',
+            '[11] AUDIT REFUSAL VECTOR TUPLES & STRAIN CEILINGS',
             '[13] BIND DISCOVERY PROVENANCE HASHES & SEAL EXCERPTS',
             '[10] RETURN TO LORE MENU',
         ])

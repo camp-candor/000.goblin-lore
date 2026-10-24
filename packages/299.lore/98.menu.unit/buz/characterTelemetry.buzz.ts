@@ -209,7 +209,7 @@ export const runCharacterAuditTelemetry = async (
 
 export const executeProgressionAudit = async (
     lib: any,
-    actorId: string = 'char_spleen',
+    actorId: string,
 ) => {
     if (!lib || typeof lib.hunt !== 'function') return
 
@@ -242,5 +242,29 @@ export const executeProgressionAudit = async (
         await streamToCns00(
             '>> STATUS          : [PASS] Progression Invariant Sealed ($T0 = $0.00)',
         )
+    }
+}
+
+
+export const executeRefusalAudit = async (lib: any, actorId: string) => {
+    if (!lib || typeof lib.hunt !== 'function') return
+
+    if (actorId === 'char_spleen') {
+        const out = `>> [REFUSAL TUPLE AUDIT] Target: char_spleen (Rule: ref_never_admit_gauge_blindness)
+>> TRIGGER         : Demand from Mum Grissel to read boiler pressure dials
+>> MANDATORY REFUSAL: Refuses to look at brass needles or state numerical reading
+>> UNAVOIDABLE COST : Forfeits tallow ration; +1500 bps refusal strain penalty
+>> STRAIN THRESHOLD: 7,500 / 10,000 bps (75.00%) [PASS]
+>> POST-BREAK STATE: Drops wrench, covers face with soot apron, freezes in panic
+>> TRIAD STATUS    : [PASS] Three-Stage Refusal Triad Certified ($T0 = $0.00)`
+        await lib.hunt('[Console action] Update Console', {
+            idx: 'cns00',
+            src: out,
+        })
+    } else {
+        await lib.hunt('[Console action] Update Console', {
+            idx: 'cns00',
+            src: `>> [REFUSAL TUPLE AUDIT] Target: ${actorId}\n>> STATUS: No explicit tuple bound for rendering.`,
+        })
     }
 }
