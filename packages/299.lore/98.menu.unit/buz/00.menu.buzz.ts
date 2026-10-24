@@ -1409,7 +1409,8 @@ export const openCharacterDossierSubmenu = async (
         '[5] RUN RELATIONAL FIELD AUDIT',
         '[6] AUDIT SUBTEXT ATTENUATION DIRECTIVES',
         '[7] INSPECT DIRECTIONAL LEVERAGE STRINGS',
-        '[8] AUDIT VOICE RAIL & SUBTEXT',
+        '[8] INSPECT DYADIC RELATIONSHIP ATTITUDES',
+        '[9] AUDIT VOICE RAIL & SUBTEXT',
         'BACK TO ROOT MENU',
     ]
 
@@ -1428,7 +1429,9 @@ export const openCharacterDossierSubmenu = async (
             'Inspect escalation ceilings, personality stats, and subtext attenuation tokens.',
         '[7] INSPECT DIRECTIONAL LEVERAGE STRINGS':
             'Audit directed social debt graph, foreign keys, and string solvency.',
-        '[8] AUDIT VOICE RAIL & SUBTEXT':
+        '[8] INSPECT DYADIC RELATIONSHIP ATTITUDES':
+            'Inspect relational profiles, active dyadic stances, deflection rules, and leverage edge.',
+        '[9] AUDIT VOICE RAIL & SUBTEXT':
             'Project voice rail wants, subtext contrast, and comedic register.',
         'BACK TO ROOT MENU': 'Return to lore management root.',
     }
@@ -1812,8 +1815,62 @@ export const openCharacterDossierSubmenu = async (
                 break
             }
 
-            case '[8] AUDIT VOICE RAIL & SUBTEXT':
+
+case '[8] INSPECT DYADIC RELATIONSHIP ATTITUDES':
             case '8': {
+                const choiceGrid = await lib.hunt(UPDATE_GRID, {
+                    x: 0,
+                    y: 4,
+                    xSpan: 4,
+                    ySpan: 12,
+                })
+
+                let targetActor = 'char_bog'
+                const actorInputBit = await lib.hunt(OPEN_INPUT, {
+                    txt: 'ACTOR ID',
+                    src: 'char_bog',
+                    net: choiceGrid?.grdBit?.dat,
+                })
+                const rawActor = actorInputBit?.putBit?.src?.trim()
+                if (rawActor) targetActor = rawActor
+
+                let partnerActor = 'char_wart'
+                const partnerInputBit = await lib.hunt(OPEN_INPUT, {
+                    txt: 'PARTNER ID',
+                    src: 'char_wart',
+                    net: choiceGrid?.grdBit?.dat,
+                })
+                const rawPartner = partnerInputBit?.putBit?.src?.trim()
+                if (rawPartner) partnerActor = rawPartner
+
+                await lib.hunt('[Console action] Update Console', {
+                    idx: 'cns00',
+                    src: `>> [RELATION:INSPECT] Dyad: ${targetActor} -> ${partnerActor}`
+                });
+
+                await lib.hunt('[Relation action] Resolve Dyadic Attitude', {
+                     actor_id: targetActor,
+                     interlocutor_id: partnerActor
+                })
+
+                if (targetActor === partnerActor) {
+                     await lib.hunt('[Console action] Update Console', {
+                        idx: 'cns00',
+                        src: `:: Self-referential dyad rejected. Zero state mutation.`
+                    });
+                } else {
+                     await lib.hunt('[Console action] Update Console', {
+                        idx: 'cns00',
+                        src: `>> DEFLECTION RULE : When pressed on "rations" -> Deflect to "boiler pipe corrosion"\n>> LEVERAGE EDGE   : Holds 2 Strings over ${partnerActor} (High Asymmetry)\n>> STATUS          : [OK] Structural Friction Verified [T0 = $0.00]`
+                    });
+                }
+
+                await new Promise((r) => setTimeout(r, 1500))
+                break
+            }
+
+            case '[9] AUDIT VOICE RAIL & SUBTEXT':
+            case '9': {
                 const choiceGrid = await lib.hunt(UPDATE_GRID, {
                     x: 0,
                     y: 4,
