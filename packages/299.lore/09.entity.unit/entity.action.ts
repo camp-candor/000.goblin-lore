@@ -20,4 +20,12 @@ export class OpenHumanSaveGate implements Action {
     constructor(public bale: HumanGateBit) {}
 }
 
+export const EVALUATE_SOMATIC_SAT = 'entity/EVALUATE_SOMATIC_SAT'
+export const AUDIT_ENTITY_CAPABILITY = 'entity/AUDIT_ENTITY_CAPABILITY'
+
+export interface EvaluateSomaticSATAction {
+    readonly type: typeof EVALUATE_SOMATIC_SAT
+    readonly payload: unknown
+}
+
 export type Actions = InitEntity | UpdateEntity | OpenHumanSaveGate

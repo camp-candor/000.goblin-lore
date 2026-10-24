@@ -1,7 +1,12 @@
 import { LocomotionModel } from '../locomotion.model.js'
 import type LocomotionBit from '../fce/locomotion.bit.js'
 import type State from '../../99.core/state.js'
-import { validateLocomotionBaseline } from '../val/locomotion.val.js'
+import {
+    validateLocomotionBaseline,
+    LocomotionTierSchema,
+    LOCOMOTION_PROFILES,
+    type LocomotionProfile,
+} from '../val/locomotion.val.js'
 import { ZodError } from 'zod'
 
 const UPDATE_CONSOLE = '[Console action] Update Console'
@@ -145,4 +150,50 @@ export const validateLocomotion = async (
     }
 
     return cpy
+}
+
+export interface LocomotionValidationResult {
+    readonly success: boolean
+    readonly locomotion_tier: string
+    readonly profile: LocomotionProfile
+    readonly code: string
+    readonly message: string
+}
+
+/**
+ * Validates a locomotion tier and resolves its velocity and forbidden verbs.
+ */
+export function validateLocomotionBaselineBuzz(
+    rawTier: unknown,
+): LocomotionValidationResult {
+    const parseResult = LocomotionTierSchema.safeParse(rawTier)
+
+    if (!parseResult.success) {
+        return {
+            success: false,
+            locomotion_tier: String(rawTier),
+            profile: {
+                baseline: 'sessile',
+                max_velocity_bps: 0,
+                max_velocity_bp: 0,
+                default_arms_bps: 0,
+                default_banned_verbs: [],
+                mandatory_banned_verbs: [],
+                description: '',
+            },
+            code: 'INVALID_LOCOMOTION_TIER',
+            message: `[FAIL] :: Invalid locomotion baseline: ${String(rawTier)}`,
+        }
+    }
+
+    const tier = parseResult.data
+    const profile = LOCOMOTION_PROFILES[tier]
+
+    return {
+        success: true,
+        locomotion_tier: tier,
+        profile,
+        code: 'OK',
+        message: `[OK] :: Locomotion tier '${tier}' mapped (Max Velocity: ${profile.max_velocity_bp} bp)`,
+    }
 }

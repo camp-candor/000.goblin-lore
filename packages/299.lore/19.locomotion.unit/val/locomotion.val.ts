@@ -17,6 +17,15 @@ export const LocomotionBaselineEnum = z.enum([
 ])
 export type LocomotionBaseline = z.infer<typeof LocomotionBaselineEnum>
 
+export const LocomotionTierSchema = z.enum([
+    'bipedal_standard',
+    'bipedal_hunched',
+    'limping',
+    'quadrupedal',
+    'slithering',
+])
+export type LocomotionTier = z.infer<typeof LocomotionTierSchema>
+
 /**
  * Deterministic profile metadata for a locomotion baseline.
  * Enforces integer basis points (bps) where 10000 bps = 100% full velocity.
@@ -25,8 +34,10 @@ export const LocomotionProfileSchema = z
     .object({
         baseline: LocomotionBaselineEnum,
         max_velocity_bps: z.number().int().min(0).max(10000),
+        max_velocity_bp: z.number().int().min(0).max(10000),
         default_arms_bps: z.number().int().min(0).max(20000),
         default_banned_verbs: z.array(z.string().min(1)),
+        mandatory_banned_verbs: z.array(z.string().min(1)),
         description: z.string().min(1),
     })
     .strict()
@@ -42,34 +53,41 @@ export const LOCOMOTION_PROFILES: Readonly<
     bipedal_standard: {
         baseline: 'bipedal_standard',
         max_velocity_bps: 10000,
+        max_velocity_bp: 10000,
         default_arms_bps: 20000,
         default_banned_verbs: [],
+        mandatory_banned_verbs: [],
         description:
             'Unrestricted bipedal mobility with full dual-arm articulation',
     },
     bipedal_hunched: {
         baseline: 'bipedal_hunched',
         max_velocity_bps: 8000,
+        max_velocity_bp: 7500,
         default_arms_bps: 20000,
         default_banned_verbs: ['sprint', 'vault'],
+        mandatory_banned_verbs: ['sprint'],
         description:
             'Low-clearance hunched crawlspace gait with limited burst speed',
     },
     quadrupedal: {
         baseline: 'quadrupedal',
         max_velocity_bps: 9500,
+        max_velocity_bp: 8500,
         default_arms_bps: 0,
         default_banned_verbs: [
             'bimanual_lift',
             'dual_wield',
             'fine_manipulation',
         ],
+        mandatory_banned_verbs: ['bipedal_stride', 'vault'],
         description:
             'Four-limbed locomotion dedicating forelimbs to weight bearing',
     },
     slithering: {
         baseline: 'slithering',
         max_velocity_bps: 6000,
+        max_velocity_bp: 3000,
         default_arms_bps: 0,
         default_banned_verbs: [
             'sprint',
@@ -79,22 +97,37 @@ export const LOCOMOTION_PROFILES: Readonly<
             'bimanual_lift',
             'dual_wield',
         ],
+        mandatory_banned_verbs: ['sprint', 'leap', 'vault', 'walk', 'jump'],
         description:
             'Limbless ground traversal with zero functional arm capacity',
     },
     brachiation: {
         baseline: 'brachiation',
         max_velocity_bps: 8500,
+        max_velocity_bp: 8500,
         default_arms_bps: 20000,
         default_banned_verbs: ['sprint'],
+        mandatory_banned_verbs: ['sprint'],
         description:
             'Overhead conduit swinging requiring functional upper limbs',
     },
     sessile: {
         baseline: 'sessile',
         max_velocity_bps: 0,
+        max_velocity_bp: 0,
         default_arms_bps: 0,
         default_banned_verbs: [
+            'sprint',
+            'run',
+            'vault',
+            'leap',
+            'climb',
+            'crawl',
+            'hobble',
+            'bimanual_lift',
+            'dual_wield',
+        ],
+        mandatory_banned_verbs: [
             'sprint',
             'run',
             'vault',
@@ -111,15 +144,25 @@ export const LOCOMOTION_PROFILES: Readonly<
     limping: {
         baseline: 'limping',
         max_velocity_bps: 5000,
+        max_velocity_bp: 4500,
         default_arms_bps: 20000,
         default_banned_verbs: ['sprint', 'vault', 'leap', 'scramble'],
+        mandatory_banned_verbs: ['sprint', 'leap', 'vault', 'scramble'],
         description: 'Asymmetric single-leg gait requiring compensatory pauses',
     },
     neuropathy_shuffle: {
         baseline: 'neuropathy_shuffle',
         max_velocity_bps: 4000,
+        max_velocity_bp: 4000,
         default_arms_bps: 20000,
         default_banned_verbs: [
+            'sprint',
+            'vault',
+            'leap',
+            'rapid_stairs',
+            'dive',
+        ],
+        mandatory_banned_verbs: [
             'sprint',
             'vault',
             'leap',
@@ -132,8 +175,10 @@ export const LOCOMOTION_PROFILES: Readonly<
     heavy_grounded_slog: {
         baseline: 'heavy_grounded_slog',
         max_velocity_bps: 4500,
+        max_velocity_bp: 4500,
         default_arms_bps: 20000,
         default_banned_verbs: ['sprint', 'vault', 'leap', 'acrobatic_dodge'],
+        mandatory_banned_verbs: ['sprint', 'vault', 'leap', 'acrobatic_dodge'],
         description: 'High-inertia dragging gait bound to floor contact',
     },
 })

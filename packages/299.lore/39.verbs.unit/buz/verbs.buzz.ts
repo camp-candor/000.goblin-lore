@@ -252,3 +252,55 @@ export const assertKineticVerbs = async (
 
     return cpy
 }
+
+const VERB_TAXONOMY_ROLLUP: Record<string, readonly string[]> = {
+    sprint: ['sprint', 'dash', 'bolt', 'charge'],
+    leap: ['leap', 'bound', 'jump', 'hurdle'],
+    vault: ['vault', 'hop_barrier', 'scale_wall'],
+    scramble: ['scramble', 'clamber', 'rush'],
+    bimanual_strike: ['bimanual_strike', 'heavy_swing', 'two_handed_cleave'],
+}
+
+/**
+ * Consolidates, rolls up synonyms, and deduplicates banned kinetic verbs.
+ */
+export function enforceBannedKineticVerbsBuzz(
+    baseBanned: readonly string[] = [],
+    locomotionBanned: readonly string[] = [],
+    somaticConditions: readonly string[] = [],
+): string[] {
+    const resultSet = new Set<string>()
+
+    const addVerbWithRollup = (verb: string) => {
+        const normalized = verb.toLowerCase().trim()
+        resultSet.add(normalized)
+        const rollups = VERB_TAXONOMY_ROLLUP[normalized]
+        if (rollups) {
+            for (const synonym of rollups) {
+                resultSet.add(synonym)
+            }
+        }
+    }
+
+    for (const v of baseBanned) addVerbWithRollup(v)
+    for (const v of locomotionBanned) addVerbWithRollup(v)
+
+    for (const condition of somaticConditions) {
+        const uc = condition.toUpperCase()
+        if (
+            uc.includes('AMPUTATION') ||
+            uc.includes('BRACHIAL') ||
+            uc.includes('FRACTURED')
+        ) {
+            addVerbWithRollup('bimanual_strike')
+            addVerbWithRollup('bimanual_lift')
+        }
+        if (uc.includes('PARALYSIS') || uc.includes('FRACTURED_FEMUR')) {
+            addVerbWithRollup('sprint')
+            addVerbWithRollup('leap')
+            addVerbWithRollup('vault')
+        }
+    }
+
+    return Array.from(resultSet).sort()
+}

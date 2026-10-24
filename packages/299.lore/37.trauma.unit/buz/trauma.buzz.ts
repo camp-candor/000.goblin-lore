@@ -190,3 +190,54 @@ export const resolveSomaticDelta = (
 
     return cpy
 }
+
+/**
+ * Map of somatic condition identifiers to their upper-limb impairment penalties in basis points.
+ * 10000 bp = 1 arm; 20000 bp = 2 arms.
+ */
+const SOMATIC_LIMB_PENALTIES: Record<string, number> = {
+    AMPUTATION_LEFT_ARM: 10000,
+    AMPUTATION_RIGHT_ARM: 10000,
+    BRACHIAL_PLEXUS_LEFT: 10000,
+    BRACHIAL_PLEXUS_RIGHT: 10000,
+    FRACTURED_HUMERUS_LEFT: 8000,
+    FRACTURED_HUMERUS_RIGHT: 8000,
+    DISLOCATED_SHOULDER_LEFT: 5000,
+    DISLOCATED_SHOULDER_RIGHT: 5000,
+    BILATERAL_AMPUTATION_ARMS: 20000,
+    TOTAL_PARALYSIS: 20000,
+}
+
+export interface LimbCapacityResult {
+    readonly available_arms_bp: number
+    readonly total_penalty_bp: number
+    readonly active_penalties: Record<string, number>
+}
+
+/**
+ * Computes net available functional arms in integer basis points.
+ * Clamps lower bound to 0 bp to prevent negative numbers.
+ */
+export function computeFunctionalLimbsBuzz(
+    baseArmsBp: number = 20000,
+    conditions: readonly string[] = [],
+): LimbCapacityResult {
+    let totalPenaltyBp = 0
+    const activePenalties: Record<string, number> = {}
+
+    for (const condition of conditions) {
+        const penalty = SOMATIC_LIMB_PENALTIES[condition.toUpperCase()]
+        if (penalty !== undefined) {
+            totalPenaltyBp += penalty
+            activePenalties[condition] = penalty
+        }
+    }
+
+    const availableArmsBp = Math.max(0, baseArmsBp - totalPenaltyBp)
+
+    return {
+        available_arms_bp: availableArmsBp,
+        total_penalty_bp: totalPenaltyBp,
+        active_penalties: activePenalties,
+    }
+}

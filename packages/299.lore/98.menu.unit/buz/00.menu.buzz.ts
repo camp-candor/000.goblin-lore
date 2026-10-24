@@ -2140,3 +2140,85 @@ export async function handleGraphMenuActionBuzz(
             log(`>> [WARN] :: Unknown graph action: ${actionId}`)
     }
 }
+
+import { computeFunctionalLimbsBuzz } from '../../37.trauma.unit/buz/trauma.buzz'
+import { validateLocomotionBaselineBuzz } from '../../19.locomotion.unit/buz/locomotion.buzz'
+import { enforceBannedKineticVerbsBuzz } from '../../39.verbs.unit/buz/verbs.buzz'
+import { evaluateSomaticSATBuzz } from '../../09.entity.unit/buz/entity.buzz'
+
+export interface MenuActionContext {
+    readonly log: (msg: string) => void
+    readonly ste: {
+        readonly hunt: (action: string, payload?: unknown) => Promise<unknown>
+    }
+}
+
+/**
+ * Handles terminal menu dispatches for Phase 3 Somatic Capability actions.
+ */
+export async function handleSomaticMenuActionBuzz(
+    actionId: string,
+    context: MenuActionContext,
+    payload?: Record<string, unknown>,
+): Promise<void> {
+    const { log } = context
+
+    switch (actionId) {
+        case 'COMPUTE_LIMB_CAPACITY': {
+            log('>> [SOMATIC] Computing functional limb capacity...')
+            const conditions = (payload?.conditions as string[]) || [
+                'BRACHIAL_PLEXUS_RIGHT',
+            ]
+            const res = computeFunctionalLimbsBuzz(20000, conditions)
+            log(
+                `>> [SOMATIC] Base: 20000 bp, Penalty: ${res.total_penalty_bp} bp, Net Available: ${res.available_arms_bp} bp`,
+            )
+            break
+        }
+        case 'VALIDATE_LOCOMOTION_GAIT': {
+            const tier = (payload?.tier as string) || 'limping'
+            log(`>> [LOCOMOTION] Validating locomotion baseline: '${tier}'...`)
+            const res = validateLocomotionBaselineBuzz(tier)
+            log(
+                `>> [LOCOMOTION] Result: ${res.code} :: ${res.message} (Banned: ${res.profile.mandatory_banned_verbs.join(', ')})`,
+            )
+            break
+        }
+        case 'AUDIT_SOMATIC_VERB_MASK': {
+            log('>> [VERBS] Auditing consolidated negative verb mask...')
+            const verbs = enforceBannedKineticVerbsBuzz(
+                ['sneer'],
+                ['sprint'],
+                ['AMPUTATION_LEFT_ARM'],
+            )
+            log(`>> [VERBS] Consolidated: ${verbs.join(', ')}`)
+            break
+        }
+        case 'RUN_SOMATIC_SAT_SOLVER': {
+            log('>> [SAT] Evaluating pre-flight somatic satisfiability...')
+            const candidate = {
+                entity_id: 'char_bog',
+                base_arms_bp: 20000,
+                somatic_conditions: ['BRACHIAL_PLEXUS_RIGHT'],
+                equipped_items: [
+                    {
+                        item_id: 'item_iron_knife',
+                        slot: 'held_primary' as const,
+                        occupies_hands_bp: 10000,
+                    },
+                    {
+                        item_id: 'item_shield',
+                        slot: 'held_offhand' as const,
+                        occupies_hands_bp: 10000,
+                    },
+                ],
+                locomotion_baseline: 'limping',
+            }
+            const res = evaluateSomaticSATBuzz(candidate)
+            log(`>> [SAT] Result: ${res.code} :: ${res.message}`)
+            break
+        }
+        default:
+            log(`>> [WARN] :: Unknown somatic menu action: ${actionId}`)
+    }
+}

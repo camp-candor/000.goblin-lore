@@ -56,7 +56,7 @@ export const updateLogistic = (
 }
 
 /**
- * Evaluates the Hand Capacity Invariant Equation at Stage T_0 = $0.00:
+ * Evaluates the Hand Capacity Invariant Equation at Stage T_0:
  * sum(occupies_hands_bps) <= arms_available_bps
  */
 export function verifyHandSaturationSat(
@@ -462,4 +462,38 @@ export const registerPossessionBuzz = (
         bal.slv({ logBit: { idx: bal.idx, val: 1 } })
     }
     return cpy
+}
+
+export interface EquippedItemDescriptor {
+    readonly item_id: string
+    readonly slot:
+        'held_primary' | 'held_offhand' | 'worn' | 'carried' | 'cached'
+    readonly occupies_hands_bp: number
+}
+
+export interface HandLoadResult {
+    readonly required_hands_bp: number
+    readonly items_in_hands: readonly string[]
+}
+
+/**
+ * Calculates total hand capacity required by actively held equipment in basis points.
+ */
+export function calculateHandLoadBuzz(
+    items: readonly EquippedItemDescriptor[] = [],
+): HandLoadResult {
+    let requiredHandsBp = 0
+    const itemsInHands: string[] = []
+
+    for (const item of items) {
+        if (item.slot === 'held_primary' || item.slot === 'held_offhand') {
+            requiredHandsBp += item.occupies_hands_bp
+            itemsInHands.push(item.item_id)
+        }
+    }
+
+    return {
+        required_hands_bp: requiredHandsBp,
+        items_in_hands: itemsInHands,
+    }
 }
