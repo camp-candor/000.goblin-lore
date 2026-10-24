@@ -138,8 +138,8 @@ A sharp bone knife.
             expect(gridCall?.dat).toEqual({
                 x: 0,
                 y: 4,
-                xSpan: 4,
-                ySpan: 11,
+                w: 4,
+                h: 11,
             })
 
             // Verify telemetry stream tags

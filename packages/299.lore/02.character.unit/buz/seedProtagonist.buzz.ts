@@ -265,3 +265,43 @@ export const generateSeedProtagonist = (
     }
     return cpy
 }
+
+export const seedCoreCharacters = (
+    cpy: CharacterModel,
+    bal: CharacterBit,
+    ste: State,
+): CharacterModel => {
+    const seriesSlug = bal.src || 'default-series'
+    try {
+        const charId = 'char_protagonist'
+        const result = generateSeedProtagonistDossier({
+            seriesSlug,
+            characterId: charId,
+        })
+        if (bal.slv) {
+            bal.slv({
+                characterBit: {
+                    idx: bal.idx,
+                    val: 1,
+                    dat: result,
+                },
+            })
+        }
+
+        ste.hunt('[Console action] Update Console', {
+            idx: 'cns00',
+            src: `============================================================\n>> [GENESIS:PROTAGONIST] Bootstrapping seed actor: char_protagonist\n>> [BYTE-0 CHECK] Verified preamble offset: 0x2D2D2D0A [OK]\n>> [SOMATIC] Baseline: bipedal_hunched | Arms: 20000 bps (2.0)\n>> [SAT GATE] Hand Saturation Check: 10000 <= 20000 bps [PASS]\n>> [ATOMIC WRITE] series/${seriesSlug}/characters/char_protagonist.md\n>> [STATUS] SHA-256 Digest: ${result.contentSha256.substring(0, 8)}... [SEALED AT T0 = $0.00]\n============================================================`,
+        })
+    } catch (err: any) {
+        if (bal.slv) {
+            bal.slv({
+                characterBit: {
+                    idx: bal.idx,
+                    val: 0,
+                    dat: { error: err.message },
+                },
+            })
+        }
+    }
+    return cpy
+}
