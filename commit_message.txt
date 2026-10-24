@@ -1,0 +1,7 @@
+Implement SEED CORE GOBLIN CAST telemetry hook and fix test
+
+- Add `seedCoreCharacters` buzzer logic to `packages/299.lore/02.character.unit/buz/seedProtagonist.buzz.ts`
+- Export `seedCoreCharacters` in `packages/299.lore/02.character.unit/character.buzzer.ts`
+- Wire `Act.SEED_CORE_CHARACTERS` to `seedCoreCharacters` in `packages/299.lore/02.character.unit/character.reduce.ts`
+- Fix `packages/299.lore/98.menu.unit/test/characterTypeahead.test.ts` to expect `w` and `h` instead of `xSpan` and `ySpan` for grid validation.
+- Update `data/directive/day-002/068.phase-three.ag-test.md` progress to completed.
