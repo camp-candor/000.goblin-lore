@@ -53,3 +53,11 @@ export type Actions =
     | PromptLocomotionChoice
     | PromptEquipmentSlots
     | RunCharacterAuditTelemetry
+    | BindDiscoveryProvenance
+
+export const BIND_DISCOVERY_PROVENANCE =
+    '[Refusal action] Bind Discovery Provenance'
+export class BindDiscoveryProvenance implements Action {
+    readonly type = BIND_DISCOVERY_PROVENANCE
+    constructor(public bale?: any) {}
+}
