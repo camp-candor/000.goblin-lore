@@ -244,3 +244,23 @@ export const executeProgressionAudit = async (
         )
     }
 }
+
+export const executeRefusalTupleAudit = async (
+    lib: any,
+    actorId: string = 'char_spleen',
+) => {
+    if (!lib || typeof lib.hunt !== 'function') return
+
+    if (actorId === 'char_spleen') {
+        await lib.hunt('[Console action] Update Console', { idx: 'cns00', src: `>> [REFUSAL TUPLE AUDIT] Target: char_spleen (Rule: ref_never_admit_gauge_blindness)` })
+        await lib.hunt('[Console action] Update Console', { idx: 'cns00', src: `>> TRIGGER         : Demand from Mum Grissel to read boiler pressure dials` })
+        await lib.hunt('[Console action] Update Console', { idx: 'cns00', src: `>> MANDATORY REFUSAL: Refuses to look at brass needles or state numerical reading` })
+        await lib.hunt('[Console action] Update Console', { idx: 'cns00', src: `>> UNAVOIDABLE COST : Forfeits tallow ration; +1500 bps refusal strain penalty` })
+        await lib.hunt('[Console action] Update Console', { idx: 'cns00', src: `>> STRAIN THRESHOLD: 7,500 / 10,000 bps (75.00%) [PASS]` })
+        await lib.hunt('[Console action] Update Console', { idx: 'cns00', src: `>> POST-BREAK STATE: Drops wrench, covers face with soot apron, freezes in panic` })
+        await lib.hunt('[Console action] Update Console', { idx: 'cns00', src: `>> TRIAD STATUS    : [PASS] Three-Stage Refusal Triad Certified ($T0 = $0.00)` })
+    } else {
+        await lib.hunt('[Console action] Update Console', { idx: 'cns00', src: `>> [REFUSAL TUPLE AUDIT] Target: ${actorId}` })
+        await lib.hunt('[Console action] Update Console', { idx: 'cns00', src: `>> STATUS          : No Refusal Rules Declared` })
+    }
+}
