@@ -1,8 +1,8 @@
 import clone from 'clone-deep'
-import * as Act from './location.action'
-import { LocationModel } from './location.model'
-import * as Buzz from './location.buzzer'
-import State from '../99.core/state'
+import * as Act from './location.action.js'
+import { LocationModel } from './location.model.js'
+import * as Buzz from './location.buzzer.js'
+import State from '../99.core/state.js'
 
 export function reducer(
     model: LocationModel = new LocationModel(),
@@ -11,10 +11,17 @@ export function reducer(
 ) {
     switch (act.type) {
         case Act.UPDATE_LOCATION:
-            return Buzz.updateLocation(clone(model), act.bale, state)
+            return Buzz.updateLocation(clone(model), act.bale, state as any)
 
         case Act.INIT_LOCATION:
-            return Buzz.initLocation(clone(model), act.bale, state)
+            return Buzz.initLocation(clone(model), act.bale, state as any)
+
+        case Act.SCAFFOLD_LOCATION_WIZARD:
+            return Buzz.scaffoldLocationWizard(
+                clone(model),
+                act.bale,
+                state as any,
+            )
 
         default:
             return model

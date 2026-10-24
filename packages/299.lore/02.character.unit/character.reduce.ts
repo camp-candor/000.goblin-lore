@@ -35,8 +35,12 @@ export function reducer(
             return Buzz.inspectSomatic(cpy, action.bale, state as State)
         case Act.SEED_CORE_CHARACTERS:
             return Buzz.seedCoreCharacters(cpy, action.bale, state as State)
-                case Act.SCAFFOLD_CHARACTER_WIZARD:
-            return Buzz.scaffoldCharacterWizard(clone(model), action.bale, state as State)
+        case Act.SCAFFOLD_CHARACTER_WIZARD:
+            return Buzz.scaffoldCharacterWizard(
+                clone(model),
+                action.bale,
+                state as State,
+            )
         default:
             return cpy
     }

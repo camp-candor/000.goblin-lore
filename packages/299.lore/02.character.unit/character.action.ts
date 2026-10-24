@@ -65,8 +65,8 @@ export class AuditCharacterDossier implements Action {
     constructor(public bale: CharacterBit) {}
 }
 
-
-export const SCAFFOLD_CHARACTER_WIZARD = '[Character action] Scaffold Character Wizard'
+export const SCAFFOLD_CHARACTER_WIZARD =
+    '[Character action] Scaffold Character Wizard'
 export class ScaffoldCharacterWizard implements Action {
     readonly type = SCAFFOLD_CHARACTER_WIZARD
     constructor(public bale: CharacterScaffoldBit) {}

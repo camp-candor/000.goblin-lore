@@ -2136,10 +2136,10 @@ export async function handleGraphMenuActionBuzz(
     }
 }
 
-import { computeFunctionalLimbsBuzz } from '../../37.trauma.unit/buz/trauma.buzz'
-import { validateLocomotionBaselineBuzz } from '../../19.locomotion.unit/buz/locomotion.buzz'
-import { enforceBannedKineticVerbsBuzz } from '../../39.verbs.unit/buz/verbs.buzz'
-import { evaluateSomaticSATBuzz } from '../../09.entity.unit/buz/entity.buzz'
+import { computeFunctionalLimbsBuzz } from '../../37.trauma.unit/buz/trauma.buzz.js'
+import { validateLocomotionBaselineBuzz } from '../../19.locomotion.unit/buz/locomotion.buzz.js'
+import { enforceBannedKineticVerbsBuzz } from '../../39.verbs.unit/buz/verbs.buzz.js'
+import { evaluateSomaticSATBuzz } from '../../09.entity.unit/buz/entity.buzz.js'
 
 export interface MenuActionContext {
     readonly log: (msg: string) => void
