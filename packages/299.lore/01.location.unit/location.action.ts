@@ -1,5 +1,6 @@
-import { Action } from '../99.core/interface/action.interface'
-import LocationBit from './fce/location.bit'
+import { Action } from '../99.core/interface/action.interface.js'
+import LocationBit from './fce/location.bit.js'
+import type LocationScaffoldBit from './fce/locationScaffold.bit.js'
 
 // Location actions
 
@@ -15,7 +16,14 @@ export class UpdateLocation implements Action {
     constructor(public bale: LocationBit) {}
 }
 
-export type Actions = InitLocation | UpdateLocation
+export const SCAFFOLD_LOCATION_WIZARD =
+    '[Location action] Scaffold Location Wizard'
+export class ScaffoldLocationWizard implements Action {
+    readonly type = SCAFFOLD_LOCATION_WIZARD
+    constructor(public bale: LocationScaffoldBit) {}
+}
+
+export type Actions = InitLocation | UpdateLocation | ScaffoldLocationWizard
 
 export const RECONCILE_RECIPROCAL_SPATIAL_LINKS =
     'location/RECONCILE_RECIPROCAL_SPATIAL_LINKS'

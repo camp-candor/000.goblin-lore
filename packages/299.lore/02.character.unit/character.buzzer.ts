@@ -22,12 +22,11 @@ export {
 } from './buz/retireCharacter.buzz.js'
 export { inspectSomatic } from './buz/inspectSomatic.buzz.js'
 
-
 export {
-  scaffoldCharacterWizard,
-  evaluateHandCapacitySAT,
-  renderCharacterDossierMarkdown,
-  writeCharacterDossierAtomic,
-  LOCOMOTION_PROFILES,
-  TRAUMA_CONDITIONS,
+    scaffoldCharacterWizard,
+    evaluateHandCapacitySAT,
+    renderCharacterDossierMarkdown,
+    writeCharacterDossierAtomic,
+    LOCOMOTION_PROFILES,
+    TRAUMA_CONDITIONS,
 } from './buz/characterScaffold.buzz.js'
