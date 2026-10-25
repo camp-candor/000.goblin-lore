@@ -16,6 +16,9 @@ export function reducer(
         case Act.INIT_GRIEVANCE:
             return Buzz.initGrievance(clone(model), act.bale, state)
 
+        case Act.SCAFFOLD_GRIEVANCE_WIZARD:
+            return Buzz.scaffoldGrievanceWizard(clone(model), act.bale, state!)
+
         default:
             return model
     }

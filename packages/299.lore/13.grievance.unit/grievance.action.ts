@@ -9,10 +9,18 @@ export class InitGrievance implements Action {
     constructor(public bale: GrievanceBit) {}
 }
 
+import type GrievanceScaffoldBit from './fce/grievanceScaffold.bit'
+
 export const UPDATE_GRIEVANCE = '[Grievance action] Update Grievance'
 export class UpdateGrievance implements Action {
     readonly type = UPDATE_GRIEVANCE
     constructor(public bale: GrievanceBit) {}
 }
 
-export type Actions = InitGrievance | UpdateGrievance
+export const SCAFFOLD_GRIEVANCE_WIZARD = '[Grievance action] Scaffold Grievance Wizard';
+export class ScaffoldGrievanceWizard implements Action {
+  readonly type = SCAFFOLD_GRIEVANCE_WIZARD;
+  constructor(public bale: GrievanceScaffoldBit) {}
+}
+
+export type Actions = InitGrievance | UpdateGrievance | ScaffoldGrievanceWizard
