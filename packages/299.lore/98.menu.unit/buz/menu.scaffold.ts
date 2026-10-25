@@ -4,6 +4,7 @@ import type State from '../../99.core/state.js'
 import * as ActChr from '../../02.character.unit/character.action.js'
 import * as ActLoc from '../../01.location.unit/location.action.js'
 import * as ActItm from '../../15.item.unit/item.action.js'
+import * as ActGrv from '../../13.grievance.unit/grievance.action.js'
 
 const UPDATE_CONSOLE = '[Console action] Update Console'
 
@@ -67,5 +68,26 @@ export const scaffoldPossession = async (
 
     if (bal.slv)
         bal.slv({ mnuBit: { idx: 'scaffold-possession', src: 'completed' } })
+    return cpy
+}
+
+export const scaffoldGrievance = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste: State,
+): Promise<MenuModel> => {
+    await ste.hunt(UPDATE_CONSOLE, {
+        idx: 'cns00',
+        src: '>> [SCAFFOLD:GRIEVANCE] Launching Interpersonal Grievance Interview...',
+    })
+
+    // Dispatch into 13.grievance.unit wizard
+    await ste.hunt(ActGrv.SCAFFOLD_GRIEVANCE_WIZARD, {
+        idx: 'menu-grv-scaffold',
+        dat: bal.dat,
+    })
+
+    if (bal.slv)
+        bal.slv({ mnuBit: { idx: 'scaffold-grievance', src: 'completed' } })
     return cpy
 }
