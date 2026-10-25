@@ -16,6 +16,13 @@ export function reducer(
         case Act.INIT_ITEM:
             return Buzz.initItem(clone(model), act.bale, state)
 
+        case Act.SCAFFOLD_POSSESSION_WIZARD:
+            return Buzz.scaffoldPossessionWizard(
+                clone(model),
+                act.bale as any,
+                state as any,
+            )
+
         default:
             return model
     }
