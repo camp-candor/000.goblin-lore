@@ -5,6 +5,7 @@ import * as ActChr from '../../02.character.unit/character.action.js'
 import * as ActLoc from '../../01.location.unit/location.action.js'
 import * as ActItm from '../../15.item.unit/item.action.js'
 import * as ActGrv from '../../13.grievance.unit/grievance.action.js'
+import * as ActLaw from '../../03.laws.unit/laws.action.js'
 
 const UPDATE_CONSOLE = '[Console action] Update Console'
 
@@ -89,5 +90,26 @@ export const scaffoldGrievance = async (
 
     if (bal.slv)
         bal.slv({ mnuBit: { idx: 'scaffold-grievance', src: 'completed' } })
+    return cpy
+}
+
+export const scaffoldWorld = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste: State,
+): Promise<MenuModel> => {
+    await ste.hunt(UPDATE_CONSOLE, {
+        idx: 'cns00',
+        src: '>> [SCAFFOLD:WORLD] Launching World Axiom Interview...',
+    })
+
+    // Dispatch into 03.laws.unit wizard
+    await ste.hunt(ActLaw.SCAFFOLD_WORLD_WIZARD, {
+        idx: 'menu-world-scaffold',
+        dat: bal.dat,
+    })
+
+    if (bal.slv)
+        bal.slv({ mnuBit: { idx: 'scaffold-world', src: 'completed' } })
     return cpy
 }
