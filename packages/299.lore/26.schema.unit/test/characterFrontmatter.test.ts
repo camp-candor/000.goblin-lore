@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import * as yaml from 'js-yaml'
 import {
     CharacterFrontmatterSchema,
+    CanonicalCharacterFrontmatterSchema,
     SensoryAcuitySchema,
 } from '../val/characterFrontmatter.val.js'
 import {
@@ -109,7 +110,7 @@ Short clipped sentences, gravelly dialect, heavy staccato pacing.
         const { frontmatterText, bodyText } =
             extractDossierSections(validDossierMarkdown)
         const parsed = yaml.load(frontmatterText)
-        const validated = CharacterFrontmatterSchema.parse(parsed)
+        const validated = CanonicalCharacterFrontmatterSchema.parse(parsed)
 
         expect(validated.id).toBe('char_bog')
         expect(validated.somatic.locomotion_baseline).toBe('bipedal_hunched')

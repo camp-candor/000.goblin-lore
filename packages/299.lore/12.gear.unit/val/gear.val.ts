@@ -85,6 +85,12 @@ export const PossessionDossierFrontmatterSchema = z.union([
 export type PossessionDossierFrontmatter = z.infer<
     typeof PossessionDossierFrontmatterSchema
 >
+export type CanonicalPossessionDossierFrontmatter = z.infer<
+    typeof CanonicalPossessionDossierFrontmatterSchema
+>
+export type GenesisPossessionDossierFrontmatter = z.infer<
+    typeof GenesisPossessionDossierFrontmatterSchema
+>
 
 /**
  * Resolution query input payload for auditing character logistical arrays.

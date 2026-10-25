@@ -4,7 +4,10 @@ import {
     SERIES_SLUG_MIN_LENGTH,
     SERIES_SLUG_MAX_LENGTH,
 } from '../val/seriesSlug.val.js'
-import type { SeriesSlugValidationResultBit } from '../fce/seriesSlug.bit.js'
+import type {
+    SeriesSlugValidationResultBit,
+    SeriesSlugValidationFailureBit,
+} from '../fce/seriesSlug.bit.js'
 
 /**
  * Validates a series slug against the strict POSIX schema, returning a typed result envelope.
@@ -70,8 +73,9 @@ export const validateSeriesSlug = (
 export const assertSeriesSlug = (rawInput: string): string => {
     const result = validateSeriesSlug(rawInput)
     if (!result.valid) {
+        const failure = result as SeriesSlugValidationFailureBit
         throw new Error(
-            `[SERIES_SLUG_BREACH] ${result.errorCode}: ${result.message}`,
+            `[SERIES_SLUG_BREACH] ${failure.errorCode}: ${failure.message}`,
         )
     }
     return result.slug

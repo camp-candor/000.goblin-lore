@@ -7,14 +7,17 @@ import {
     verifyByteZeroOffset,
     sanitizeVoiceRailProse,
 } from '../buz/serializer.buzz.js'
-import { CharacterFrontmatter } from '../../26.schema.unit/val/characterFrontmatter.val.js'
+import {
+    CharacterFrontmatter,
+    CanonicalCharacterFrontmatter,
+} from '../../26.schema.unit/val/characterFrontmatter.val.js'
 import { VoiceRailSectionsBit } from '../../26.schema.unit/fce/characterDossier.bit.js'
 
 describe('Interactive Character Dossier Disk Serializer', () => {
     const testRoot = path.join(process.cwd(), '.tmp_test_serializer')
     const testSeriesSlug = 'test-wiregrass-basin'
 
-    const validFrontmatter: CharacterFrontmatter = {
+    const validFrontmatter: CanonicalCharacterFrontmatter = {
         id: 'char_bog',
         name: 'Bog',
         type: 'character',
@@ -140,7 +143,7 @@ describe('Interactive Character Dossier Disk Serializer', () => {
     it('negative control: halts disk write when Hand Saturation SAT is breached', () => {
         const invalidFrontmatter = JSON.parse(
             JSON.stringify(validFrontmatter),
-        ) as CharacterFrontmatter
+        ) as CanonicalCharacterFrontmatter
         invalidFrontmatter.somatic.available_arms_bps = 10000 // 1.0 arm
         invalidFrontmatter.logistical.held = ['item_sword', 'item_shield'] // 2 items > 1 arm
 

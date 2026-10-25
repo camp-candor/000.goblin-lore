@@ -6,6 +6,7 @@ import {
     assertSeriesNamespaceVacant,
     checkSeriesSlugAvailabilityBuzz,
 } from '../buz/slugCollisionGuard.buzz.js'
+import type { SlugCollisionGuardOccupiedBit } from '../fce/slugCollisionGuard.bit.js'
 import { SeriesModel } from '../series.model.js'
 
 describe('29.series.unit - Existing Series Namespace Collision Guard', () => {
@@ -40,9 +41,10 @@ describe('29.series.unit - Existing Series Namespace Collision Guard', () => {
         const res = assertSeriesNamespaceVacant(tempRepoRoot, 'Wiregrass Basin')
         expect(res.isVacant).toBe(false)
         if (!res.isVacant) {
-            expect(res.errorCode).toBe('CONFLICT_BLOCKED')
-            expect(res.collidedPaths).toContain(existingSeriesDir)
-            expect(res.message).toContain('already exists on disk')
+            const occ = res as SlugCollisionGuardOccupiedBit
+            expect(occ.errorCode).toBe('CONFLICT_BLOCKED')
+            expect(occ.collidedPaths).toContain(existingSeriesDir)
+            expect(occ.message).toContain('already exists on disk')
         }
     })
 
@@ -57,8 +59,9 @@ describe('29.series.unit - Existing Series Namespace Collision Guard', () => {
         const res = assertSeriesNamespaceVacant(tempRepoRoot, 'wiregrass-basin')
         expect(res.isVacant).toBe(false)
         if (!res.isVacant) {
-            expect(res.errorCode).toBe('CONFLICT_BLOCKED')
-            expect(res.collidedPaths).toContain(existingCompiledDir)
+            const occ = res as SlugCollisionGuardOccupiedBit
+            expect(occ.errorCode).toBe('CONFLICT_BLOCKED')
+            expect(occ.collidedPaths).toContain(existingCompiledDir)
         }
     })
 

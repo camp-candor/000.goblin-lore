@@ -8,7 +8,10 @@ import {
     verifyByteZeroOffset,
 } from '../buz/seedProtagonist.buzz.js'
 import { extractDossierSections } from '../../26.schema.unit/buz/schema.buzz.js'
-import { CharacterFrontmatterSchema } from '../../26.schema.unit/val/characterFrontmatter.val.js'
+import {
+    CharacterFrontmatterSchema,
+    CanonicalCharacterFrontmatterSchema,
+} from '../../26.schema.unit/val/characterFrontmatter.val.js'
 
 describe('Seed Protagonist Genesis Dossier Generator', () => {
     const testRoot = path.join(process.cwd(), '.tmp_test_genesis')
@@ -69,7 +72,7 @@ describe('Seed Protagonist Genesis Dossier Generator', () => {
         const { frontmatterText, bodyText } =
             extractDossierSections(markdownContent)
         const parsedYaml = yaml.load(frontmatterText)
-        const validated = CharacterFrontmatterSchema.parse(parsedYaml)
+        const validated = CanonicalCharacterFrontmatterSchema.parse(parsedYaml)
 
         expect(validated.id).toBe('char_protagonist')
         expect(validated.name).toBe('Kaelen')

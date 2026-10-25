@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import {
     PossessionDossierFrontmatterSchema,
+    CanonicalPossessionDossierFrontmatterSchema,
     PossessionDossierFrontmatter,
 } from '../val/gear.val'
 import {
@@ -61,7 +62,7 @@ describe('12.gear.unit :: Gear Unit Foreign-Key Possession Resolver', () => {
             },
             created_at_epoch: 100,
         }
-        const parsed = PossessionDossierFrontmatterSchema.parse(raw)
+        const parsed = CanonicalPossessionDossierFrontmatterSchema.parse(raw)
         expect(parsed.id).toBe('item_copper_flange')
         expect(parsed.logistical.mass_grams).toBe(250)
     })

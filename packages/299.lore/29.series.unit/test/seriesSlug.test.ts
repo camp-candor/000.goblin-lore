@@ -6,6 +6,7 @@ import {
     SERIES_SLUG_MAX_LENGTH,
 } from '../val/seriesSlug.val.js'
 import { validateSeriesSlug, assertSeriesSlug } from '../buz/seriesSlug.buzz.js'
+import type { SeriesSlugValidationFailureBit } from '../fce/seriesSlug.bit.js'
 
 describe('29.series.unit - Posix Slug Sanitization Validator', () => {
     describe('sanitizeSeriesSlug', () => {
@@ -100,7 +101,8 @@ describe('29.series.unit - Posix Slug Sanitization Validator', () => {
             const res = validateSeriesSlug('   !@#$   ')
             expect(res.valid).toBe(false)
             if (!res.valid) {
-                expect(res.errorCode).toBe('SLUG_EMPTY')
+                const failure = res as SeriesSlugValidationFailureBit
+                expect(failure.errorCode).toBe('SLUG_EMPTY')
             }
             expect(() => assertSeriesSlug('!@#$')).toThrow(/SLUG_EMPTY/)
         })
@@ -109,7 +111,8 @@ describe('29.series.unit - Posix Slug Sanitization Validator', () => {
             const res = validateSeriesSlug('wb')
             expect(res.valid).toBe(false)
             if (!res.valid) {
-                expect(res.errorCode).toBe('SLUG_TOO_SHORT')
+                const failure = res as SeriesSlugValidationFailureBit
+                expect(failure.errorCode).toBe('SLUG_TOO_SHORT')
             }
             expect(() => assertSeriesSlug('wb')).toThrow(/SLUG_TOO_SHORT/)
         })
@@ -119,7 +122,8 @@ describe('29.series.unit - Posix Slug Sanitization Validator', () => {
             const res = validateSeriesSlug(longTitle)
             expect(res.valid).toBe(false)
             if (!res.valid) {
-                expect(res.errorCode).toBe('SLUG_TOO_LONG')
+                const failure = res as SeriesSlugValidationFailureBit
+                expect(failure.errorCode).toBe('SLUG_TOO_LONG')
             }
             expect(() => assertSeriesSlug(longTitle)).toThrow(/SLUG_TOO_LONG/)
         })

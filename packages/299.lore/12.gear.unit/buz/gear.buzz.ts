@@ -7,6 +7,8 @@ import State from '../../99.core/state'
 import {
     PossessionDossierFrontmatterSchema,
     PossessionDossierFrontmatter,
+    CanonicalPossessionDossierFrontmatter,
+    GenesisPossessionDossierFrontmatter,
     ResolveGearPointersInputSchema,
     ResolveGearPointersInput,
 } from '../val/gear.val'
@@ -129,18 +131,39 @@ export function resolveCharacterGearPointers(
             return
         }
 
-        totalMassGrams += dossier.logistical.mass_grams
+        const isCanonical = 'type' in dossier && dossier.type === 'possession'
+        const canDossier = isCanonical
+            ? (dossier as CanonicalPossessionDossierFrontmatter)
+            : null
+        const genDossier = !isCanonical
+            ? (dossier as GenesisPossessionDossierFrontmatter)
+            : null
+
+        const massGrams = canDossier
+            ? canDossier.logistical.mass_grams
+            : (genDossier?.mass_grams ?? 0)
+        const occupiesHandsBps = canDossier
+            ? canDossier.logistical.occupies_hands_bps
+            : (genDossier?.hands_required_bps ?? 10000)
+        const weightClass = canDossier
+            ? canDossier.logistical.weight_class
+            : (genDossier?.weight_class ?? 'scrap')
+        const isContested = canDossier
+            ? canDossier.logistical.is_contested
+            : false
+
+        totalMassGrams += massGrams
         if (slot === 'held') {
-            totalHeldHandsBps += dossier.logistical.occupies_hands_bps
+            totalHeldHandsBps += occupiesHandsBps
         }
 
         resolvedItems.push({
             item_id: dossier.id,
             name: dossier.name,
-            mass_grams: dossier.logistical.mass_grams,
-            occupies_hands_bps: dossier.logistical.occupies_hands_bps,
-            weight_class: dossier.logistical.weight_class,
-            is_contested: dossier.logistical.is_contested,
+            mass_grams: massGrams,
+            occupies_hands_bps: occupiesHandsBps,
+            weight_class: weightClass,
+            is_contested: isContested,
             slot_assigned: slot,
             location_id: locId,
         })

@@ -306,3 +306,9 @@ export const CharacterFrontmatterSchema = z.union([
 ])
 
 export type CharacterFrontmatter = z.infer<typeof CharacterFrontmatterSchema>
+export type FoundationalCharacterFrontmatter = z.infer<
+    typeof FoundationalCharacterFrontmatterSchema
+>
+export type CanonicalCharacterFrontmatter = z.infer<
+    typeof CanonicalCharacterFrontmatterSchema
+>

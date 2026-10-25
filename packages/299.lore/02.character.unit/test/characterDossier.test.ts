@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest'
-import { CharacterFrontmatterSchema } from '../../26.schema.unit/val/characterFrontmatter.val.js'
+import {
+    CharacterFrontmatterSchema,
+    CanonicalCharacterFrontmatterSchema,
+} from '../../26.schema.unit/val/characterFrontmatter.val.js'
 import { verifyByteZeroIntegrity } from '../../41.canon.unit/buz/byteZero.buzz.js'
 import { verifyHandSaturationSat } from '../../04.logistic.unit/buz/logistic.buzz.js'
 import { scanVoiceRailVerbPolarity } from '../../39.verbs.unit/buz/polarityScanner.buzz.js'
@@ -87,7 +90,8 @@ Speaks in clipped, dry phrases with heavy emphasis on quantities, tallies, and w
         expect(byteZeroResult.firstFourBytesHex).toBe('2d2d2d0a')
 
         // Assert Strict Schema Parsing
-        const parsed = CharacterFrontmatterSchema.parse(mockBogFrontmatter)
+        const parsed =
+            CanonicalCharacterFrontmatterSchema.parse(mockBogFrontmatter)
         expect(parsed.id).toBe('char_bog')
         expect(parsed.somatic.locomotion_baseline).toBe('bipedal_hunched')
         expect(parsed.refusal_vectors).toHaveLength(1)

@@ -88,9 +88,18 @@ export function buildCharacterDossierMarkdown(
     if (typeof voiceRailProse === 'string') {
         const validatedFrontmatter =
             CharacterFrontmatterSchema.parse(configOrFrontmatter)
-        const heldItemsCount = validatedFrontmatter.logistical.held.length
-        const availableArms =
-            (validatedFrontmatter.somatic.available_arms_bps ?? 20000) / 10000
+        const heldItemsCount =
+            'held' in validatedFrontmatter.logistical &&
+            Array.isArray(validatedFrontmatter.logistical.held)
+                ? validatedFrontmatter.logistical.held.length
+                : 0
+        const availableArmsBps =
+            'available_arms_bps' in validatedFrontmatter.somatic
+                ? (validatedFrontmatter.somatic.available_arms_bps ?? 20000)
+                : 'arms_available_bp' in validatedFrontmatter.somatic
+                  ? (validatedFrontmatter.somatic.arms_available_bp ?? 20000)
+                  : 20000
+        const availableArms = availableArmsBps / 10000
         if (heldItemsCount > availableArms) {
             throw new Error(
                 `[HAND_CAPACITY_SAT_VIOLATION]: Held items (${heldItemsCount}) exceed available arms (${availableArms})`,
@@ -112,9 +121,18 @@ export function buildCharacterDossierMarkdown(
     )
 
     // Hand Saturation SAT Invariant Check
-    const heldItemsCount = validatedFrontmatter.logistical.held.length
-    const availableArms =
-        (validatedFrontmatter.somatic.available_arms_bps ?? 20000) / 10000
+    const heldItemsCount =
+        'held' in validatedFrontmatter.logistical &&
+        Array.isArray(validatedFrontmatter.logistical.held)
+            ? validatedFrontmatter.logistical.held.length
+            : 0
+    const availableArmsBps =
+        'available_arms_bps' in validatedFrontmatter.somatic
+            ? (validatedFrontmatter.somatic.available_arms_bps ?? 20000)
+            : 'arms_available_bp' in validatedFrontmatter.somatic
+              ? (validatedFrontmatter.somatic.arms_available_bp ?? 20000)
+              : 20000
+    const availableArms = availableArmsBps / 10000
     if (heldItemsCount > availableArms) {
         throw new Error(
             `[HAND_CAPACITY_SAT_VIOLATION]: Held items (${heldItemsCount}) exceed available arms (${availableArms})`,

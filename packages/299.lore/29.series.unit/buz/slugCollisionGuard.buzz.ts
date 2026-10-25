@@ -6,6 +6,7 @@ import { sanitizeSeriesSlug } from '../val/seriesSlug.val.js'
 import type {
     SlugCollisionGuardOptionsBit,
     SlugCollisionGuardResultBit,
+    SlugCollisionGuardOccupiedBit,
 } from '../fce/slugCollisionGuard.bit.js'
 import type { SeriesModel } from '../series.model.js'
 import type SeriesBit from '../fce/series.bit.js'
@@ -66,13 +67,14 @@ export const checkSeriesSlugAvailabilityBuzz = async (
     const check = assertSeriesNamespaceVacant(repoRoot, rawSlug)
 
     if (!check.isVacant) {
+        const failure = check as SlugCollisionGuardOccupiedBit
         await emitBusConsoleLog(
             'cns00',
-            `>> [FAIL] SLUG_COLLISION: Series '${check.slug}' already exists in series/.`,
+            `>> [FAIL] SLUG_COLLISION: Series '${failure.slug}' already exists in series/.`,
         )
         await emitBusConsoleLog(
             'cns00',
-            `>> [GUARD] Collided path: ${check.collidedPaths.join(', ')}`,
+            `>> [GUARD] Collided path: ${failure.collidedPaths.join(', ')}`,
         )
 
         if (bal?.slv != null) {

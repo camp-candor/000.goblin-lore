@@ -1,12 +1,9 @@
-import type { CharacterFrontmatter } from '../val/characterFrontmatter.val.js'
+import type {
+    CharacterFrontmatter,
+    LocomotionBaseline,
+} from '../val/characterFrontmatter.val.js'
 
 export type CharacterStatus = 'active' | 'departed' | 'dormant'
-export type LocomotionBaseline =
-    | 'bipedal_standard'
-    | 'bipedal_hunched'
-    | 'limping'
-    | 'quadrupedal'
-    | 'slithering'
 
 export interface CharacterSomaticVectorBit {
     readonly arms_available_bp: number
