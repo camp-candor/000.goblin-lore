@@ -221,19 +221,11 @@ const init = async () => {
                     pkgDistPath,
                     '98.menu.unit/menu.action',
                 )
-                const menuBuzzPath = path.join(
-                    pkgDistPath,
-                    '98.menu.unit/buz/00.menu.buzz',
-                )
-                const hasVisualMenu =
-                    fs.existsSync(menuActionPath + '.js') ||
-                    fs.existsSync(menuActionPath + '.ts') ||
-                    fs.existsSync(menuActionPath) ||
-                    fs.existsSync(menuBuzzPath + '.js') ||
-                    fs.existsSync(menuBuzzPath + '.ts') ||
-                    fs.existsSync(menuBuzzPath)
-
-                if (!hasVisualMenu) {
+                if (
+                    !fs.existsSync(menuActionPath + '.js') &&
+                    !fs.existsSync(menuActionPath + '.ts') &&
+                    !fs.existsSync(menuActionPath)
+                ) {
                     // Headless pivot without visual menu unit
                     await LIBRARY.hunt(CONSOLE_ACTION_LIBRARY.UPDATE_CONSOLE, {
                         idx: 'cns00',
@@ -242,16 +234,7 @@ const init = async () => {
                     continue
                 }
 
-                let MENU_ACTION: any = null
-                if (
-                    fs.existsSync(menuActionPath + '.js') ||
-                    fs.existsSync(menuActionPath + '.ts') ||
-                    fs.existsSync(menuActionPath)
-                ) {
-                    MENU_ACTION = require(menuActionPath)
-                }
-                const initMenuAction =
-                    MENU_ACTION?.INIT_MENU || '[Menu action] Init Menu'
+                const MENU_ACTION = require(menuActionPath)
 
                 // Mount sub-menu into root Blessed navigation
                 await LIBRARY.hunt(MENU_ACTION_LIBRARY.ROUTE_MENU, {
@@ -260,7 +243,7 @@ const init = async () => {
                     fnc: async () => {
                         await new Promise<void>((resolve) => {
                             ;(global as any)[pkg.globalKey].hunt(
-                                initMenuAction,
+                                MENU_ACTION.INIT_MENU,
                                 {
                                     slv: resolve,
                                 },
@@ -323,32 +306,14 @@ const init = async () => {
                     pkgDistPath,
                     '98.menu.unit/menu.action',
                 )
-                const menuBuzzPath = path.join(
-                    pkgDistPath,
-                    '98.menu.unit/buz/00.menu.buzz',
-                )
-                const hasVisualMenu =
+                if (
                     fs.existsSync(menuActionPath + '.js') ||
                     fs.existsSync(menuActionPath + '.ts') ||
-                    fs.existsSync(menuActionPath) ||
-                    fs.existsSync(menuBuzzPath + '.js') ||
-                    fs.existsSync(menuBuzzPath + '.ts') ||
-                    fs.existsSync(menuBuzzPath)
-
-                if (hasVisualMenu) {
-                    let TARGET_ACTION: any = null
-                    if (
-                        fs.existsSync(menuActionPath + '.js') ||
-                        fs.existsSync(menuActionPath + '.ts') ||
-                        fs.existsSync(menuActionPath)
-                    ) {
-                        TARGET_ACTION = require(menuActionPath)
-                    }
-                    const initMenuAction =
-                        TARGET_ACTION?.INIT_MENU || '[Menu action] Init Menu'
-
+                    fs.existsSync(menuActionPath)
+                ) {
+                    const TARGET_ACTION = require(menuActionPath)
                     await (global as any)[target.globalKey].hunt(
-                        initMenuAction,
+                        TARGET_ACTION.INIT_MENU,
                         {
                             slv: async () => {
                                 await LIBRARY.hunt(
