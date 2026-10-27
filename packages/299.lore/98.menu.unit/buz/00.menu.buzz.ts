@@ -2,6 +2,22 @@
 import * as ActMnu from '../menu.action.js'
 //import * as ActAgt from '../../00.agent.unit/agent.action.js';
 import * as ActOlm from '../../00.lore.unit/lore.action.js'
+import {
+    SCHEMA_MENU_LABEL,
+    VALIDATE_PRIMITIVES_LABEL,
+    SCHEMA_BACK_LABEL,
+    auditPrimitiveStandards,
+} from './01.schema.audit.buzz.js'
+import {
+    SOMATIC_AUDIT_LABEL,
+    runSomaticAuditMenu,
+} from './02.somatic.audit.buzz.js'
+import {
+    SOMATIC_SAT_LABEL,
+    AUDIT_PORTALS_LABEL,
+    runHandCapacityAudit,
+    runPortalReciprocityAudit,
+} from './03.logistics.audit.buzz.js'
 
 import type { MenuModel } from '../menu.model.js'
 import type MenuBit from '../fce/menu.bit.js'
@@ -65,6 +81,8 @@ export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
         ActOlm.UPDATE_LORE.split(']')[1],
         ActOlm.TEST_LORE.split(']')[1],
         ActOlm.LIST_LORE.split(']')[1],
+        SCHEMA_MENU_LABEL,
+        SOMATIC_AUDIT_LABEL,
         'ROOT MENU',
     ]
 
@@ -122,6 +140,91 @@ export const updateMenu = async (cpy: MenuModel, bal: MenuBit, ste: State) => {
 
             await new Promise((resolve) => setTimeout(resolve, 3000))
             break
+
+        case SCHEMA_MENU_LABEL: {
+            bit = await global.LIBRARY.hunt(UPDATE_GRID, {
+                x: 0,
+                y: 4,
+                xSpan: 4,
+                ySpan: 8,
+            })
+            bit = await global.LIBRARY.hunt(OPEN_CHOICE, {
+                dat: { clr0: Color.BLACK, clr1: Color.YELLOW },
+                src: Align.VERTICAL,
+                lst: [
+                    VALIDATE_PRIMITIVES_LABEL,
+                    SOMATIC_SAT_LABEL,
+                    AUDIT_PORTALS_LABEL,
+                    SCHEMA_BACK_LABEL,
+                ],
+                net: bit.grdBit.dat,
+            })
+
+            src = bit.chcBit.src
+
+            if (src === VALIDATE_PRIMITIVES_LABEL) {
+                try {
+                    const lines = await auditPrimitiveStandards()
+                    for (const line of lines) {
+                        await global.LIBRARY.hunt(UPDATE_CONSOLE, {
+                            idx: 'cns00',
+                            src: line,
+                        })
+                    }
+                } catch (err: any) {
+                    await global.LIBRARY.hunt(UPDATE_CONSOLE, {
+                        idx: 'cns00',
+                        src: `>> ${err.message || 'Unknown primitive audit failure.'}`,
+                    })
+                }
+                await new Promise((resolve) => setTimeout(resolve, 1500))
+            } else if (src === SOMATIC_SAT_LABEL) {
+                try {
+                    const lines = await runHandCapacityAudit()
+                    for (const line of lines) {
+                        await global.LIBRARY.hunt(UPDATE_CONSOLE, {
+                            idx: 'cns00',
+                            src: line,
+                        })
+                    }
+                } catch (err: any) {
+                    await global.LIBRARY.hunt(UPDATE_CONSOLE, {
+                        idx: 'cns00',
+                        src: `>> ${err.message || 'Unknown SAT audit failure.'}`,
+                    })
+                }
+                await new Promise((resolve) => setTimeout(resolve, 1500))
+            } else if (src === AUDIT_PORTALS_LABEL) {
+                try {
+                    const lines = await runPortalReciprocityAudit()
+                    for (const line of lines) {
+                        await global.LIBRARY.hunt(UPDATE_CONSOLE, {
+                            idx: 'cns00',
+                            src: line,
+                        })
+                    }
+                } catch (err: any) {
+                    await global.LIBRARY.hunt(UPDATE_CONSOLE, {
+                        idx: 'cns00',
+                        src: `>> ${err.message || 'Unknown portal audit failure.'}`,
+                    })
+                }
+                await new Promise((resolve) => setTimeout(resolve, 1500))
+            }
+            break
+        }
+
+        case SOMATIC_AUDIT_LABEL: {
+            try {
+                await runSomaticAuditMenu(ste)
+            } catch (err: any) {
+                await global.LIBRARY.hunt(UPDATE_CONSOLE, {
+                    idx: 'cns00',
+                    src: `>> ${err.message || 'Unknown somatic audit failure.'}`,
+                })
+            }
+            break
+        }
 
         case 'ROOT MENU':
             if (rootSlv != null) rootSlv({ mnuBit: { idx: 'root-menu' } })

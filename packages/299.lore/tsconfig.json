@@ -1,6 +1,7 @@
 {
     "extends": "../../apps/995.library/tsconfig-base.json",
     "compilerOptions": {
+        "target": "es2020",
         "outDir": "../dist/299.lore",
         "composite": true,
         "skipLibCheck": true,

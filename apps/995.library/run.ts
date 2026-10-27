@@ -273,7 +273,32 @@ const init = async () => {
         })
         await LIBRARY.hunt(CONSOLE_ACTION_LIBRARY.UPDATE_CONSOLE, {
             idx: 'cns00',
-            src: ':: [KEYS] UP/DOWN or J/K: Navigate | ENTER: Select',
+            src: ':: [KEYS] UP/DOWN or J/K: Navigate | ENTER: Select | Q: Quit',
+        })
+
+        // Graceful shutdown bindings: q / Q / C-c tears down the curses
+        // runtime and exits 0 (Phase 1 audit Level 4 lifecycle gate).
+        // Choice/text widgets own all other keys; this listener only
+        // reacts to the three quit bytes.
+        let exiting = false
+        const gracefulExit = async () => {
+            if (exiting) return
+            exiting = true
+            try {
+                const TERMINAL_ACTION = require(
+                    path.join(libPath, '80.terminal.unit/terminal.action'),
+                )
+                await LIBRARY.hunt(TERMINAL_ACTION.CLOSE_TERMINAL, {})
+            } catch {
+                // Best-effort teardown; the exit code is the contract
+            }
+            process.exit(0)
+        }
+        process.stdin.on('data', (chunk: Buffer) => {
+            const key = chunk.toString('utf8')
+            if (key === 'q' || key === 'Q' || key === '\x03') {
+                void gracefulExit()
+            }
         })
 
         // Direct target dispatch if specified via -t / --separator (excluding default 'library')
