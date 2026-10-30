@@ -1,7 +1,8 @@
-import MenuBit from './menu.bit'
+import type MenuBit from './menu.bit'
 
 export default interface Menu {
-    // idx:string;
-    // menuBitList: MenuBit[];
-    // menuBits: any;
+    idx: string
+    menuBits: Record<string, MenuBit>
+    activeSelection?: string
+    lastTelemetryReport?: string[]
 }
