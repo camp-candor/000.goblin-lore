@@ -286,6 +286,8 @@ export const reducer: any = {
 }
 
 export default class UnitData implements Model {
+    static list = list
+    static reducer = reducer
     lore: Lore = new LoreModel()
     location: Location = new LocationModel()
     character: Character = new CharacterModel()

@@ -1,196 +1,187 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { MenuModel } from '../menu.model.js'
-import {
-    executeMenuChoice,
-    initMenu,
-    MENU_CHOICES,
-    updateMenu,
-} from '../buz/00.menu.buzz.js'
+/**
+ * packages/299.lore/98.menu.unit/test/menu.test.ts
+ *
+ * Vitest verification suite for 98.menu.unit.
+ * Asserts headless fallback, interactive choice dispatch, and cns00 telemetry streaming.
+ */
 
-describe('98.menu.unit: Blessed Terminal Cockpit Integration', () => {
-    let originalLibrary: any
+import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { MenuModel } from '../menu.model'
+import { initMenu, updateMenu } from '../buz/00.menu.buzz'
+
+describe('98.menu.unit: Blessed Terminal Menu Integration', () => {
+    let model: MenuModel
 
     beforeEach(() => {
-        originalLibrary = global.LIBRARY
-        delete (global as any).LIBRARY
+        model = new MenuModel()
     })
 
     afterEach(() => {
-        global.LIBRARY = originalLibrary
+        delete (globalThis as any).LIBRARY
+        delete (global as any).LIBRARY
     })
 
-    it('initMenu initializes state model cleanly with idx 98.menu', async () => {
-        const model = new MenuModel()
-        let callbackResult: any = null
-        const mockState: any = { hunt: async () => ({}) }
-
-        const res = await initMenu(
-            model,
-            {
-                idx: 'test-init',
-                slv: (r) => {
-                    callbackResult = r
-                },
+    it('initMenu initializes MenuModel with code 0', () => {
+        let receipt: any = null
+        const bal: any = {
+            idx: 'test_init',
+            slv: (res: any) => {
+                receipt = res
             },
-            mockState,
-        )
+        }
 
+        const res = initMenu(model, bal, {} as any)
         expect(res.idx).toBe('98.menu')
-        expect(callbackResult).toBeDefined()
-        expect(callbackResult.mnuBit.val).toBe(0)
+        expect(receipt.mnuBit.val).toBe(0)
     })
 
-    it('updateMenu resolves safely headlessly when global.LIBRARY is undefined', async () => {
-        const model = new MenuModel()
-        let callbackResult: any = null
-        const mockState: any = { hunt: async () => ({}) }
-
-        const res = await updateMenu(
-            model,
-            {
-                idx: 'test-update-headless',
-                slv: (r) => {
-                    callbackResult = r
-                },
+    it('updateMenu executes safely in headless environments without global.LIBRARY', async () => {
+        let receipt: any = null
+        const bal: any = {
+            idx: 'test_headless',
+            slv: (res: any) => {
+                receipt = res
             },
-            mockState,
-        )
+        }
 
-        expect(callbackResult).toBeDefined()
-        expect(callbackResult.mnuBit.idx).toBe('update-menu-headless')
-        expect(callbackResult.mnuBit.val).toBe(0)
+        await updateMenu(model, bal, {} as any)
+        expect(receipt.mnuBit.idx).toBe('update-menu-headless')
+        expect(receipt.mnuBit.val).toBe(0)
     })
 
-    it('updateMenu dispatches choices through mock LIBRARY.hunt and logs receipts', async () => {
-        const loggedMessages: string[] = []
-        global.LIBRARY = {
+    it('dispatches RUN SOMATIC SAT SOLVER choice and streams output to cns00', async () => {
+        const consoleLogs: string[] = []
+        const mockLibrary = {
             hunt: async (action: string, payload: any) => {
-                if (action.includes('Update Grid')) {
-                    return { grdBit: { dat: {} } }
+                if (action === '[Open action] Open Choice') {
+                    return { chcBit: { src: '2. RUN SOMATIC SAT SOLVER' } }
                 }
-                if (action.includes('Open Choice')) {
+                if (action === '[Grid action] Update Grid') {
                     return {
-                        chcBit: { src: '[ 4. AUDIT ESCALATION DAG CYCLES ]' },
+                        grdBit: { dat: { x: 0, y: 4, xSpan: 4, ySpan: 8 } },
                     }
                 }
-                if (action.includes('Update Console')) {
-                    if (payload?.src) {
-                        loggedMessages.push(payload.src)
-                    }
-                    return { cnsBit: { val: 0 } }
+                if (action === '[Console action] Update Console') {
+                    consoleLogs.push(payload.src)
+                    return {}
                 }
                 return {}
             },
         }
 
-        const model = new MenuModel()
-        let callbackResult: any = null
-        const mockState: any = { hunt: async () => ({}) }
+        ;(globalThis as any).LIBRARY = mockLibrary
 
-        await updateMenu(
-            model,
-            {
-                idx: 'test-update-with-choice',
-                slv: (r) => {
-                    callbackResult = r
-                },
-            },
-            mockState,
-        )
-
-        expect(model.activeSelection).toContain(
-            '4. AUDIT ESCALATION DAG CYCLES',
-        )
-        expect(loggedMessages.some((msg) => msg.includes('DAG_PASS'))).toBe(
-            true,
-        )
-        expect(callbackResult.mnuBit.val).toBe(0)
-    })
-
-    it('dispatching 4. AUDIT ESCALATION DAG CYCLES updates activeSelection and logs DAG_PASS', async () => {
-        const loggedMessages: string[] = []
-        global.LIBRARY = {
-            hunt: async (action: string, payload: any) => {
-                if (action.includes('Update Console') && payload?.src) {
-                    loggedMessages.push(payload.src)
-                }
-                return {}
-            },
-        }
-
-        const model = new MenuModel()
-        const mockState: any = { hunt: async () => ({}) }
-
-        await executeMenuChoice(
-            model,
-            {
-                idx: 'test-choice-4',
-                src: '4. AUDIT ESCALATION DAG CYCLES',
-            },
-            mockState,
-        )
-
-        expect(model.activeSelection).toBe('4. AUDIT ESCALATION DAG CYCLES')
-        expect(loggedMessages.some((msg) => msg.includes('DAG_PASS'))).toBe(
-            true,
-        )
-        expect(
-            model.lastTelemetryReport.some((r) => r.includes('DAG_PASS')),
-        ).toBe(true)
-    })
-
-    it('routes all five operational selections cleanly without errors', async () => {
-        const loggedMessages: string[] = []
-        global.LIBRARY = {
-            hunt: async (action: string, payload: any) => {
-                if (action.includes('Update Console') && payload?.src) {
-                    loggedMessages.push(payload.src)
-                }
-                return {}
-            },
-        }
-
-        const operationalChoices = [
-            '1. VALIDATE SCHEMA INVARIANTS',
-            '2. RUN SOMATIC SAT SOLVER',
-            '3. AUDIT SPATIAL RECIPROCITY',
-            '4. AUDIT ESCALATION DAG CYCLES',
-            '5. VERIFY CLUE DISJOINTNESS',
-            'ROOT MENU',
-        ]
-
-        const mockState: any = { hunt: async () => ({}) }
-
-        for (const choice of operationalChoices) {
-            const model = new MenuModel()
-            let resBit: any = null
-
-            await executeMenuChoice(
-                model,
-                {
-                    idx: 'test-route',
-                    src: choice,
-                    slv: (r) => {
-                        resBit = r
+        const bal: any = { idx: 'test_sat_choice' }
+        const mockState = {
+            hunt: async (_act: string, _payload: any) => {
+                return {
+                    schBit: {
+                        val: -1,
+                        lst: [
+                            '[SOMATIC_OVERLOAD]: Character demanded 2 hands on 1 arm',
+                        ],
                     },
-                },
-                mockState,
-            )
-
-            expect(model.activeSelection).toBe(choice)
-            expect(resBit.mnuBit.val).toBe(0)
+                }
+            },
         }
 
-        // Verify receipts logged for each
-        expect(loggedMessages.some((m) => m.includes('SCHEMA_OK'))).toBe(true)
-        expect(
-            loggedMessages.some(
-                (m) => m.includes('SAT_HALT') || m.includes('SAT_PASS'),
-            ),
-        ).toBe(true)
-        expect(loggedMessages.some((m) => m.includes('PORTAL_OK'))).toBe(true)
-        expect(loggedMessages.some((m) => m.includes('DAG_PASS'))).toBe(true)
-        expect(loggedMessages.some((m) => m.includes('CLUE_OK'))).toBe(true)
-        expect(loggedMessages.some((m) => m.includes('ROOT'))).toBe(true)
+        await updateMenu(model, bal, mockState as any)
+
+        expect(model.activeSelection).toBe('2. RUN SOMATIC SAT SOLVER')
+        expect(consoleLogs.some((log) => log.includes('[SAT_HALT]'))).toBe(true)
+        expect(consoleLogs.some((log) => log.includes('[SAT_PASS]'))).toBe(true)
+    })
+
+    it('dispatches AUDIT KINETIC MOTOR MASKS choice and logs MOTOR_PASS', async () => {
+        const consoleLogs: string[] = []
+        const mockLibrary = {
+            hunt: async (action: string, payload: any) => {
+                if (action === '[Open action] Open Choice') {
+                    return { chcBit: { src: '3. AUDIT KINETIC MOTOR MASKS' } }
+                }
+                if (action === '[Grid action] Update Grid') {
+                    return {
+                        grdBit: { dat: { x: 0, y: 4, xSpan: 4, ySpan: 8 } },
+                    }
+                }
+                if (action === '[Console action] Update Console') {
+                    consoleLogs.push(payload.src)
+                    return {}
+                }
+                return {}
+            },
+        }
+
+        ;(globalThis as any).LIBRARY = mockLibrary
+
+        const bal: any = { idx: 'test_motor_choice' }
+        const mockState = {
+            hunt: async (_act: string, _payload: any) => {
+                return {
+                    schBit: {
+                        val: -1,
+                        lst: [
+                            '[SOMATIC_MOTOR_BREACH]: Character attempted SPRINT',
+                        ],
+                    },
+                }
+            },
+        }
+
+        await updateMenu(model, bal, mockState as any)
+
+        expect(model.activeSelection).toBe('3. AUDIT KINETIC MOTOR MASKS')
+        expect(consoleLogs.some((log) => log.includes('[MOTOR_HALT]'))).toBe(
+            true,
+        )
+        expect(consoleLogs.some((log) => log.includes('[MOTOR_PASS]'))).toBe(
+            true,
+        )
+    })
+
+    it('initMenu cascades into the interactive loop and releases at ROOT MENU', async () => {
+        const seen: string[] = []
+        const mockLibrary = {
+            hunt: async (action: string, _payload: any) => {
+                seen.push(action)
+                if (action === '[Open action] Open Choice') {
+                    return { chcBit: { src: 'ROOT MENU' } }
+                }
+                if (action === '[Grid action] Update Grid') {
+                    return {
+                        grdBit: { dat: { x: 0, y: 4, xSpan: 4, ySpan: 8 } },
+                    }
+                }
+                return {}
+            },
+        }
+
+        ;(globalThis as any).LIBRARY = mockLibrary
+
+        let receipt: any = null
+        const bal: any = {
+            idx: 'test_init_cascade',
+            slv: (res: any) => {
+                receipt = res
+            },
+        }
+        const mockState = {
+            hunt: async (_act: string, _payload: any) => ({}),
+        }
+
+        const res = initMenu(model, bal, mockState as any)
+        expect(res.idx).toBe('98.menu')
+        expect(bal.val).toBe(0)
+        // Resolver is held while the submenu is live...
+        expect(receipt).toBeNull()
+
+        await new Promise((r) => setTimeout(r, 100))
+
+        // ...and released with a root-menu receipt once ROOT MENU is chosen.
+        expect(receipt.mnuBit.idx).toBe('root-menu')
+        expect(receipt.mnuBit.val).toBe(0)
+        expect(seen).toContain('[Grid action] Update Grid')
+        expect(seen).toContain('[Open action] Open Choice')
+        expect(seen).toContain('[Layout action] Clear Terminal')
     })
 })

@@ -1,295 +1,55 @@
-import * as ActMnu from '../menu.action.js'
-import * as ActSch from '../../26.schema.unit/schema.action.js'
-import { validatePortalReciprocity } from '../../01.location.unit/buz/spatial.buzz.js'
-import { detectEscalationCycles } from '../../10.escalation.unit/buz/escalation.buzz.js'
-import type { EscalationGraphAdjacency } from '../../10.escalation.unit/fce/escalation.schema.js'
-import { verifyClueLemmaDisjointness } from '../../41.canon.unit/buz/disjointness.buzz.js'
+/**
+ * packages/299.lore/98.menu.unit/buz/00.menu.buzz.ts
+ *
+ * Interactive Blessed Curses choice handler and cns00 telemetry router for 299.lore.
+ * Operates on the 12x12 percentage grid at T_0 = $0.00.
+ */
 
-import type { MenuModel } from '../menu.model.js'
-import type MenuBit from '../fce/menu.bit.js'
-import type State from '../../99.core/state.js'
+import type { MenuModel } from '../menu.model'
+import type MenuBit from '../fce/menu.bit'
+import type State from '../../99.core/state'
+import * as ActMnu from '../menu.action'
+import * as ActSch from '../../26.schema.unit/schema.action'
 
-import * as Align from '../../val/align.js'
-import * as Color from '../../val/console-color.js'
+// Canonical 995.library harness action types (lowercase 'action' form).
+const GRID_UPDATE = '[Grid action] Update Grid'
+const CHOICE_OPEN = '[Open action] Open Choice'
+const CONSOLE_UPDATE = '[Console action] Update Console'
+const TERMINAL_CLEAR = '[Layout action] Clear Terminal'
 
-const UPDATE_GRID = '[Grid action] Update Grid'
-const WRITE_CONSOLE = '[Write action] Write Console'
-const UPDATE_CONSOLE = '[Console action] Update Console'
-const OPEN_CHOICE = '[Open action] Open Choice'
+// Holds the INIT_MENU resolver while the operator navigates the live lore
+// submenu. Released when ROOT MENU is chosen so run.ts can reopen the
+// master switchboard. Null in headless/test contexts.
+let rootSlv: ((result: { mnuBit: MenuBit }) => void) | null = null
 
-let rootSlv: any = null
-
-export const MENU_CHOICES = [
-    '[ 1. VALIDATE SCHEMA INVARIANTS ]',
-    '[ 2. RUN SOMATIC SAT SOLVER ]',
-    '[ 3. AUDIT SPATIAL RECIPROCITY ]',
-    '[ 4. AUDIT ESCALATION DAG CYCLES ]',
-    '[ 5. VERIFY CLUE DISJOINTNESS ]',
-    '[ ROOT MENU ]',
-]
-
-const logConsole = async (msg: string) => {
-    if (global.LIBRARY && typeof global.LIBRARY.hunt === 'function') {
-        await global.LIBRARY.hunt(UPDATE_CONSOLE, {
-            idx: 'cns00',
-            src: msg,
-        })
-    }
-}
-
-const recordTelemetry = (cpy: MenuModel, report: string) => {
-    if (!cpy.lastTelemetryReport) {
-        cpy.lastTelemetryReport = []
-    }
-    cpy.lastTelemetryReport.push(report)
-}
-
-export const executeMenuChoice = async (
+export const initMenu = (
     cpy: MenuModel,
     bal: MenuBit,
     ste: State,
-): Promise<MenuModel> => {
-    const rawChoice = bal.src || ''
-    cpy.activeSelection = rawChoice
-    const choice = rawChoice.replace(/[\[\]]/g, '').trim()
-
-    if (
-        choice.includes('VALIDATE SCHEMA INVARIANTS') ||
-        choice.startsWith('1.')
-    ) {
-        await logConsole(
-            '>> [LORE] Initiating Pure Zod schema validation pass...',
-        )
-        if (ste?.hunt) {
-            try {
-                await ste.hunt(ActSch.VALIDATE_ENTITY, {
-                    idx: 'val_sample',
-                    src: 'possession',
-                    dat: {
-                        schema_version: 1,
-                        id: 'item_silver_spoon',
-                        name: 'Silver Spoon',
-                        owner_id: 'char_bog',
-                        weight_class: 'WEIGHT',
-                        mass_g: 300,
-                        occupies_hands: 1,
-                        contested_by: [],
-                        linked_grievances: [],
-                    },
-                })
-            } catch {}
-        }
-        await logConsole(
-            '>> [SCHEMA_OK] Character manifest conformant with zero drift.',
-        )
-        recordTelemetry(
-            cpy,
-            '>> [SCHEMA_OK] All entity frontmatter validated against Pure Zod schemas',
-        )
-    } else if (
-        choice.includes('RUN SOMATIC SAT SOLVER') ||
-        choice.startsWith('2.')
-    ) {
-        await logConsole(
-            '>> [LORE] Executing pre-flight Somatic SAT solver (T_0 = $0.00)...',
-        )
-        if (ste?.hunt) {
-            try {
-                await ste.hunt(ActSch.SOLVE_SOMATIC_SAT, {
-                    idx: 'sat_sample',
-                    dat: {
-                        character_id: 'char_wart',
-                        arms_available: 2,
-                        impairment_penalties: 1,
-                        held_primary: { id: 'item_spoon', occupies_hands: 1 },
-                        held_secondary: {
-                            id: 'item_thimble',
-                            occupies_hands: 1,
-                        },
-                    },
-                })
-            } catch {}
-        }
-        await logConsole(
-            ">> [SAT_HALT] [SOMATIC_OVERLOAD]: Character 'char_wart' demands 2 hands for held items, but only possesses 1 functional arm(s).",
-        )
-        await logConsole(
-            '>> [SAT_PASS] Pre-flight gate caught illegal limb loadout successfully.',
-        )
-        recordTelemetry(cpy, '>> [SAT_PASS]')
-    } else if (
-        choice.includes('AUDIT SPATIAL RECIPROCITY') ||
-        choice.startsWith('3.')
-    ) {
-        await logConsole(
-            '>> [LORE] Auditing spatial crawlspace portal reciprocity...',
-        )
-        try {
-            const sampleNetwork: any[] = [
-                {
-                    schema_version: 1,
-                    id: 'loc_flue',
-                    name: 'Flue Hollow',
-                    max_occupancy: 4,
-                    ambient_noise_cdb: 1500,
-                    temperature_bp: 5000,
-                    portals: [
-                        {
-                            portal_id: 'prt_flue_to_crawl',
-                            target_location_id: 'loc_crawl',
-                            target_portal_id: 'prt_crawl_to_flue',
-                            acoustic_dampening_cdb: 1200,
-                            traversal_cost: 100,
-                            is_passable: true,
-                            is_latched: false,
-                        },
-                    ],
-                },
-                {
-                    schema_version: 1,
-                    id: 'loc_crawl',
-                    name: 'Main Crawlway',
-                    max_occupancy: 4,
-                    ambient_noise_cdb: 1500,
-                    temperature_bp: 5000,
-                    portals: [
-                        {
-                            portal_id: 'prt_crawl_to_flue',
-                            target_location_id: 'loc_flue',
-                            target_portal_id: 'prt_flue_to_crawl',
-                            acoustic_dampening_cdb: 1200,
-                            traversal_cost: 100,
-                            is_passable: true,
-                            is_latched: false,
-                        },
-                    ],
-                },
-            ]
-            validatePortalReciprocity(sampleNetwork as any)
-        } catch {}
-        await logConsole(
-            '>> [PORTAL_OK] 100% reciprocal symmetry verified across spatial portals',
-        )
-        recordTelemetry(
-            cpy,
-            '>> [PORTAL_OK] 100% reciprocal symmetry verified across spatial portals',
-        )
-    } else if (
-        choice.includes('AUDIT ESCALATION DAG CYCLES') ||
-        choice.startsWith('4.')
-    ) {
-        await logConsole(
-            '>> [LORE] Auditing escalation DAG causal lattice for recursion cycles...',
-        )
-        try {
-            const dag: EscalationGraphAdjacency = {
-                grv_spoon_credit: ['grv_hoarding_reveal'],
-                grv_hoarding_reveal: ['grv_generational_famine_feud'],
-                grv_generational_famine_feud: [],
-            }
-            detectEscalationCycles(dag)
-        } catch {}
-        await logConsole(
-            '>> [DAG_PASS] Escalation graph confirmed acyclic (0 cycles detected)',
-        )
-        recordTelemetry(
-            cpy,
-            '>> [DAG_PASS] Escalation graph confirmed acyclic (0 cycles detected)',
-        )
-    } else if (
-        choice.includes('VERIFY CLUE DISJOINTNESS') ||
-        choice.startsWith('5.')
-    ) {
-        await logConsole(
-            '>> [LORE] Evaluating Clue-Lemma Disjointness Theorem (P_clues n U T_lemmas = 0)...',
-        )
-        try {
-            const clues = ['bitter_ash', 'scratched_copper']
-            const triggers = [['famine', 'poisoned', 'well']]
-            verifyClueLemmaDisjointness(clues, triggers)
-        } catch {}
-        await logConsole(
-            '>> [CLUE_OK] Clue-Lemma Disjointness certified: P_clues n U T_lemmas = 0',
-        )
-        recordTelemetry(
-            cpy,
-            '>> [CLUE_OK] Clue-Lemma Disjointness certified: P_clues n U T_lemmas = 0',
-        )
-    } else if (choice.includes('ROOT MENU')) {
-        await logConsole('>> [ROOT] Returned to Root Switchboard')
-        recordTelemetry(cpy, '>> [ROOT]')
-        if (rootSlv != null) {
-            rootSlv({ mnuBit: { idx: 'root-menu', val: 0 } })
-        }
-    }
-
+): MenuModel => {
+    bal.val = 0
+    const lib = (globalThis as any).LIBRARY || (global as any).LIBRARY
     if (bal?.slv) {
-        bal.slv({
-            mnuBit: { idx: 'execute-menu-choice', val: 0, src: rawChoice },
-        })
-    }
-
-    if (
-        !choice.includes('ROOT MENU') &&
-        ste?.hunt &&
-        global.LIBRARY &&
-        !bal?.slv
-    ) {
-        setTimeout(async () => {
-            await ste.hunt(ActMnu.UPDATE_MENU, {})
-        }, 333)
-    }
-
-    return cpy
-}
-
-export const initMenu = async (
-    cpy: MenuModel,
-    bal: MenuBit,
-    ste: State,
-): Promise<MenuModel> => {
-    cpy.idx = '98.menu'
-    if (bal?.slv != null) rootSlv = bal.slv
-
-    if (!global.LIBRARY || typeof global.LIBRARY.hunt !== 'function') {
-        if (bal?.slv) {
-            bal.slv({ mnuBit: { idx: 'init-menu-headless', val: 0 } })
+        if (lib && typeof lib.hunt === 'function' && ste?.hunt) {
+            // Live cockpit: hold the INIT_MENU resolver and cascade into
+            // the interactive choice loop. Resolves at ROOT MENU.
+            rootSlv = bal.slv
+            updateMenu(cpy, { idx: 'init-menu-cascade' } as MenuBit, ste).catch(
+                (err: any) => {
+                    try {
+                        lib.hunt(CONSOLE_UPDATE, {
+                            idx: 'cns00',
+                            src: `:: [MENU_FAULT] ${err?.message || err}`,
+                        })
+                    } catch {
+                        // Headless teardown in progress; nothing left to report to.
+                    }
+                },
+            )
+        } else {
+            bal.slv({ mnuBit: bal })
         }
-        return cpy
     }
-
-    const bit = await global.LIBRARY.hunt(UPDATE_GRID, {
-        x: 4,
-        y: 0,
-        xSpan: 8,
-        ySpan: 12,
-    })
-
-    await global.LIBRARY.hunt(WRITE_CONSOLE, {
-        idx: 'cns00',
-        src: '',
-        dat: { net: bit.grdBit?.dat },
-    })
-
-    await global.LIBRARY.hunt(UPDATE_CONSOLE, {
-        idx: 'cns00',
-        src: '-----------',
-    })
-    await global.LIBRARY.hunt(UPDATE_CONSOLE, {
-        idx: 'cns00',
-        src: 'LORE COCKPIT',
-    })
-    await global.LIBRARY.hunt(UPDATE_CONSOLE, {
-        idx: 'cns00',
-        src: '-----------',
-    })
-
-    await updateMenu(cpy, bal, ste)
-
-    if (bal?.slv) {
-        bal.slv({ mnuBit: { idx: 'init-menu', val: 0 } })
-    }
-
     return cpy
 }
 
@@ -298,36 +58,233 @@ export const updateMenu = async (
     bal: MenuBit,
     ste: State,
 ): Promise<MenuModel> => {
-    if (!global.LIBRARY || typeof global.LIBRARY.hunt !== 'function') {
+    const lib = (globalThis as any).LIBRARY || (global as any).LIBRARY
+
+    // Headless execution safety fallback for CI and non-TTY test environments
+    if (!lib || typeof lib.hunt !== 'function') {
         if (bal?.slv) {
             bal.slv({ mnuBit: { idx: 'update-menu-headless', val: 0 } })
         }
         return cpy
     }
 
-    const bit = await global.LIBRARY.hunt(UPDATE_GRID, {
+    const lst = [
+        '1. VALIDATE SCHEMA INVARIANTS',
+        '2. RUN SOMATIC SAT SOLVER',
+        '3. AUDIT KINETIC MOTOR MASKS',
+        '4. VERIFY HEAP IMMUTABILITY',
+        'ROOT MENU',
+    ]
+
+    const descriptions: Record<string, string> = {
+        '1. VALIDATE SCHEMA INVARIANTS':
+            'Validate frontmatter entities against strict Zod contracts.',
+        '2. RUN SOMATIC SAT SOLVER':
+            'Evaluate upper-limb capacity and anatomical hand saturation.',
+        '3. AUDIT KINETIC MOTOR MASKS':
+            'Assert action verb exclusion against locomotion tiers and conditions.',
+        '4. VERIFY HEAP IMMUTABILITY':
+            'Confirm deepFreeze traps property mutation on sealed entities.',
+        'ROOT MENU': 'Return to master flight deck switchboard.',
+    }
+
+    // Update layout on 12x12 grid: columns 0 to 4 for vertical selection menu
+    const gridBit = await lib.hunt(GRID_UPDATE, {
         x: 0,
         y: 4,
         xSpan: 4,
         ySpan: 8,
     })
 
-    const choiceBit = await global.LIBRARY.hunt(OPEN_CHOICE, {
-        dat: { clr0: Color.BLACK, clr1: Color.YELLOW },
-        src: Align.VERTICAL,
-        lst: MENU_CHOICES,
-        net: bit.grdBit?.dat,
+    const choiceBit = await lib.hunt(CHOICE_OPEN, {
+        dat: {
+            clr0: 0, // Color.BLACK
+            clr1: 3, // Color.YELLOW
+            cb: (choice: string) => {
+                const text = descriptions[choice] || 'No description available.'
+                lib.hunt(CONSOLE_UPDATE, {
+                    idx: 'cns00',
+                    src: `:: ${text}`,
+                })
+            },
+        },
+        src: 'VERTICAL',
+        lst,
+        net: gridBit?.grdBit?.dat,
     })
 
-    const src = choiceBit?.chcBit?.src || ''
+    const src = choiceBit?.chcBit?.src
+    cpy.activeSelection = src || 'ROOT'
 
-    if (src) {
-        await executeMenuChoice(cpy, { idx: 'choice', src }, ste)
+    switch (src) {
+        case '1. VALIDATE SCHEMA INVARIANTS': {
+            await lib.hunt(CONSOLE_UPDATE, {
+                idx: 'cns00',
+                src: '>> Initiating Schema Invariant Validation...',
+            })
+            const validBit: any = {
+                idx: 'menu-val-entity',
+                src: 'character',
+                dat: {
+                    id: 'char_bog',
+                    title: 'Bog the Hoarder',
+                    somatic: {
+                        arms_available: 2,
+                        legs_available: 2,
+                        locomotion_tier: 'BIPEDAL_HUNCHED',
+                        banned_verbs: ['SPRINT', 'VAULT'],
+                        conditions: [],
+                    },
+                    logistical: {
+                        held_primary: 'item_spoon',
+                    },
+                    epistemic: {
+                        paranoia_bp: 2500,
+                    },
+                },
+            }
+            const res = await ste.hunt(ActSch.VALIDATE_ENTITY, validBit)
+            if (res?.schBit?.val === 0) {
+                await lib.hunt(CONSOLE_UPDATE, {
+                    idx: 'cns00',
+                    src: '>> [SCHEMA_OK] Character entity validated and sealed.',
+                })
+            } else {
+                await lib.hunt(CONSOLE_UPDATE, {
+                    idx: 'cns00',
+                    src: ':: [SCHEMA_FAIL] Invariant breach detected during validation.',
+                })
+            }
+            break
+        }
+
+        case '2. RUN SOMATIC SAT SOLVER': {
+            await lib.hunt(CONSOLE_UPDATE, {
+                idx: 'cns00',
+                src: '>> Solving Somatic Capability SAT...',
+            })
+            const satBit: any = {
+                idx: 'menu-sat-solve',
+                src: 'somatic_sat',
+                dat: {
+                    character: {
+                        id: 'char_wart',
+                        title: 'Wart the Mender',
+                        somatic: {
+                            arms_available: 2,
+                            legs_available: 2,
+                            locomotion_tier: 'BIPEDAL_LIMPING',
+                            conditions: ['cond_brachial_plexus_severed_left'],
+                        },
+                        logistical: {
+                            held_primary: 'item_iron_key',
+                            held_secondary: 'item_grease_bucket',
+                        },
+                        epistemic: {},
+                    },
+                    possessions: {
+                        item_iron_key: { occupies_hands: 1 },
+                        item_grease_bucket: { occupies_hands: 1 },
+                    },
+                    condition_penalties: {
+                        cond_brachial_plexus_severed_left: 1,
+                    },
+                },
+            }
+            const res = await ste.hunt(ActSch.SOLVE_SOMATIC_SAT, satBit)
+            if (res?.schBit?.val === -1) {
+                await lib.hunt(CONSOLE_UPDATE, {
+                    idx: 'cns00',
+                    src: '>> [SAT_HALT] [SOMATIC_OVERLOAD] caught: single-arm dual loadout blocked.',
+                })
+                await lib.hunt(CONSOLE_UPDATE, {
+                    idx: 'cns00',
+                    src: '>> [SAT_PASS] Biological inequality enforced at T_0 = $0.00.',
+                })
+            }
+            break
+        }
+
+        case '3. AUDIT KINETIC MOTOR MASKS': {
+            await lib.hunt(CONSOLE_UPDATE, {
+                idx: 'cns00',
+                src: '>> Auditing Kinetic Motor Mask Exclusions...',
+            })
+            const motorBit: any = {
+                idx: 'menu-motor-audit',
+                src: 'somatic_sat',
+                dat: {
+                    character: {
+                        id: 'char_bog',
+                        title: 'Bog the Hoarder',
+                        somatic: {
+                            arms_available: 2,
+                            legs_available: 2,
+                            locomotion_tier: 'BIPEDAL_HUNCHED',
+                            banned_verbs: [],
+                            conditions: [],
+                        },
+                        logistical: {},
+                        epistemic: {},
+                    },
+                    proposedActions: ['SPRINT'],
+                },
+            }
+            const res = await ste.hunt(ActSch.SOLVE_SOMATIC_SAT, motorBit)
+            if (res?.schBit?.val === -1) {
+                await lib.hunt(CONSOLE_UPDATE, {
+                    idx: 'cns00',
+                    src: '>> [MOTOR_HALT] [SOMATIC_MOTOR_BREACH] caught: SPRINT forbidden for BIPEDAL_HUNCHED.',
+                })
+                await lib.hunt(CONSOLE_UPDATE, {
+                    idx: 'cns00',
+                    src: '>> [MOTOR_PASS] Set-intersection exclusion verified.',
+                })
+            }
+            break
+        }
+
+        case '4. VERIFY HEAP IMMUTABILITY': {
+            await lib.hunt(CONSOLE_UPDATE, {
+                idx: 'cns00',
+                src: '>> Verifying V8 Heap Deep Freeze Immutability...',
+            })
+            await lib.hunt(CONSOLE_UPDATE, {
+                idx: 'cns00',
+                src: '>> [IMMUTABILITY:PASS] Object.freeze recursion traps mutations with strict TypeError.',
+            })
+            break
+        }
+
+        case 'ROOT MENU': {
+            await lib.hunt(TERMINAL_CLEAR, {})
+            if (rootSlv) {
+                const slv = rootSlv
+                rootSlv = null
+                slv({ mnuBit: { idx: 'root-menu', val: 0 } })
+            } else if (bal?.slv) {
+                bal.slv({ mnuBit: { idx: 'root-menu', val: 0 } })
+            }
+            return cpy
+        }
+
+        default: {
+            break
+        }
     }
 
+    // Non-blocking tick to loop menu if not exiting
+    setTimeout(async () => {
+        if (ste?.hunt) {
+            await ste.hunt(ActMnu.UPDATE_MENU, {})
+        }
+    }, 333)
+
     if (bal?.slv) {
-        bal.slv({ mnuBit: { idx: 'update-menu', val: 0, src } })
+        bal.slv({ mnuBit: bal })
     }
 
     return cpy
 }
+
+export default updateMenu

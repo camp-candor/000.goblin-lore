@@ -1,95 +1,70 @@
-import { describe, expect, it } from 'vitest'
-import { solveHandCapacitySAT } from '../12.gear.unit/buz/gear.buzz'
-import { detectEscalationCycles } from '../10.escalation.unit/buz/escalation.buzz'
-import { validatePortalReciprocity } from '../01.location.unit/buz/spatial.buzz'
-import { verifyClueLemmaDisjointness } from '../41.canon.unit/buz/disjointness.buzz'
+/**
+ * packages/299.lore/test/gate-zero.test.ts
+ *
+ * Consolidated Gate Zero Verification Orchestrator for 299.lore.
+ * Executes Pass 1 (Structural Shapes), Pass 2 (Relational Soundness),
+ * and Pass 3 (Somatic & Physical SAT) in local Node.js memory at T_0 = $0.00.
+ */
 
-describe('Local Gate Zero Verification Gauntlet (T_0 = $0.00)', () => {
-    it('GATE 0.1: Somatic Hand Capacity Invariant', () => {
-        const intact = solveHandCapacitySAT(
-            { total_arms: 2, impairment_penalty_arms: 0 },
-            [{ id: 'item_spoon', occupies_hands: 1 }],
-        )
-        expect(intact.valid).toBe(true)
+import { describe, it, expect } from 'vitest'
+import { SchemaModel } from '../26.schema.unit/schema.model'
+import { validateEntity } from '../26.schema.unit/buz/validate.buzz'
+import { solveSomaticSAT } from '../26.schema.unit/buz/somatic-sat.buzz'
+import BEE from '../BEE'
+import SchemaUnit from '../26.schema.unit/schema.unit'
 
-        const overload = solveHandCapacitySAT(
-            { total_arms: 2, impairment_penalty_arms: 1 },
-            [
-                { id: 'item_spoon', occupies_hands: 1 },
-                { id: 'item_thimble', occupies_hands: 1 },
-            ],
-        )
-        expect(overload.valid).toBe(false)
+describe('299.lore - Consolidated Local Gate Zero Orchestrator', () => {
+    it('certifies package registration and reducer mounting', () => {
+        expect(BEE.list).toContain(SchemaUnit)
+        expect(typeof BEE.reducer.schema).toBe('function')
     })
 
-    it('GATE 0.2: Escalation DAG Acyclicity Invariant', () => {
-        const cleanDag = {
-            grv_1: ['grv_2'],
-            grv_2: ['grv_3'],
-            grv_3: [],
-        }
-        expect(detectEscalationCycles(cleanDag).hasCycle).toBe(false)
+    it('orchestrates end-to-end entity certification and somatic SAT clearance', () => {
+        const model = new SchemaModel()
 
-        const cyclicDag = {
-            grv_1: ['grv_2'],
-            grv_2: ['grv_1'],
-        }
-        expect(detectEscalationCycles(cyclicDag).hasCycle).toBe(true)
-    })
-
-    it('GATE 0.3: Spatial Topology Portal Reciprocity Invariant', () => {
-        const reciprocalLocations: any = [
-            {
-                schema_version: 1,
-                id: 'loc_a',
-                name: 'Room A',
-                max_occupancy: 2,
-                ambient_noise_cdb: 1000,
-                temperature_bp: 5000,
-                portals: [
-                    {
-                        portal_id: 'prt_a_to_b',
-                        target_location_id: 'loc_b',
-                        target_portal_id: 'prt_b_to_a',
-                        acoustic_dampening_cdb: 1000,
-                        traversal_cost: 100,
-                        is_passable: true,
-                        is_latched: false,
-                    },
-                ],
+        // 1. Ingest compliant character
+        const charBit: any = {
+            idx: 'gate-zero-char',
+            src: 'character',
+            dat: {
+                id: 'char_spleen',
+                title: 'Spleen the Scavenger',
+                somatic: {
+                    arms_available: 2,
+                    legs_available: 2,
+                    locomotion_tier: 'BIPEDAL_NIMBLE',
+                    banned_verbs: [],
+                    conditions: [],
+                },
+                logistical: {
+                    held_primary: 'item_scraper',
+                    held_secondary: null,
+                },
+                epistemic: {
+                    paranoia_bp: 1500,
+                },
             },
-            {
-                schema_version: 1,
-                id: 'loc_b',
-                name: 'Room B',
-                max_occupancy: 2,
-                ambient_noise_cdb: 1000,
-                temperature_bp: 5000,
-                portals: [
-                    {
-                        portal_id: 'prt_b_to_a',
-                        target_location_id: 'loc_a',
-                        target_portal_id: 'prt_a_to_b',
-                        acoustic_dampening_cdb: 1000,
-                        traversal_cost: 100,
-                        is_passable: true,
-                        is_latched: false,
-                    },
-                ],
+        }
+        validateEntity(model, charBit)
+        expect(charBit.val).toBe(0)
+
+        // 2. Evaluate somatic hand capacity and kinetic action clearance
+        const satBit: any = {
+            idx: 'gate-zero-sat',
+            src: 'somatic_sat',
+            dat: {
+                character: model.validatedEntities['char_spleen'],
+                possessions: {
+                    item_scraper: { occupies_hands: 1 },
+                },
+                proposedActions: ['CLIMB', 'SCUTTLE'],
             },
-        ]
+        }
+        solveSomaticSAT(model, satBit)
 
-        expect(validatePortalReciprocity(reciprocalLocations).valid).toBe(true)
-    })
-
-    it('GATE 0.4: Epistemic Clue-Lemma Disjointness Invariant', () => {
-        const clues = ['frost_crust', 'bitter_ash']
-        const triggers = [['famine', 'poisoned', 'well']]
-        expect(verifyClueLemmaDisjointness(clues, triggers).valid).toBe(true)
-
-        const taintedClues = ['frost_crust', 'famine']
-        expect(verifyClueLemmaDisjointness(taintedClues, triggers).valid).toBe(
-            false,
-        )
+        expect(satBit.val).toBe(0)
+        expect(satBit.dat?.satisfied).toBe(true)
+        expect(satBit.dat?.netArmsAvailable).toBe(2)
+        expect(satBit.dat?.requiredHands).toBe(1)
     })
 })

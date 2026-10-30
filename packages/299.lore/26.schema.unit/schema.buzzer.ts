@@ -11,4 +11,8 @@ export {
     SCHEMA_ROUTER,
 } from './buz/validate.buzz'
 export { deepFreeze, type DeepReadonly } from './buz/freeze.buzz'
-export { solveSomaticSAT } from './buz/somatic-sat.buzz'
+export {
+    solveSomaticSAT,
+    LOCOMOTION_TIER_BANNED_VERBS,
+    type SomaticSATPayload,
+} from './buz/somatic-sat.buzz'

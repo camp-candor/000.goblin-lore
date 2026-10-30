@@ -31,8 +31,7 @@ export function reducer(
             return cpy
 
         case Act.SOLVE_SOMATIC_SAT:
-            Buzz.solveSomaticSAT(cpy, act.bale, state as State)
-            return cpy
+            return Buzz.solveSomaticSAT(cpy, act.bale, state as State)
 
         default:
             return cpy

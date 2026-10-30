@@ -175,6 +175,27 @@ const init = async () => {
             src: '>> [OK] Master Bus Initialized',
         })
 
+        // 2b. Teardown watchdog: CLOSE_TERMINAL restores the TTY but the
+        // harness menu loop keeps spinning headlessly afterwards and never
+        // exits. Arm on live screen, exit cleanly once teardown lands.
+        let terminalArmed = false
+        const teardownWatch = setInterval(() => {
+            try {
+                const screen =
+                    (LIBRARY as any)?.state?.value?.terminal?.screen ?? null
+                if (screen != null) {
+                    terminalArmed = true
+                    return
+                }
+                if (terminalArmed) {
+                    clearInterval(teardownWatch)
+                    process.exit(0)
+                }
+            } catch {
+                // State shape in flux during boot; keep watching.
+            }
+        }, 100)
+
         // 3. Dynamic Package Injection & Bus Wiring
         const packagesDist = path.resolve(
             import.meta.dirname,
