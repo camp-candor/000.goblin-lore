@@ -1,3 +1,10 @@
+/**
+ * packages/299.lore/26.schema.unit/schema.reduce.ts
+ *
+ * Deterministic reducer switchboard for 26.schema.unit.
+ * Enforces clone-deep state isolation on every reduction turn.
+ */
+
 import clone from 'clone-deep'
 import * as Act from './schema.action'
 import { SchemaModel } from './schema.model'
@@ -9,6 +16,7 @@ export function reducer(
     act: Act.Actions,
     state?: State,
 ): SchemaModel {
+    // Enforce absolute memory isolation before action dispatch
     const cpy = clone(model, true)
 
     switch (act.type) {
@@ -30,3 +38,5 @@ export function reducer(
             return cpy
     }
 }
+
+export default reducer
