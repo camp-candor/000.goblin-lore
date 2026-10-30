@@ -1,17 +1,14 @@
-export { validateEntity } from './buz/validate.buzz'
+/**
+ * packages/299.lore/26.schema.unit/schema.buzzer.ts
+ *
+ * Facade export switchboard for 26.schema.unit buzzers.
+ */
+
+export {
+    initSchema,
+    updateSchema,
+    validateEntity,
+    SCHEMA_ROUTER,
+} from './buz/validate.buzz'
+export { deepFreeze, type DeepReadonly } from './buz/freeze.buzz'
 export { solveSomaticSAT } from './buz/somatic-sat.buzz'
-export { deepFreeze } from './buz/freeze.buzz'
-
-export const initSchema = (cpy: any, bal: any, _ste: any) => {
-    if (bal?.slv) {
-        bal.slv({ schBit: { idx: 'init-schema', val: 0 } })
-    }
-    return cpy
-}
-
-export const updateSchema = (cpy: any, bal: any, _ste: any) => {
-    if (bal?.slv) {
-        bal.slv({ schBit: { idx: 'update-schema', val: 0 } })
-    }
-    return cpy
-}

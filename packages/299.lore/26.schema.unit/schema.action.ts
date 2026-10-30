@@ -23,22 +23,30 @@ export const SOLVE_SOMATIC_SAT = '[Schema action] Solve Somatic Sat'
 
 export class InitSchema implements Action<SchemaBit> {
     readonly type = INIT_SCHEMA
-    constructor(public bale: SchemaBit) {}
+    constructor(public bale: SchemaBit) {
+        Object.freeze(this)
+    }
 }
 
 export class UpdateSchema implements Action<SchemaBit> {
     readonly type = UPDATE_SCHEMA
-    constructor(public bale: SchemaBit) {}
+    constructor(public bale: SchemaBit) {
+        Object.freeze(this)
+    }
 }
 
 export class ValidateEntity implements Action<SchemaBit> {
     readonly type = VALIDATE_ENTITY
-    constructor(public bale: SchemaBit) {}
+    constructor(public bale: SchemaBit) {
+        Object.freeze(this)
+    }
 }
 
 export class SolveSomaticSat implements Action<SchemaBit> {
     readonly type = SOLVE_SOMATIC_SAT
-    constructor(public bale: SchemaBit) {}
+    constructor(public bale: SchemaBit) {
+        Object.freeze(this)
+    }
 }
 
 // ----------------------------------------------------------------------------

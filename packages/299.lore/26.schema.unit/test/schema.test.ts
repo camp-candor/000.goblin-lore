@@ -30,15 +30,10 @@ describe('26.schema.unit: Invariant Solvers & Immutability', () => {
         let callbackResult: any = null
 
         const validPossession = {
-            schema_version: 1,
-            id: 'item_silver_spoon',
-            name: 'Silver Spoon',
-            owner_id: 'char_bog',
+            item_id: 'item_silver_spoon',
+            title: 'Silver Spoon',
             weight_class: 'WEIGHT',
-            mass_g: 300,
             occupies_hands: 1,
-            contested_by: [],
-            linked_grievances: [],
         }
 
         const bal: any = {
@@ -65,9 +60,8 @@ describe('26.schema.unit: Invariant Solvers & Immutability', () => {
         let callbackResult: any = null
 
         const invalidPossession = {
-            schema_version: 1,
-            id: 'item_broken',
-            name: 'Broken Item',
+            item_id: 'item_broken',
+            title: 'Broken Item',
             weight_class: 'INVALID_CLASS', // Illegal enum
         }
 
