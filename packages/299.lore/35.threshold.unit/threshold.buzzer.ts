@@ -1,2 +1,111 @@
-export { initThreshold } from './buz/threshold.buzz'
-export { updateThreshold } from './buz/threshold.buzz'
+export {
+    validateScalarBoundsBuzz,
+    type ThresholdValidationResult,
+} from './buz/threshold.buzz.js'
+
+import type { ThresholdModel } from './threshold.model.js'
+import type ThresholdBit from './fce/postBreak.bit.js'
+import type State from '../99.core/state.js'
+import { evaluateThresholdBreachInterception } from './buz/postBreakInterceptor.buzz.js'
+
+const UPDATE_CONSOLE = '[Console action] Update Console'
+
+export const initThreshold = (
+    cpy: ThresholdModel,
+    bal: ThresholdBit,
+    _ste: State,
+): ThresholdModel => {
+    cpy.breakReceipts = {}
+    cpy.brokenEntities = new Set<string>()
+    if (bal?.slv) {
+        bal.slv({ trhBit: { idx: 'init-threshold-ok', val: 1 } })
+    }
+    return cpy
+}
+
+export const updateThreshold = (
+    cpy: ThresholdModel,
+    bal: ThresholdBit,
+    _ste: State,
+): ThresholdModel => {
+    if (bal?.slv) {
+        bal.slv({ trhBit: { idx: 'update-threshold-ok', val: 1 } })
+    }
+    return cpy
+}
+
+export const evaluatePostBreakThreshold = (
+    cpy: ThresholdModel,
+    bal: ThresholdBit & { dat: any },
+    ste: State,
+): ThresholdModel => {
+    const payload = bal.dat
+    if (!payload || !payload.input) {
+        if (bal.slv)
+            bal.slv({ trhBit: { idx: 'evaluate-post-break-fail', val: -1 } })
+        return cpy
+    }
+
+    try {
+        const { isBreached, receipt } = evaluateThresholdBreachInterception(
+            payload.input,
+            payload.activeAcousticProfile,
+            payload.currentAttenuationTokens,
+        )
+
+        if (isBreached && receipt) {
+            cpy.breakReceipts[receipt.entityId] = receipt
+            cpy.brokenEntities.add(receipt.entityId)
+
+            if (ste) {
+                ste.hunt(UPDATE_CONSOLE, {
+                    idx: 'cns00',
+                    src: `>> [POST_BREAK] ${receipt.entityId} breached threshold on ${receipt.category} (${receipt.breachedValueBp}/${receipt.thresholdLimitBp} bps) [!] HALT ENGAGED [OK]`,
+                })
+                ste.hunt(UPDATE_CONSOLE, {
+                    idx: 'cns00',
+                    src: `>> [FINALITY] Mutated refusal ${receipt.targetRefusalVectorId} | Added Condition: ${receipt.terminalConditionAdded} | Lifted tokens: [${receipt.bannedTokensRemoved.join(', ')}] [OK]`,
+                })
+            }
+
+            if (bal.slv) {
+                bal.slv({
+                    trhBit: {
+                        idx: 'evaluate-post-break-breached',
+                        val: receipt.breachedValueBp,
+                        dat: receipt,
+                    },
+                })
+            }
+        } else {
+            if (bal.slv) {
+                bal.slv({
+                    trhBit: {
+                        idx: 'evaluate-post-break-unbreached',
+                        val: 0,
+                        dat: { isBreached: false },
+                    },
+                })
+            }
+        }
+    } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err)
+        if (ste) {
+            ste.hunt(UPDATE_CONSOLE, {
+                idx: 'cns00',
+                src: `:: [POST_BREAK FAIL] ${message}`,
+            })
+        }
+        if (bal.slv) {
+            bal.slv({
+                trhBit: {
+                    idx: 'evaluate-post-break-err',
+                    val: -1,
+                    src: message,
+                },
+            })
+        }
+    }
+
+    return cpy
+}
