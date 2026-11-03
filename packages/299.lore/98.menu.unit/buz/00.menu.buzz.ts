@@ -31,6 +31,7 @@ import {
     runSomaticSolverAudit,
 } from './05.schema.solver.audit.buzz'
 import { runPressureMeterSimulatorMenu } from './06.pressure.simulator.buzz'
+import { runAcousticParanoiaInspectorMenu } from './07.acoustic.inspector.buzz'
 import {
     COMPILE_MENU_OPTIONS,
     emitConsoleLine,
@@ -902,6 +903,11 @@ export const openSomaticDspHub = async (
 
     if (hubSelection === '[Pressure Meter Thermodynamic Simulator]') {
         await runPressureMeterSimulatorMenu(ste)
+        return cpy
+    }
+
+    if (hubSelection === '[Acoustic Paranoia Clock Inspector]') {
+        await runAcousticParanoiaInspectorMenu(ste)
         return cpy
     }
 
