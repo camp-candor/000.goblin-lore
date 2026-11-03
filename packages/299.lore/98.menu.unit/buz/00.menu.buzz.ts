@@ -5,12 +5,15 @@
  * Connects directly to 43.compile.unit and domain audit buzzers at T_0 = $0.00.
  */
 
+import fs from 'node:fs'
+import path from 'node:path'
 import type { MenuModel } from '../menu.model'
 import type MenuBit from '../fce/menu.bit'
 import type State from '../../99.core/state'
 import * as ActMnu from '../menu.action'
 import * as ActSch from '../../26.schema.unit/schema.action'
 import * as ActCmp from '../../43.compile.unit/compile.action'
+import * as ActLdg from '../../16.ledger.unit/ledger.action'
 import { deepFreeze } from '../../26.schema.unit/buz/freeze.buzz'
 import { auditPrimitiveStandards } from './01.schema.audit.buzz'
 import { runSomaticAuditMenu } from './02.somatic.audit.buzz'
@@ -41,11 +44,53 @@ const WRITE_CONSOLE = '[Write action] Write Console'
 const CHOICE_OPEN = '[Open action] Open Choice'
 const CONSOLE_UPDATE = '[Console action] Update Console'
 const TERMINAL_CLEAR = '[Layout action] Clear Terminal'
+const TERMINAL_CLOSE = '[Terminal action] Close Terminal'
 
 // Holds the INIT_MENU resolver while the operator navigates the live lore
 // submenu. Released when ROOT MENU is chosen so run.ts can reopen the
 // master switchboard. Null in headless/test contexts.
 let rootSlv: ((result: { mnuBit: MenuBit }) => void) | null = null
+let screenExitHooked = false
+
+function attachCleanExitBindings(lib: any): void {
+    if (screenExitHooked || !lib) return
+    const screen = lib?.state?.value?.terminal?.screen
+    if (!screen || typeof screen.key !== 'function') return
+    screenExitHooked = true
+
+    let escapeCount = 0
+    let escapeResetTimer: ReturnType<typeof setTimeout> | null = null
+
+    const performCleanShutdown = async () => {
+        try {
+            await lib.hunt(TERMINAL_CLEAR, {})
+            await lib.hunt(TERMINAL_CLOSE, {})
+        } catch {
+            // Ignore headless teardown errors
+        }
+        process.exit(0)
+    }
+
+    screen.key(['q', 'C-c'], performCleanShutdown)
+    screen.key(['escape'], () => {
+        escapeCount += 1
+        if (escapeResetTimer) clearTimeout(escapeResetTimer)
+        escapeResetTimer = setTimeout(() => {
+            escapeCount = 0
+        }, 2500)
+        if (escapeCount >= 2) {
+            setTimeout(performCleanShutdown, 150)
+        }
+    })
+}
+
+// Auto-bind on module load if global.LIBRARY is already live
+try {
+    const bootLib = (globalThis as any).LIBRARY || (global as any).LIBRARY
+    if (bootLib) attachCleanExitBindings(bootLib)
+} catch {
+    // Ignore in test environments
+}
 
 async function mountConsolePane(lib: any): Promise<void> {
     if (!lib || typeof lib.hunt !== 'function') return
@@ -79,6 +124,7 @@ export const initMenu = (
         if (lib && typeof lib.hunt === 'function' && ste?.hunt) {
             // Live cockpit: hold the INIT_MENU resolver, mount cns00 console,
             // render HUD banner, and cascade into the interactive choice loop.
+            attachCleanExitBindings(lib)
             rootSlv = bal.slv
             ;(async () => {
                 await mountConsolePane(lib)
@@ -121,6 +167,7 @@ export const updateMenu = async (
 
     const lst = [
         '1. VALIDATE SCHEMA INVARIANTS',
+        '[Somatic DSP Modulation Hub]',
         '2. RUN SOMATIC SAT SOLVER',
         '3. AUDIT KINETIC MOTOR MASKS',
         '4. VERIFY HEAP IMMUTABILITY',
@@ -152,6 +199,8 @@ export const updateMenu = async (
     const descriptions: Record<string, string> = {
         '1. VALIDATE SCHEMA INVARIANTS':
             'Validate frontmatter entities, basis-point bounds, and Banker rounding.',
+        '[Somatic DSP Modulation Hub]':
+            'Extract disk-backed Somatic Ledger dossiers, trauma floors, and SQLite records.',
         '2. RUN SOMATIC SAT SOLVER':
             'Evaluate upper-limb capacity and anatomical hand saturation.',
         '3. AUDIT KINETIC MOTOR MASKS':
@@ -483,11 +532,18 @@ export const updateMenu = async (
             break
         }
 
+        case '[Somatic DSP Modulation Hub]': {
+            await openSomaticDspHub(cpy, bal, ste)
+            break
+        }
+
         case '[C] COMPILE CANON & GATE 0 GAUNTLET': {
             await openCompileMenu(cpy, bal, ste)
             break
         }
 
+        case '':
+        case undefined:
         case 'ROOT MENU': {
             await lib.hunt(TERMINAL_CLEAR, {})
             await mountConsolePane(lib)
@@ -718,6 +774,195 @@ export const triggerCompileAction = async (
                     val: -1,
                     src: err?.message || String(err),
                 },
+            })
+        }
+    }
+
+    return cpy
+}
+
+function findSeriesBaseDir(): string | null {
+    let curr = process.cwd()
+    while (curr && curr !== path.dirname(curr)) {
+        const candidate = path.join(curr, 'series')
+        if (fs.existsSync(candidate) && fs.statSync(candidate).isDirectory()) {
+            return candidate
+        }
+        curr = path.dirname(curr)
+    }
+    return null
+}
+
+export function discoverSomaticSeriesSlugs(): string[] {
+    const baseDir = findSeriesBaseDir()
+    if (!baseDir) {
+        return ['under-the-floorboards', 'wiregrass-basin']
+    }
+    const entries = fs
+        .readdirSync(baseDir, { withFileTypes: true })
+        .filter((e) => e.isDirectory())
+        .map((e) => e.name)
+    entries.sort((a, b) =>
+        a === 'under-the-floorboards'
+            ? -1
+            : b === 'under-the-floorboards'
+              ? 1
+              : a.localeCompare(b),
+    )
+    return entries.length > 0
+        ? entries
+        : ['under-the-floorboards', 'wiregrass-basin']
+}
+
+export function discoverSeriesCharacters(seriesSlug: string): string[] {
+    const baseDir = findSeriesBaseDir()
+    if (!baseDir) {
+        return seriesSlug === 'under-the-floorboards'
+            ? ['char_wart.md', 'char_bog.md']
+            : ['char_spleen.md']
+    }
+    const charDir = path.join(baseDir, seriesSlug, 'characters')
+    if (!fs.existsSync(charDir)) {
+        return ['char_wart.md', 'char_bog.md']
+    }
+    const rawFiles = fs.readdirSync(charDir).filter((f) => f.endsWith('.md'))
+    const canonicalSet = new Set<string>()
+    for (const f of rawFiles) {
+        canonicalSet.add(f.startsWith('char_') ? f : `char_${f}`)
+    }
+    const list = Array.from(canonicalSet)
+    list.sort((a, b) =>
+        a === 'char_wart.md'
+            ? -1
+            : b === 'char_wart.md'
+              ? 1
+              : a.localeCompare(b),
+    )
+    return list
+}
+
+/**
+ * Opens the Somatic DSP Modulation Hub for disk-backed Somatic Ledger extraction.
+ */
+export const openSomaticDspHub = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste: State,
+): Promise<MenuModel> => {
+    const hubOptions = [
+        '[Extract Somatic Ledger]',
+        '[Pressure Meter Thermodynamic Simulator]',
+        '[Acoustic Paranoia Clock Inspector]',
+        '[Algebraic DSP Matrix Inspector]',
+        '[<] RETURN TO LORE MENU',
+    ]
+
+    const lib = (globalThis as any).LIBRARY || (global as any).LIBRARY
+    if (!lib || typeof lib.hunt !== 'function') {
+        if (bal?.slv) {
+            bal.slv({
+                mnuBit: {
+                    idx: 'open-somatic-dsp-hub',
+                    lst: hubOptions,
+                    val: 0,
+                },
+            })
+        }
+        return cpy
+    }
+
+    const gridBit = await lib.hunt(GRID_UPDATE, {
+        x: 0,
+        y: 4,
+        xSpan: 4,
+        ySpan: 8,
+    })
+
+    const hubChoiceBit = await lib.hunt(CHOICE_OPEN, {
+        dat: {
+            clr0: 0,
+            clr1: 3,
+            cb: (choice: string) => {
+                lib.hunt(CONSOLE_UPDATE, {
+                    idx: 'cns00',
+                    src: `:: [SOMATIC_HUB] ${choice}`,
+                })
+            },
+        },
+        src: 'VERTICAL',
+        lst: hubOptions,
+        net: gridBit?.grdBit?.dat,
+    })
+
+    const hubSelection = hubChoiceBit?.chcBit?.src
+    if (!hubSelection || hubSelection === '[<] RETURN TO LORE MENU') {
+        return cpy
+    }
+
+    if (hubSelection === '[Extract Somatic Ledger]') {
+        const seriesSlugs = discoverSomaticSeriesSlugs()
+        await lib.hunt(CONSOLE_UPDATE, {
+            idx: 'cns00',
+            src: `>> [SOMATIC_HUB] Discovered series slugs: ${seriesSlugs.join(', ')}`,
+        })
+
+        const seriesChoiceBit = await lib.hunt(CHOICE_OPEN, {
+            dat: {
+                clr0: 0,
+                clr1: 3,
+                cb: (choice: string) => {
+                    lib.hunt(CONSOLE_UPDATE, {
+                        idx: 'cns00',
+                        src: `:: [SERIES] ${choice}`,
+                    })
+                },
+            },
+            src: 'VERTICAL',
+            lst: [...seriesSlugs, '[<] BACK'],
+            net: gridBit?.grdBit?.dat,
+        })
+
+        const selectedSeries = seriesChoiceBit?.chcBit?.src
+        if (!selectedSeries || selectedSeries === '[<] BACK') {
+            return cpy
+        }
+
+        const charFiles = discoverSeriesCharacters(selectedSeries)
+        const charChoiceBit = await lib.hunt(CHOICE_OPEN, {
+            dat: {
+                clr0: 0,
+                clr1: 3,
+                cb: (choice: string) => {
+                    lib.hunt(CONSOLE_UPDATE, {
+                        idx: 'cns00',
+                        src: `:: [DOSSIER] ${selectedSeries}/characters/${choice}`,
+                    })
+                },
+            },
+            src: 'VERTICAL',
+            lst: [...charFiles, '[<] BACK'],
+            net: gridBit?.grdBit?.dat,
+        })
+
+        const selectedChar = charChoiceBit?.chcBit?.src
+        if (!selectedChar || selectedChar === '[<] BACK') {
+            return cpy
+        }
+
+        const shortCharFile = selectedChar.replace(/^char_/, '')
+        const conditionsPath = `series/${selectedSeries}/world/conditions.md`
+        const characterPath = `series/${selectedSeries}/characters/${shortCharFile}`
+
+        if (ste && typeof ste.hunt === 'function') {
+            await new Promise<void>((resolve) => {
+                ste.hunt(ActLdg.EXTRACT_SOMATIC_LEDGER, {
+                    idx: 'menu-extract-somatic-ledger',
+                    dat: {
+                        conditionsPath,
+                        characterPaths: [characterPath],
+                    },
+                    slv: () => resolve(),
+                })
             })
         }
     }

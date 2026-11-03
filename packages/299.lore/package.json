@@ -6,8 +6,8 @@
     "main": "BEE.ts",
     "terminal": {
         "globalKey": "LORE",
-        "menuTitle": "LORE COCKPIT",
-        "menuDesc": "Open the Lore Cockpit\nto manage lore."
+        "menuTitle": "LORE MENU",
+        "menuDesc": "Open the Lore Menu\nto manage lore."
     },
     "exports": {
         ".": {

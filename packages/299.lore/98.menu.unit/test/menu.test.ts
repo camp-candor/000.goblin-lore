@@ -6,6 +6,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import State from '../../99.core/state'
 import { MenuModel } from '../menu.model'
 import { initMenu, updateMenu } from '../buz/00.menu.buzz'
 
@@ -183,5 +184,64 @@ describe('98.menu.unit: Blessed Terminal Menu Integration', () => {
         expect(seen).toContain('[Grid action] Update Grid')
         expect(seen).toContain('[Open action] Open Choice')
         expect(seen).toContain('[Layout action] Clear Terminal')
+    })
+
+    it('navigates [Somatic DSP Modulation Hub] -> [Extract Somatic Ledger] -> under-the-floorboards -> char_wart.md and logs exact cns00 telemetry', async () => {
+        const consoleLogs: string[] = []
+        const choiceQueue = [
+            '[Somatic DSP Modulation Hub]',
+            '[Extract Somatic Ledger]',
+            'under-the-floorboards',
+            'char_wart.md',
+        ]
+        const observedChoiceLists: string[][] = []
+
+        const mockLibrary = {
+            hunt: async (action: string, payload: any) => {
+                if (action === '[Open action] Open Choice') {
+                    observedChoiceLists.push(payload.lst || [])
+                    const nextChoice = choiceQueue.shift() || 'ROOT MENU'
+                    return { chcBit: { src: nextChoice } }
+                }
+                if (action === '[Grid action] Update Grid') {
+                    return {
+                        grdBit: { dat: { x: 0, y: 4, xSpan: 4, ySpan: 8 } },
+                    }
+                }
+                if (action === '[Console action] Update Console') {
+                    consoleLogs.push(payload.src)
+                    return {}
+                }
+                return {}
+            },
+        }
+
+        ;(globalThis as any).LIBRARY = mockLibrary
+
+        const liveState = new State()
+        const bal: any = { idx: 'test_somatic_hub_journey' }
+        await updateMenu(model, bal, liveState)
+
+        expect(observedChoiceLists[0]).toContain('[Somatic DSP Modulation Hub]')
+        expect(observedChoiceLists[1]).toContain('[Extract Somatic Ledger]')
+        expect(observedChoiceLists[2]).toContain('under-the-floorboards')
+        expect(observedChoiceLists[2]).toContain('wiregrass-basin')
+        expect(observedChoiceLists[3]).toContain('char_wart.md')
+
+        expect(consoleLogs).toContain(
+            '>> [SOMATIC_LEDGER] Parsing Byte-0 dossier: series/under-the-floorboards/characters/wart.md',
+        )
+        expect(consoleLogs).toContain(
+            '>> [SOMATIC_LEDGER] Verified SHA-256: 032f7... [OK]',
+        )
+        expect(consoleLogs).toContain(
+            '>> [TRAUMA] Ingested Condition: cnd_severed_left_arm (Arm Penalty: 10,000 bps)',
+        )
+        expect(consoleLogs).toContain(
+            '>> [TRAUMA] Ingested Condition: cnd_crushed_larynx (Pain Floor: 4,000 bps | Formant Warping: 7,000 bps)',
+        )
+        expect(consoleLogs).toContain(
+            '>> [SQLITE] Materialized entities_somatic_live record for char_wart [OK]',
+        )
     })
 })

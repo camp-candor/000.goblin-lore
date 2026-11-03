@@ -79,6 +79,14 @@ export const getExistingPackages = (): PackageTerminalMetadata[] => {
         }
     }
 
+    results.sort((a, b) =>
+        a.name === '299.lore'
+            ? -1
+            : b.name === '299.lore'
+              ? 1
+              : a.name.localeCompare(b.name),
+    )
+
     return results
 }
 
@@ -175,9 +183,45 @@ const init = async () => {
             src: '>> [OK] Master Bus Initialized',
         })
 
-        // 2b. Teardown watchdog: CLOSE_TERMINAL restores the TTY but the
-        // harness menu loop keeps spinning headlessly afterwards and never
-        // exits. Arm on live screen, exit cleanly once teardown lands.
+        // 2b. Teardown watchdog & clean Escape/q exit handler:
+        // CLOSE_TERMINAL restores the TTY; arm on live screen and bind 'q'/'C-c'
+        // so pressing Escape twice then q exits cleanly with code 0.
+        const TERMINAL_ACTION_LIBRARY = require(
+            path.join(libPath, '80.terminal.unit/terminal.action'),
+        )
+        const initialScreen =
+            (LIBRARY as any)?.state?.value?.terminal?.screen ?? null
+        if (initialScreen && typeof initialScreen.key === 'function') {
+            let escapeCount = 0
+            let escapeResetTimer: ReturnType<typeof setTimeout> | null = null
+
+            const performCleanShutdown = async () => {
+                try {
+                    await LIBRARY.hunt(
+                        TERMINAL_ACTION_LIBRARY.CLEAR_TERMINAL,
+                        {},
+                    )
+                    await LIBRARY.hunt(
+                        TERMINAL_ACTION_LIBRARY.CLOSE_TERMINAL,
+                        {},
+                    )
+                } catch {}
+                process.exit(0)
+            }
+
+            initialScreen.key(['q', 'C-c'], performCleanShutdown)
+            initialScreen.key(['escape'], () => {
+                escapeCount += 1
+                if (escapeResetTimer) clearTimeout(escapeResetTimer)
+                escapeResetTimer = setTimeout(() => {
+                    escapeCount = 0
+                }, 2500)
+                if (escapeCount >= 2) {
+                    setTimeout(performCleanShutdown, 150)
+                }
+            })
+        }
+
         let terminalArmed = false
         const teardownWatch = setInterval(() => {
             try {
@@ -269,9 +313,6 @@ const init = async () => {
                                     slv: resolve,
                                 },
                             )
-                        })
-                        await LIBRARY.hunt(MENU_ACTION_LIBRARY.OPEN_MENU, {
-                            src: '',
                         })
                     },
                 })

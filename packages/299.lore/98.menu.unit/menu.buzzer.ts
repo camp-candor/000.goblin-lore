@@ -9,4 +9,7 @@ export {
     updateMenu,
     openCompileMenu,
     triggerCompileAction,
+    openSomaticDspHub,
+    discoverSomaticSeriesSlugs,
+    discoverSeriesCharacters,
 } from './buz/00.menu.buzz'
