@@ -17,7 +17,8 @@ export function reducer(
       return Buzz.updateDecay(clone(model), act.bale, state!);
 
     case Act.STEP_THERMODYNAMIC_CYCLE:
-      return Buzz.stepThermodynamicCycle(clone(model), act.bale as any, state!);
+      Buzz.stepThermodynamicCycle(clone(model), act.bale as any, state!);
+      return model;
 
     case Act.EVALUATE_INTER_METER_BRIDGE:
       return Buzz.evaluateInterMeterBridge(clone(model), act.bale as any, state!);

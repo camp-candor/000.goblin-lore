@@ -22,13 +22,11 @@ export const updateDecay = (cpy: DecayModel, bal: PressureMeterBit, _ste: State)
   return cpy;
 };
 
-export const stepThermodynamicCycle = (
-
+export const stepThermodynamicCycle = async (
   cpy: DecayModel,
   bal: PressureMeterBit & { dat: any },
   ste: State,
-): DecayModel => {
-
+): Promise<DecayModel> => {
   const payload = bal.dat;
   if (!payload || !payload.meter) {
     if (bal.slv) bal.slv({ dcyBit: { idx: 'step-thermodynamic-cycle-fail', val: -1 } });
@@ -45,7 +43,7 @@ export const stepThermodynamicCycle = (
     cpy.cycleReceipts[receipt.meterId] = receipt;
 
     if (ste) {
-      ste.hunt(UPDATE_CONSOLE, {
+      await ste.hunt(UPDATE_CONSOLE, {
         idx: 'cns00',
         src: `>> [THERMODYNAMIC_FLOW] ${receipt.category}:${receipt.meterId} | ${receipt.previousValueBp} -> ${receipt.currentValueBp} bps | Dissipated: ${receipt.dissipatedBp} bps [OK]`,
       });
@@ -63,7 +61,7 @@ export const stepThermodynamicCycle = (
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     if (ste) {
-      ste.hunt(UPDATE_CONSOLE, {
+      await ste.hunt(UPDATE_CONSOLE, {
         idx: 'cns00',
         src: `:: [THERMODYNAMIC_FLOW FAIL] ${message}`,
       });

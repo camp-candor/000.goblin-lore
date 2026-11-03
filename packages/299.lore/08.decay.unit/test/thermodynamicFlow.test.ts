@@ -97,7 +97,7 @@ describe('08.decay.unit :: Unified Pressure Meter Thermodynamic Accumulator', ()
     initDecay(model, { idx: 'init' }, {} as any);
 
     let emittedReceipt: any;
-    stepThermodynamicCycle(
+    await stepThermodynamicCycle(
       model,
       {
         idx: 'step-test',
@@ -110,7 +110,7 @@ describe('08.decay.unit :: Unified Pressure Meter Thermodynamic Accumulator', ()
           emittedReceipt = res.dcyBit.dat;
         },
       },
-      { hunt: () => {} } as any,
+      { hunt: async () => {} } as any,
     );
 
     expect(emittedReceipt).toBeDefined();
