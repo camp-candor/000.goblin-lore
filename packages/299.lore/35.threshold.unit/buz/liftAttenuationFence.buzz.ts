@@ -25,10 +25,13 @@ export function executeAttenuationFenceLift(
         }
     }
 
-    return Object.freeze({
+    const receipt: AttenuationFenceLiftReceipt = {
         entityId,
-        tokensRemoved: Object.freeze(tokensRemoved.sort()),
-        remainingTokens: Object.freeze(remainingTokens.sort()),
+        tokensRemoved: tokensRemoved.sort(),
+        remainingTokens: remainingTokens.sort(),
         isBreakStateAuthorized: true,
-    })
+    }
+    Object.freeze(receipt.tokensRemoved)
+    Object.freeze(receipt.remainingTokens)
+    return Object.freeze(receipt)
 }

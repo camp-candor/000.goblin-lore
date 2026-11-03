@@ -1,5 +1,5 @@
 import { Action } from '../99.core/interface/action.interface.js'
-import type ThresholdBit from './fce/threshold.bit.js'
+import type ThresholdBit from './fce/postBreak.bit.js'
 import type { ThresholdEvaluationInput } from './val/postBreak.val.js'
 
 export const INIT_THRESHOLD = '[Threshold action] Init Threshold'
