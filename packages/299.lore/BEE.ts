@@ -42,6 +42,7 @@ import VerbsUnit from './39.verbs.unit/verbs.unit'
 import WoundUnit from './40.wound.unit/wound.unit'
 import CanonUnit from './41.canon.unit/canon.unit'
 import CatalystUnit from './42.catalyst.unit/catalyst.unit'
+import CompileUnit from './43.compile.unit/compile.unit'
 import ModelUnit from './96.model.unit/model.unit'
 import CollectUnit from './97.collect.unit/collect.unit'
 import MenuUnit from './98.menu.unit/menu.unit'
@@ -131,6 +132,8 @@ import Canon from './41.canon.unit/fce/canon.interface'
 import { CanonModel } from './41.canon.unit/canon.model'
 import Catalyst from './42.catalyst.unit/fce/catalyst.interface'
 import { CatalystModel } from './42.catalyst.unit/catalyst.model'
+import Compile from './43.compile.unit/fce/compile.interface'
+import { CompileModel } from './43.compile.unit/compile.model'
 import ModelInterface from './96.model.unit/fce/model.interface'
 import { ModelModel } from './96.model.unit/model.model'
 import Collect from './97.collect.unit/fce/collect.interface'
@@ -183,6 +186,7 @@ export const list: Array<any> = [
     WoundUnit,
     CanonUnit,
     CatalystUnit,
+    CompileUnit,
     ModelUnit,
     CollectUnit,
     MenuUnit,
@@ -231,6 +235,7 @@ import * as reduceFromVerbs from './39.verbs.unit/verbs.reduce'
 import * as reduceFromWound from './40.wound.unit/wound.reduce'
 import * as reduceFromCanon from './41.canon.unit/canon.reduce'
 import * as reduceFromCatalyst from './42.catalyst.unit/catalyst.reduce'
+import * as reduceFromCompile from './43.compile.unit/compile.reduce'
 import * as reduceFromModel from './96.model.unit/model.reduce'
 import * as reduceFromCollect from './97.collect.unit/collect.reduce'
 import * as reduceFromMenu from './98.menu.unit/menu.reduce'
@@ -279,6 +284,7 @@ export const reducer: any = {
     wound: reduceFromWound.reducer,
     canon: reduceFromCanon.reducer,
     catalyst: reduceFromCatalyst.reducer,
+    compile: reduceFromCompile.reducer,
     model: reduceFromModel.reducer,
     collect: reduceFromCollect.reducer,
     menu: reduceFromMenu.reducer,
@@ -330,6 +336,7 @@ export default class UnitData implements Model {
     wound: Wound = new WoundModel()
     canon: Canon = new CanonModel()
     catalyst: Catalyst = new CatalystModel()
+    compile: Compile = new CompileModel()
     model: ModelInterface = new ModelModel()
     collect: Collect = new CollectModel()
     menu: Menu = new MenuModel()

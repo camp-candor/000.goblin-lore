@@ -26,6 +26,14 @@ export const reducer = (
             Buzz.updateMenu(cpy, act.bale, state!)
             return cpy
 
+        case Act.OPEN_COMPILE_MENU:
+            Buzz.openCompileMenu(cpy, act.bale, state!)
+            return cpy
+
+        case Act.TRIGGER_COMPILE_ACTION:
+            Buzz.triggerCompileAction(cpy, act.bale, state!)
+            return cpy
+
         default:
             return cpy
     }

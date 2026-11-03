@@ -40,7 +40,7 @@ export const UnresolvedMysterySchema = z
     })
     .strict()
     .superRefine((data, ctx) => {
-        // 1. Clue-Lemma Disjointness Theorem: P_clues ∩ ⋃ T_lemmas = ∅
+        // 1. Clue-Lemma Disjointness Theorem: P_clues intersect union(T_lemmas) = empty_set
         const allTriggerLemmas = new Set<string>()
         for (const lemmaSet of data.trigger_lemma_sets) {
             for (const lemma of lemmaSet) {

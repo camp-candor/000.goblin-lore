@@ -1,7 +1,7 @@
 /**
  * Evaluates the set intersection between physical sensory clue tokens
  * and forbidden mystery resolution lemma triggers.
- * Formula: P_clues ∩ ⋃ T_lemmas = ∅
+ * Formula: P_clues intersect union(T_lemmas) = empty_set
  */
 export const verifyClueLemmaDisjointness = (
     clueTokens: string[],

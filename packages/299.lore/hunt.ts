@@ -14,7 +14,15 @@ var host = (obj, typ) => {
     const promo = new Promise((rslv, rjct) => (slv = rslv))
 
     if (obj == null) obj = {}
-    if (obj.slv == null) obj.slv = (val0) => slv(val0)
+    if (obj.slv == null) {
+        obj.slv = (val0) => slv(val0)
+    } else {
+        var origSlv = obj.slv
+        obj.slv = (val0) => {
+            origSlv(val0)
+            slv(val0)
+        }
+    }
 
     sim.state.dispatch({ type: typ, bale: obj })
     return promo

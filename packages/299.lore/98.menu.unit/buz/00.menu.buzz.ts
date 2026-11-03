@@ -2,7 +2,7 @@
  * packages/299.lore/98.menu.unit/buz/00.menu.buzz.ts
  *
  * Interactive Blessed Curses choice handler and cns00 telemetry router for 299.lore.
- * Operates on the 12x12 percentage grid at T_0 = $0.00.
+ * Connects directly to 43.compile.unit and domain audit buzzers at T_0 = $0.00.
  */
 
 import type { MenuModel } from '../menu.model'
@@ -10,9 +10,34 @@ import type MenuBit from '../fce/menu.bit'
 import type State from '../../99.core/state'
 import * as ActMnu from '../menu.action'
 import * as ActSch from '../../26.schema.unit/schema.action'
+import * as ActCmp from '../../43.compile.unit/compile.action'
+import { deepFreeze } from '../../26.schema.unit/buz/freeze.buzz'
+import { auditPrimitiveStandards } from './01.schema.audit.buzz'
+import { runSomaticAuditMenu } from './02.somatic.audit.buzz'
+import {
+    runHandCapacityAudit,
+    runPortalReciprocityAudit,
+} from './03.logistics.audit.buzz'
+import {
+    runCausalDagAudit,
+    runDyadicMeshAudit,
+    runEpistemicFirewallAudit,
+} from './04.grievance.audit.buzz'
+import {
+    runEntityManifestAudit,
+    runSomaticSolverAudit,
+} from './05.schema.solver.audit.buzz'
+import {
+    COMPILE_MENU_OPTIONS,
+    emitConsoleLine,
+    printLoreCockpitBanner,
+    printDetailedCompileReceipt,
+    printCompileFailureReport,
+} from '../compile-menu.view'
 
 // Canonical 995.library harness action types (lowercase 'action' form).
 const GRID_UPDATE = '[Grid action] Update Grid'
+const WRITE_CONSOLE = '[Write action] Write Console'
 const CHOICE_OPEN = '[Open action] Open Choice'
 const CONSOLE_UPDATE = '[Console action] Update Console'
 const TERMINAL_CLEAR = '[Layout action] Clear Terminal'
@@ -21,6 +46,27 @@ const TERMINAL_CLEAR = '[Layout action] Clear Terminal'
 // submenu. Released when ROOT MENU is chosen so run.ts can reopen the
 // master switchboard. Null in headless/test contexts.
 let rootSlv: ((result: { mnuBit: MenuBit }) => void) | null = null
+
+async function mountConsolePane(lib: any): Promise<void> {
+    if (!lib || typeof lib.hunt !== 'function') return
+    try {
+        const gridBit = await lib.hunt(GRID_UPDATE, {
+            x: 4,
+            y: 0,
+            xSpan: 8,
+            ySpan: 12,
+        })
+        if (gridBit?.grdBit?.dat) {
+            await lib.hunt(WRITE_CONSOLE, {
+                idx: 'cns00',
+                src: '',
+                dat: { net: gridBit.grdBit.dat, src: 'alligator0' },
+            })
+        }
+    } catch {
+        // Ignore in mock or headless environments where Write Console is unmounted
+    }
+}
 
 export const initMenu = (
     cpy: MenuModel,
@@ -31,21 +77,33 @@ export const initMenu = (
     const lib = (globalThis as any).LIBRARY || (global as any).LIBRARY
     if (bal?.slv) {
         if (lib && typeof lib.hunt === 'function' && ste?.hunt) {
-            // Live cockpit: hold the INIT_MENU resolver and cascade into
-            // the interactive choice loop. Resolves at ROOT MENU.
+            // Live cockpit: hold the INIT_MENU resolver, mount cns00 console,
+            // render HUD banner, and cascade into the interactive choice loop.
             rootSlv = bal.slv
-            updateMenu(cpy, { idx: 'init-menu-cascade' } as MenuBit, ste).catch(
-                (err: any) => {
-                    try {
-                        lib.hunt(CONSOLE_UPDATE, {
-                            idx: 'cns00',
-                            src: `:: [MENU_FAULT] ${err?.message || err}`,
-                        })
-                    } catch {
-                        // Headless teardown in progress; nothing left to report to.
-                    }
-                },
-            )
+            ;(async () => {
+                await mountConsolePane(lib)
+                const compileState = (ste as any)?.value?.compile
+                await printLoreCockpitBanner(
+                    ste,
+                    cpy.activeSeries || '000.sample-hearth',
+                    compileState?.status || 'IDLE',
+                    compileState?.lastMerkleHash || '',
+                )
+                await updateMenu(
+                    cpy,
+                    { idx: 'init-menu-cascade' } as MenuBit,
+                    ste,
+                )
+            })().catch((err: any) => {
+                try {
+                    lib.hunt(CONSOLE_UPDATE, {
+                        idx: 'cns00',
+                        src: `:: [MENU_FAULT] ${err?.message || err}`,
+                    })
+                } catch {
+                    // Headless teardown in progress; nothing left to report to.
+                }
+            })
         } else {
             bal.slv({ mnuBit: bal })
         }
@@ -58,33 +116,62 @@ export const updateMenu = async (
     bal: MenuBit,
     ste: State,
 ): Promise<MenuModel> => {
+    const activeSeries = cpy.activeSeries || '001.goblin-lore'
     const lib = (globalThis as any).LIBRARY || (global as any).LIBRARY
-
-    // Headless execution safety fallback for CI and non-TTY test environments
-    if (!lib || typeof lib.hunt !== 'function') {
-        if (bal?.slv) {
-            bal.slv({ mnuBit: { idx: 'update-menu-headless', val: 0 } })
-        }
-        return cpy
-    }
 
     const lst = [
         '1. VALIDATE SCHEMA INVARIANTS',
         '2. RUN SOMATIC SAT SOLVER',
         '3. AUDIT KINETIC MOTOR MASKS',
         '4. VERIFY HEAP IMMUTABILITY',
+        '5. AUDIT SPATIAL PORTALS & ACOUSTICS',
+        '6. AUDIT GRIEVANCE DAG & DYADIC MESH',
+        '7. VERIFY EPISTEMIC FIREWALLS',
+        '8. INTERACTIVE SOMATIC MOTOR LAB',
+        '[S] STYLOMETRIC & VOICE-BLEED LINTER',
+        '[H] HERMETIC OFFLINE DELETION PARITY',
+        '[C] COMPILE CANON & GATE 0 GAUNTLET',
         'ROOT MENU',
     ]
 
+    // Headless execution safety fallback for CI and non-TTY test environments
+    if (!lib || typeof lib.hunt !== 'function') {
+        if (bal?.slv) {
+            bal.slv({
+                mnuBit: {
+                    idx: 'update-menu-headless',
+                    lst,
+                    val: 0,
+                    dat: { activeSeries },
+                },
+            })
+        }
+        return cpy
+    }
+
     const descriptions: Record<string, string> = {
         '1. VALIDATE SCHEMA INVARIANTS':
-            'Validate frontmatter entities against strict Zod contracts.',
+            'Validate frontmatter entities, basis-point bounds, and Banker rounding.',
         '2. RUN SOMATIC SAT SOLVER':
             'Evaluate upper-limb capacity and anatomical hand saturation.',
         '3. AUDIT KINETIC MOTOR MASKS':
             'Assert action verb exclusion against locomotion tiers and conditions.',
         '4. VERIFY HEAP IMMUTABILITY':
             'Confirm deepFreeze traps property mutation on sealed entities.',
+        '5. AUDIT SPATIAL PORTALS & ACOUSTICS':
+            'Verify bidirectional portal reciprocity and cdB acoustic attenuation.',
+        '6. AUDIT GRIEVANCE DAG & DYADIC MESH':
+            'Run 3-color DFS cycle detection, topological depth, and dyadic mesh checks.',
+        '7. VERIFY EPISTEMIC FIREWALLS':
+            'Enforce Clue-Lemma Disjointness and false-belief prompt-injection guards.',
+        '8. INTERACTIVE SOMATIC MOTOR LAB':
+            'Inspect character somatic masks and test custom kinetic verbs interactively.',
+        '[S] STYLOMETRIC & VOICE-BLEED LINTER':
+            'Audit prose lexical diversity, corporate slop bans, and callback collisions.',
+        '[H] HERMETIC OFFLINE DELETION PARITY':
+            'Purge compiled/ artifacts and verify bit-for-bit offline H_root rebuild.',
+        '[C] COMPILE CANON & GATE 0 GAUNTLET':
+            'Open 3-pass compiler flight deck, Merkle emission, and Gate 0 verification.',
         'ROOT MENU': 'Return to master flight deck switchboard.',
     }
 
@@ -155,6 +242,21 @@ export const updateMenu = async (
                     src: ':: [SCHEMA_FAIL] Invariant breach detected during validation.',
                 })
             }
+            try {
+                const primLines = await auditPrimitiveStandards()
+                for (const line of primLines) {
+                    await lib.hunt(CONSOLE_UPDATE, { idx: 'cns00', src: line })
+                }
+                const manifestLines = await runEntityManifestAudit()
+                for (const line of manifestLines) {
+                    await lib.hunt(CONSOLE_UPDATE, { idx: 'cns00', src: line })
+                }
+            } catch (err: any) {
+                await lib.hunt(CONSOLE_UPDATE, {
+                    idx: 'cns00',
+                    src: `:: ${err?.message || String(err)}`,
+                })
+            }
             break
         }
 
@@ -200,6 +302,21 @@ export const updateMenu = async (
                 await lib.hunt(CONSOLE_UPDATE, {
                     idx: 'cns00',
                     src: '>> [SAT_PASS] Biological inequality enforced at T_0 = $0.00.',
+                })
+            }
+            try {
+                const satLines = await runSomaticSolverAudit()
+                for (const line of satLines) {
+                    await lib.hunt(CONSOLE_UPDATE, { idx: 'cns00', src: line })
+                }
+                const rosterLines = await runHandCapacityAudit()
+                for (const line of rosterLines) {
+                    await lib.hunt(CONSOLE_UPDATE, { idx: 'cns00', src: line })
+                }
+            } catch (err: any) {
+                await lib.hunt(CONSOLE_UPDATE, {
+                    idx: 'cns00',
+                    src: `:: ${err?.message || String(err)}`,
                 })
             }
             break
@@ -249,6 +366,20 @@ export const updateMenu = async (
                 idx: 'cns00',
                 src: '>> Verifying V8 Heap Deep Freeze Immutability...',
             })
+            const probe = deepFreeze({
+                id: 'char_bog',
+                somatic: { arms_available: 2, banned_verbs: ['SPRINT'] },
+            })
+            let trapped = false
+            try {
+                ;(probe.somatic as any).arms_available = 99
+            } catch {
+                trapped = true
+            }
+            await lib.hunt(CONSOLE_UPDATE, {
+                idx: 'cns00',
+                src: `>> [IMMUTABILITY:PROBE] Object.isFrozen=${Object.isFrozen(probe)} | MutationTrapped=${trapped}`,
+            })
             await lib.hunt(CONSOLE_UPDATE, {
                 idx: 'cns00',
                 src: '>> [IMMUTABILITY:PASS] Object.freeze recursion traps mutations with strict TypeError.',
@@ -256,8 +387,110 @@ export const updateMenu = async (
             break
         }
 
+        case '5. AUDIT SPATIAL PORTALS & ACOUSTICS': {
+            try {
+                const lines = await runPortalReciprocityAudit()
+                for (const line of lines) {
+                    await lib.hunt(CONSOLE_UPDATE, { idx: 'cns00', src: line })
+                }
+            } catch (err: any) {
+                await lib.hunt(CONSOLE_UPDATE, {
+                    idx: 'cns00',
+                    src: `:: ${err?.message || String(err)}`,
+                })
+            }
+            break
+        }
+
+        case '6. AUDIT GRIEVANCE DAG & DYADIC MESH': {
+            try {
+                const dagLines = await runCausalDagAudit()
+                for (const line of dagLines) {
+                    await lib.hunt(CONSOLE_UPDATE, { idx: 'cns00', src: line })
+                }
+                const dyadLines = await runDyadicMeshAudit()
+                for (const line of dyadLines) {
+                    await lib.hunt(CONSOLE_UPDATE, { idx: 'cns00', src: line })
+                }
+            } catch (err: any) {
+                await lib.hunt(CONSOLE_UPDATE, {
+                    idx: 'cns00',
+                    src: `:: ${err?.message || String(err)}`,
+                })
+            }
+            break
+        }
+
+        case '7. VERIFY EPISTEMIC FIREWALLS': {
+            try {
+                const epLines = await runEpistemicFirewallAudit()
+                for (const line of epLines) {
+                    await lib.hunt(CONSOLE_UPDATE, { idx: 'cns00', src: line })
+                }
+            } catch (err: any) {
+                await lib.hunt(CONSOLE_UPDATE, {
+                    idx: 'cns00',
+                    src: `:: ${err?.message || String(err)}`,
+                })
+            }
+            break
+        }
+
+        case '8. INTERACTIVE SOMATIC MOTOR LAB': {
+            await runSomaticAuditMenu(ste)
+            break
+        }
+
+        case '[S] STYLOMETRIC & VOICE-BLEED LINTER': {
+            await emitConsoleLine(
+                ste,
+                '>> [LEVEL 3: STYLOMETRICS] Running lexical diversity & voice-bleed audit...',
+            )
+            if (ste && typeof ste.hunt === 'function') {
+                await ste.hunt(ActCmp.STYLOMETRIC_LINT, {
+                    idx: 'menu-stylometrics',
+                    seriesSlug: activeSeries,
+                    emitTelemetry: true,
+                })
+            }
+            break
+        }
+
+        case '[H] HERMETIC OFFLINE DELETION PARITY': {
+            await emitConsoleLine(
+                ste,
+                '>> [HERMETIC PARITY] Executing offline deletion & bit-for-bit Merkle rebuild test...',
+            )
+            if (ste && typeof ste.hunt === 'function') {
+                let parityRes: any = null
+                await ste.hunt(ActCmp.OFFLINE_DELETION_TEST, {
+                    idx: 'menu-offline-parity',
+                    seriesSlug: activeSeries,
+                    emitTelemetry: true,
+                    slv: (r: any) => {
+                        parityRes = r?.cmpBit || r?.resBit
+                    },
+                })
+                if (parityRes) {
+                    await printDetailedCompileReceipt(
+                        ste,
+                        activeSeries,
+                        parityRes,
+                        parityRes.executionDurationMs || 1,
+                    )
+                }
+            }
+            break
+        }
+
+        case '[C] COMPILE CANON & GATE 0 GAUNTLET': {
+            await openCompileMenu(cpy, bal, ste)
+            break
+        }
+
         case 'ROOT MENU': {
             await lib.hunt(TERMINAL_CLEAR, {})
+            await mountConsolePane(lib)
             if (rootSlv) {
                 const slv = rootSlv
                 rootSlv = null
@@ -282,6 +515,211 @@ export const updateMenu = async (
 
     if (bal?.slv) {
         bal.slv({ mnuBit: bal })
+    }
+
+    return cpy
+}
+
+/**
+ * Opens the dedicated Compile Menu Flight Deck.
+ */
+export const openCompileMenu = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste: State,
+): Promise<MenuModel> => {
+    const activeSeries =
+        bal?.dat?.activeSeries || cpy.activeSeries || '001.goblin-lore'
+
+    await emitConsoleLine(
+        ste,
+        `>> [MENU:COMPILE] Opening Compile Flight Deck for series: ${activeSeries}`,
+    )
+
+    const optionLabels = COMPILE_MENU_OPTIONS.map((opt) => opt.label)
+
+    const lib = (globalThis as any).LIBRARY || (global as any).LIBRARY
+    if (lib && typeof lib.hunt === 'function') {
+        const gridBit = await lib.hunt(GRID_UPDATE, {
+            x: 0,
+            y: 4,
+            xSpan: 4,
+            ySpan: 8,
+        })
+
+        const choiceBit = await lib.hunt(CHOICE_OPEN, {
+            dat: {
+                clr0: 0,
+                clr1: 3,
+                cb: (choice: string) => {
+                    const opt = COMPILE_MENU_OPTIONS.find(
+                        (o) => o.label === choice,
+                    )
+                    const text = opt?.description || 'No description available.'
+                    lib.hunt(CONSOLE_UPDATE, {
+                        idx: 'cns00',
+                        src: `:: ${text}`,
+                    })
+                },
+            },
+            src: 'VERTICAL',
+            lst: optionLabels,
+            net: gridBit?.grdBit?.dat,
+        })
+
+        const chosenLabel = choiceBit?.chcBit?.src
+        const chosenIndex = COMPILE_MENU_OPTIONS.findIndex(
+            (o) => o.label === chosenLabel,
+        )
+        if (chosenIndex >= 0) {
+            await triggerCompileAction(
+                cpy,
+                { ...bal, val: chosenIndex } as MenuBit,
+                ste,
+            )
+        }
+    }
+
+    if (bal?.slv) {
+        bal.slv({
+            mnuBit: {
+                idx: 'open-compile-menu',
+                lst: optionLabels,
+                dat: {
+                    activeSeries,
+                    options: COMPILE_MENU_OPTIONS,
+                },
+            },
+        })
+    }
+
+    return cpy
+}
+
+/**
+ * Triggers an operation from the compile menu and streams full telemetry.
+ */
+export const triggerCompileAction = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste: State,
+): Promise<MenuModel> => {
+    const activeSeries =
+        bal?.dat?.activeSeries || cpy.activeSeries || '001.goblin-lore'
+    const selectedIndex = bal?.val ?? 0
+    const option = COMPILE_MENU_OPTIONS[selectedIndex]
+
+    if (!option) {
+        await emitConsoleLine(
+            ste,
+            ':: [MENU:ERR] Invalid compile menu option selected.',
+        )
+        if (bal?.slv) {
+            bal.slv({ mnuBit: { idx: 'compile-action-err', val: -1 } })
+        }
+        return cpy
+    }
+
+    // Return to Lore Menu option
+    if (option.key === '<') {
+        await emitConsoleLine(
+            ste,
+            '>> [MENU:COMPILE] Returning to Lore Menu...',
+        )
+        return updateMenu(cpy, bal, ste)
+    }
+
+    const startTime = Date.now()
+    await emitConsoleLine(
+        ste,
+        `>> [COMPILE:DISPATCH] Triggered: ${option.label}`,
+    )
+    await emitConsoleLine(
+        ste,
+        `>> [TARGET:SERIES]   slug=${activeSeries} source=corpus/ output=compiled/`,
+    )
+
+    let compileResult: any = null
+    let compileError: any = null
+
+    try {
+        if (ste && typeof ste.hunt === 'function') {
+            const dispatchRes: any = await ste.hunt(option.actionType, {
+                idx: 'cmp-tui-dispatch',
+                src: process.cwd(),
+                val: 1, // Verbose telemetry flag
+                dat: {
+                    seriesSlug: activeSeries,
+                    verifyDriftTripwire: option.key === '5', // Enforce tripwire on Gate 0 option
+                },
+                slv: (res: any) => {
+                    if (res?.resBit) compileResult = res.resBit
+                    else if (res?.cmpBit && res.cmpBit.val !== 0)
+                        compileResult = res.cmpBit
+                    if (res?.errBit) compileError = res.errBit
+                },
+            })
+
+            if (!compileResult && dispatchRes?.resBit) {
+                compileResult = dispatchRes.resBit
+            } else if (
+                !compileResult &&
+                dispatchRes?.cmpBit &&
+                dispatchRes.cmpBit.val !== 0
+            ) {
+                compileResult = dispatchRes.cmpBit
+            }
+            if (!compileError && dispatchRes?.errBit) {
+                compileError = dispatchRes.errBit
+            }
+        }
+
+        const elapsedMs = Date.now() - startTime
+
+        if (compileError) {
+            await printCompileFailureReport(ste, activeSeries, compileError)
+            cpy.lastError = compileError.message
+        } else {
+            await printDetailedCompileReceipt(
+                ste,
+                activeSeries,
+                compileResult,
+                elapsedMs,
+            )
+            cpy.lastError = undefined
+        }
+
+        if (bal?.slv) {
+            bal.slv({
+                mnuBit: {
+                    idx: 'trigger-compile-action',
+                    val: compileError ? -1 : 0,
+                    dat: {
+                        action: option.actionType,
+                        elapsedMs,
+                        success: !compileError,
+                        resBit: compileResult,
+                        errBit: compileError,
+                    },
+                },
+            })
+        }
+    } catch (err: any) {
+        const errorPayload = {
+            code: 'DISPATCH_EXCEPTION',
+            message: err?.message || String(err),
+        }
+        await printCompileFailureReport(ste, activeSeries, errorPayload)
+
+        if (bal?.slv) {
+            bal.slv({
+                mnuBit: {
+                    idx: 'trigger-compile-action-err',
+                    val: -1,
+                    src: err?.message || String(err),
+                },
+            })
+        }
     }
 
     return cpy

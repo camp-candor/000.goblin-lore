@@ -16,6 +16,25 @@ export default class State extends BehaviorSubject<any> {
     constructor(init: UnitModel = new UnitModel()) {
         super(init)
 
+        this.hunt = (typ: string, obj: any = {}) => {
+            let slv: any
+            const promo = new Promise((rslv) => {
+                slv = rslv
+            })
+            if (obj == null) obj = {}
+            if (obj.slv == null) {
+                obj.slv = (val0: any) => slv(val0)
+            } else {
+                const origSlv = obj.slv
+                obj.slv = (val0: any) => {
+                    origSlv(val0)
+                    slv(val0)
+                }
+            }
+            this.dispatch({ type: typ, bale: obj })
+            return promo
+        }
+
         this.dispatcher
             .scan((state, action) => this.reducedApp(state, action), init)
             .subscribe((state) => {
@@ -24,7 +43,8 @@ export default class State extends BehaviorSubject<any> {
     }
 
     reducedApp(nextState: any, key: any) {
-        for (var k in Effect.reducer) Effect.reducer[k](nextState[k], key, this)
+        for (var k in Effect.reducer)
+            nextState[k] = Effect.reducer[k](nextState[k], key, this)
         return nextState
     }
 

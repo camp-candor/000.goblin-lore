@@ -10,6 +10,8 @@ export class MenuModel {
     idx: string = '98.menu'
     menuBits: Record<string, MenuBit> = {}
     activeSelection: string = 'ROOT'
+    activeSeries?: string = '001.goblin-lore'
+    lastError?: string
     lastTelemetryReport: string[] = []
 }
 

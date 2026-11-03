@@ -4,4 +4,9 @@
  * Facade export switchboard for 98.menu.unit buzzers.
  */
 
-export { initMenu, updateMenu } from './buz/00.menu.buzz'
+export {
+    initMenu,
+    updateMenu,
+    openCompileMenu,
+    triggerCompileAction,
+} from './buz/00.menu.buzz'

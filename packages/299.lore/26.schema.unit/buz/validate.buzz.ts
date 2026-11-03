@@ -97,6 +97,28 @@ export const PossessionSchema = z
     })
     .strict()
 
+export const CanonicalPossessionSchema = z
+    .object({
+        schema_version: z.number().int().min(1).default(1),
+        id: z.string().regex(/^item_[a-z0-9_]+$/),
+        name: z.string().min(1),
+        owner_id: z
+            .string()
+            .regex(/^char_[a-z0-9_]+$/)
+            .nullable()
+            .default(null),
+        weight_class: z.enum(['SCRAP', 'SHINE', 'WEIGHT']),
+        mass_g: z.number().int().nonnegative().default(100),
+        occupies_hands: z.number().int().min(0).max(2).default(1),
+        contested_by: z
+            .array(z.string().regex(/^char_[a-z0-9_]+$/))
+            .default([]),
+        linked_grievances: z
+            .array(z.string().regex(/^grv_[a-z0-9_]+$/))
+            .default([]),
+    })
+    .strict()
+
 export const GrievanceOutcomeDescriptorSchema = z
     .object({
         mechanics: z.string().min(1),
@@ -213,7 +235,16 @@ export const validateEntity = (
     ste?: State,
 ): SchemaModel => {
     const entityType = bal?.src?.toLowerCase().trim() || ''
-    const schema = SCHEMA_ROUTER[entityType]
+    let schema = SCHEMA_ROUTER[entityType]
+    if (
+        entityType === 'possession' &&
+        bal?.dat &&
+        typeof bal.dat === 'object' &&
+        'id' in bal.dat &&
+        !('item_id' in bal.dat)
+    ) {
+        schema = CanonicalPossessionSchema
+    }
 
     if (!schema) {
         const errorMsg = `UNKNOWN_ENTITY_SCHEMA: No authoritative schema registered for entity family '${entityType}'. Valid families: ${Object.keys(SCHEMA_ROUTER).join(', ')}`
