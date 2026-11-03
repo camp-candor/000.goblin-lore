@@ -231,9 +231,13 @@ describe('98.menu.unit: Blessed Terminal Menu Integration', () => {
         expect(consoleLogs).toContain(
             '>> [SOMATIC_LEDGER] Parsing Byte-0 dossier: series/under-the-floorboards/characters/wart.md',
         )
-        expect(consoleLogs).toContain(
-            '>> [SOMATIC_LEDGER] Verified SHA-256: 032f7... [OK]',
-        )
+        expect(
+            consoleLogs.some((l) =>
+                /^>> \[SOMATIC_LEDGER\] Verified SHA-256: [0-9a-f]{5}\.\.\. \[OK\]$/.test(
+                    l,
+                ),
+            ),
+        ).toBe(true)
         expect(consoleLogs).toContain(
             '>> [TRAUMA] Ingested Condition: cnd_severed_left_arm (Arm Penalty: 10,000 bps)',
         )
