@@ -25,5 +25,8 @@
     },
     "scripts": {
         "test": "vitest run"
+    },
+    "dependencies": {
+        "better-sqlite3": "11.1.2"
     }
 }
