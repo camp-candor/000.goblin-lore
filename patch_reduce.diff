@@ -1,0 +1,16 @@
+--- packages/299.lore/35.threshold.unit/threshold.reduce.ts
++++ packages/299.lore/35.threshold.unit/threshold.reduce.ts
+@@ -15,11 +15,7 @@
+             return Buzz.updateThreshold(clone(model), act.bale, state!)
+
+         case Act.EVALUATE_POST_BREAK_THRESHOLD:
+-            Buzz.evaluatePostBreakThreshold(
+-                clone(model),
+-                act.bale as any,
+-                state!,
+-            )
+-            return model
++            return Buzz.evaluatePostBreakThreshold(clone(model), act.bale as any, state!)
+
+         default:
+             return model

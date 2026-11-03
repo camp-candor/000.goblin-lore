@@ -1,0 +1,63 @@
+--- packages/299.lore/35.threshold.unit/threshold.buzzer.ts
++++ packages/299.lore/35.threshold.unit/threshold.buzzer.ts
+@@ -35,11 +35,11 @@ export const updateThreshold = (
+     return cpy
+ }
+
+-export const evaluatePostBreakThreshold = async (
++export const evaluatePostBreakThreshold = (
+     cpy: ThresholdModel,
+     bal: ThresholdBit & { dat: any },
+     ste: State,
+-): Promise<ThresholdModel> => {
++): ThresholdModel => {
+     const payload = bal.dat
+     if (!payload || !payload.input) {
+         if (bal.slv)
+@@ -58,14 +58,14 @@ export const evaluatePostBreakThreshold = async (
+             cpy.brokenEntities.add(receipt.entityId)
+
+             if (ste) {
+-                await ste.hunt(UPDATE_CONSOLE, {
++                ste.hunt(UPDATE_CONSOLE, {
+                     idx: 'cns00',
+                     src: `>> [POST_BREAK] ${receipt.entityId} breached threshold on ${receipt.category} (${receipt.breachedValueBp}/${receipt.thresholdLimitBp} bps) [!] HALT ENGAGED [OK]`,
+-                })
+-                await ste.hunt(UPDATE_CONSOLE, {
++                }).catch(e => {})
++                ste.hunt(UPDATE_CONSOLE, {
+                     idx: 'cns00',
+                     src: `>> [FINALITY] Mutated refusal ${receipt.targetRefusalVectorId} | Added Condition: ${receipt.terminalConditionAdded} | Lifted tokens: [${receipt.bannedTokensRemoved.join(', ')}] [OK]`,
+-                })
++                }).catch(e => {})
+             }
+
+             if (bal.slv) {
+@@ -91,9 +91,9 @@ export const evaluatePostBreakThreshold = async (
+     } catch (err: unknown) {
+         const message = err instanceof Error ? err.message : String(err)
+         if (ste) {
+-            await ste.hunt(UPDATE_CONSOLE, {
++            ste.hunt(UPDATE_CONSOLE, {
+                 idx: 'cns00',
+                 src: `:: [POST_BREAK FAIL] ${message}`,
+-            })
++            }).catch(e => {})
+         }
+         if (bal.slv) {
+--- packages/299.lore/35.threshold.unit/threshold.reduce.ts
++++ packages/299.lore/35.threshold.unit/threshold.reduce.ts
+@@ -15,11 +15,7 @@ export function reducer(
+             return Buzz.updateThreshold(clone(model), act.bale, state!)
+
+         case Act.EVALUATE_POST_BREAK_THRESHOLD:
+-            Buzz.evaluatePostBreakThreshold(
+-                clone(model),
+-                act.bale as any,
+-                state!,
+-            )
+-            return model
++            return Buzz.evaluatePostBreakThreshold(clone(model), act.bale as any, state!)
+
+         default:
+             return model
