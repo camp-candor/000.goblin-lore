@@ -30,6 +30,7 @@ import {
     runEntityManifestAudit,
     runSomaticSolverAudit,
 } from './05.schema.solver.audit.buzz'
+import { runPressureMeterSimulatorMenu } from './06.pressure.simulator.buzz'
 import {
     COMPILE_MENU_OPTIONS,
     emitConsoleLine,
@@ -896,6 +897,11 @@ export const openSomaticDspHub = async (
 
     const hubSelection = hubChoiceBit?.chcBit?.src
     if (!hubSelection || hubSelection === '[<] RETURN TO LORE MENU') {
+        return cpy
+    }
+
+    if (hubSelection === '[Pressure Meter Thermodynamic Simulator]') {
+        await runPressureMeterSimulatorMenu(ste)
         return cpy
     }
 

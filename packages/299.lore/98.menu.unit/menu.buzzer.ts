@@ -13,3 +13,4 @@ export {
     discoverSomaticSeriesSlugs,
     discoverSeriesCharacters,
 } from './buz/00.menu.buzz'
+export { runPressureMeterSimulatorMenu } from './buz/06.pressure.simulator.buzz'
