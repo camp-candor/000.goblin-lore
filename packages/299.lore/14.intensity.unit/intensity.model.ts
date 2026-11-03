@@ -1,8 +1,9 @@
-import Intensity from './fce/intensity.interface'
-import IntensityBit from './fce/intensity.interface'
+import Intensity from './fce/intensity.interface.js';
+import type { ComposedSomaticDspMatrix } from './val/algebraicDsp.val.js';
 
 export class IntensityModel implements Intensity {
-    //idx:string;
-    //intensityBitList: IntensityBit[] = [];
-    //intensityBits: any = {};
+  idx: string = '14.intensity';
+  composedMatrices: Record<string, ComposedSomaticDspMatrix> = {};
 }
+
+export default IntensityModel;
