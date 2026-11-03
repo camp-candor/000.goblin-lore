@@ -1,7 +1,7 @@
 export default interface LedgerBit<T = any> {
-    idx: string;
-    src?: string;
-    val?: number;
-    dat?: T;
-    slv?: Function;
+    idx: string
+    src?: string
+    val?: number
+    dat?: T
+    slv?: Function
 }
