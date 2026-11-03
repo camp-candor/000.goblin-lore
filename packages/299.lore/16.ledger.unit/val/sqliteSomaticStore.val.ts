@@ -34,4 +34,4 @@ CREATE TABLE IF NOT EXISTS pressure_meters_live (
 
 CREATE INDEX IF NOT EXISTS idx_entities_somatic_tier ON entities_somatic_live(locomotion_tier);
 CREATE INDEX IF NOT EXISTS idx_pressure_meters_entity ON pressure_meters_live(entity_id);
-`;
+`
