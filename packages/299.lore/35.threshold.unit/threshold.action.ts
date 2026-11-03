@@ -1,7 +1,6 @@
-import { Action } from '../99.core/interface/action.interface'
-import ThresholdBit from './fce/threshold.bit'
-
-// Threshold actions
+import { Action } from '../99.core/interface/action.interface.js'
+import type ThresholdBit from './fce/threshold.bit.js'
+import type { ThresholdEvaluationInput } from './val/postBreak.val.js'
 
 export const INIT_THRESHOLD = '[Threshold action] Init Threshold'
 export class InitThreshold implements Action {
@@ -15,4 +14,20 @@ export class UpdateThreshold implements Action {
     constructor(public bale: ThresholdBit) {}
 }
 
-export type Actions = InitThreshold | UpdateThreshold
+export const EVALUATE_POST_BREAK_THRESHOLD =
+    '[Threshold action] Evaluate Post Break Threshold'
+export class EvaluatePostBreakThreshold implements Action {
+    readonly type = EVALUATE_POST_BREAK_THRESHOLD
+    constructor(
+        public bale: ThresholdBit & {
+            dat: {
+                input: ThresholdEvaluationInput
+                activeAcousticProfile?: any
+                currentAttenuationTokens?: string[]
+            }
+        },
+    ) {}
+}
+
+export type Actions =
+    InitThreshold | UpdateThreshold | EvaluatePostBreakThreshold
