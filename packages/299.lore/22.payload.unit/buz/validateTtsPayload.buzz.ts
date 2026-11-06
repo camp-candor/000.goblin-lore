@@ -44,34 +44,48 @@ export function assertDialogueRhythmRatio(
     consecutiveDialogueCount: number
     violationIndex?: number
 } {
-    let maxCount = 0
-    let currentCount = 0
+    let consecutiveCount = 0
+    let invalidResult: {
+        valid: boolean
+        consecutiveDialogueCount: number
+        violationIndex?: number
+    } | null = null
 
     for (let i = 0; i < sequence.length; i++) {
         const node = sequence[i]
         if (node.type === 'DIALOGUE') {
-            currentCount++
-            if (currentCount > maxCount) maxCount = currentCount
-            if (currentCount > 3) {
+            consecutiveCount++
+            if (consecutiveCount > 3) {
                 throw new Error(
-                    'RHYTHM_BREACH: Exceeded maximum hard limit of 3 consecutive dialogue lines',
+                    `RHYTHM_BREACH: Exceeded maximum hard limit of 3 consecutive dialogue lines`,
                 )
             }
+            if (
+                consecutiveCount > maxConsecutiveDialogueLines &&
+                !invalidResult
+            ) {
+                invalidResult = {
+                    valid: false,
+                    consecutiveDialogueCount: consecutiveCount,
+                    violationIndex: i,
+                }
+            } else if (
+                consecutiveCount > maxConsecutiveDialogueLines &&
+                invalidResult
+            ) {
+                invalidResult.consecutiveDialogueCount = consecutiveCount
+            }
         } else if (node.type === 'BEAT' || node.type === 'ACTION') {
-            currentCount = 0
+            consecutiveCount = 0
         }
     }
 
-    if (maxCount > maxConsecutiveDialogueLines) {
-        return {
-            valid: false,
-            consecutiveDialogueCount: maxCount,
-            violationIndex: -1,
-        }
+    if (invalidResult) {
+        return invalidResult
     }
 
     return {
         valid: true,
-        consecutiveDialogueCount: currentCount,
+        consecutiveDialogueCount: consecutiveCount,
     }
 }
