@@ -34,6 +34,7 @@ import { runPressureMeterSimulatorMenu } from './06.pressure.simulator.buzz'
 import { runAcousticParanoiaInspectorMenu } from './07.acoustic.inspector.buzz'
 import { runAlgebraicDspInspectorMenu } from './08.algebraic.inspector.buzz'
 import { runPostBreakFinalityTriggerMenu } from './09.postbreak.trigger.buzz'
+import { runSynthesisPayloadValidatorMenu } from './10.payload.validator.buzz'
 import {
     COMPILE_MENU_OPTIONS,
     emitConsoleLine,
@@ -859,6 +860,7 @@ export const openSomaticDspHub = async (
         '[Acoustic Paranoia Clock Inspector]',
         '[Algebraic DSP Matrix Inspector]',
         '[Post-Break Finality Trigger]',
+        '[Synthesis Ingress Payload Validator]',
         '[<] RETURN TO LORE MENU',
     ]
 
@@ -921,6 +923,11 @@ export const openSomaticDspHub = async (
 
     if (hubSelection === '[Post-Break Finality Trigger]') {
         await runPostBreakFinalityTriggerMenu(ste)
+        return cpy
+    }
+
+    if (hubSelection === '[Synthesis Ingress Payload Validator]') {
+        await runSynthesisPayloadValidatorMenu(ste)
         return cpy
     }
 

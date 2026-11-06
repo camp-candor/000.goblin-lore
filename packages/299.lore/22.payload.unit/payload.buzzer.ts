@@ -66,7 +66,9 @@ export const validateTtsPayload = (
             })
         }
     } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : String(err)
+        const message =
+            (err as any)?.issues?.[0]?.message ||
+            (err instanceof Error ? err.message : String(err))
         if (ste) {
             ste.hunt(UPDATE_CONSOLE, {
                 idx: 'cns00',
