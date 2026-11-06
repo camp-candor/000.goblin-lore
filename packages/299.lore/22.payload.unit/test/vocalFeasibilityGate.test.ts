@@ -91,7 +91,7 @@ describe('22.payload.unit :: Task 6.2 Integrate Aphonia Vocal-Motor Feasibility 
                 idx: 'feasibility-test',
                 dat: { candidate: healthyActor, epoch: 5 },
                 slv: (res) => {
-                    emittedReceipt = res.aphBit?.dat
+                    emittedReceipt = res.pldBit?.dat
                 },
             },
             { hunt: async () => {} } as any,

@@ -1,8 +1,5 @@
 import type { PayloadModel } from './payload.model.js'
-import type PayloadBit from './fce/ttsPayload.bit.js'
-import type AphoniaGateBit from './fce/aphoniaGate.bit.js'
-import type FactPinningBit from './fce/factPinning.bit.js'
-import type PayloadHashBit from './fce/payloadHash.bit.js'
+import type PayloadBit from './fce/payload.bit.js'
 import type State from '../99.core/state.js'
 import { validateTtsGenerationPayload } from './buz/validateTtsPayload.buzz.js'
 import { assertVocalMotorFeasibility } from './buz/vocalFeasibilityGate.buzz.js'
@@ -79,9 +76,7 @@ export const validateTtsPayload = (
             })
         }
     } catch (err: unknown) {
-        const firstError = (err as any)?.errors?.[0]?.message
-        const message =
-            firstError || (err instanceof Error ? err.message : String(err))
+        const message = err instanceof Error ? err.message : String(err)
         if (ste) {
             ste.hunt(UPDATE_CONSOLE, {
                 idx: 'cns00',
@@ -104,14 +99,14 @@ export const validateTtsPayload = (
 
 export const verifyVocalFeasibility = (
     cpy: PayloadModel,
-    bal: AphoniaGateBit & { dat: any },
+    bal: PayloadBit & { dat: any },
     ste: State,
 ): PayloadModel => {
     const payload = bal.dat?.candidate || bal.dat
     if (!payload || !payload.entityId) {
         if (bal.slv)
             bal.slv({
-                aphBit: { idx: 'verify-vocal-feasibility-fail', val: -1 },
+                pldBit: { idx: 'verify-vocal-feasibility-fail', val: -1 },
             })
         return cpy
     }
@@ -132,7 +127,7 @@ export const verifyVocalFeasibility = (
 
         if (bal.slv) {
             bal.slv({
-                aphBit: {
+                pldBit: {
                     idx: 'verify-vocal-feasibility-ok',
                     val: receipt.isPhonationFeasible ? 1 : 0,
                     dat: receipt,
@@ -149,7 +144,7 @@ export const verifyVocalFeasibility = (
         }
         if (bal.slv) {
             bal.slv({
-                aphBit: {
+                pldBit: {
                     idx: 'verify-vocal-feasibility-err',
                     val: -1,
                     src: message,
@@ -163,14 +158,14 @@ export const verifyVocalFeasibility = (
 
 export const checkSceneSomaticStaleness = (
     cpy: PayloadModel,
-    bal: FactPinningBit & { dat: any },
+    bal: PayloadBit & { dat: any },
     ste: State,
 ): PayloadModel => {
-    const payload = bal.dat?.input || bal.dat
+    const payload = bal.dat?.stalenessInput || bal.dat?.input || bal.dat
     if (!payload || !payload.sceneId || !payload.pinnedFacts) {
         if (bal.slv)
             bal.slv({
-                pinBit: { idx: 'check-somatic-staleness-fail', val: -1 },
+                pldBit: { idx: 'check-somatic-staleness-fail', val: -1 },
             })
         return cpy
     }
@@ -200,7 +195,7 @@ export const checkSceneSomaticStaleness = (
 
         if (bal.slv) {
             bal.slv({
-                pinBit: {
+                pldBit: {
                     idx: receipt.isDirty
                         ? 'check-somatic-staleness-dirty'
                         : 'check-somatic-staleness-clean',
@@ -219,7 +214,7 @@ export const checkSceneSomaticStaleness = (
         }
         if (bal.slv) {
             bal.slv({
-                pinBit: {
+                pldBit: {
                     idx: 'check-somatic-staleness-err',
                     val: -1,
                     src: message,
@@ -233,13 +228,13 @@ export const checkSceneSomaticStaleness = (
 
 export const hashTtsGenerationPayload = (
     cpy: PayloadModel,
-    bal: PayloadHashBit & { dat: any },
+    bal: PayloadBit & { dat: any },
     ste: State,
 ): PayloadModel => {
-    const candidate = bal.dat?.payload || bal.dat
+    const candidate = bal.dat?.hashPayload || bal.dat?.payload || bal.dat
     if (!candidate) {
         if (bal.slv)
-            bal.slv({ hashBit: { idx: 'hash-tts-payload-fail', val: -1 } })
+            bal.slv({ pldBit: { idx: 'hash-tts-payload-fail', val: -1 } })
         return cpy
     }
 
@@ -256,7 +251,7 @@ export const hashTtsGenerationPayload = (
 
         if (bal.slv) {
             bal.slv({
-                hashBit: {
+                pldBit: {
                     idx: 'hash-tts-payload-ok',
                     val: 1,
                     dat: receipt,
@@ -273,7 +268,7 @@ export const hashTtsGenerationPayload = (
         }
         if (bal.slv) {
             bal.slv({
-                hashBit: {
+                pldBit: {
                     idx: 'hash-tts-payload-err',
                     val: -1,
                     src: message,
@@ -287,13 +282,12 @@ export const hashTtsGenerationPayload = (
 
 export const verifyPayloadHashParity = (
     cpy: PayloadModel,
-    bal: PayloadHashBit & { dat: any },
+    bal: PayloadBit & { dat: any },
     ste: State,
 ): PayloadModel => {
-    const input = bal.dat
+    const input = bal.dat?.parityInput || bal.dat
     if (!input || !input.expectedHash || !input.payload) {
-        if (bal.slv)
-            bal.slv({ hashBit: { idx: 'verify-parity-fail', val: -1 } })
+        if (bal.slv) bal.slv({ pldBit: { idx: 'verify-parity-fail', val: -1 } })
         return cpy
     }
 
@@ -321,7 +315,7 @@ export const verifyPayloadHashParity = (
 
         if (bal.slv) {
             bal.slv({
-                hashBit: {
+                pldBit: {
                     idx: result.isValid
                         ? 'verify-parity-match'
                         : 'verify-parity-mismatch',
@@ -340,7 +334,7 @@ export const verifyPayloadHashParity = (
         }
         if (bal.slv) {
             bal.slv({
-                hashBit: {
+                pldBit: {
                     idx: 'verify-parity-err',
                     val: -1,
                     src: message,
