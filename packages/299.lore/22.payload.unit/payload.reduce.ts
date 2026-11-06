@@ -17,18 +17,20 @@ export function reducer(
             return Buzz.updatePayload(clone(model), act.bale, state!)
 
         case Act.VALIDATE_TTS_PAYLOAD:
-            return Buzz.validateTtsPayload(
-                clone(model),
-                act.bale as any,
-                state!,
-            )
+            Buzz.validateTtsPayload(clone(model), act.bale as any, state!)
+            return model
 
         case Act.VERIFY_VOCAL_FEASIBILITY:
-            return Buzz.verifyVocalFeasibility(
+            Buzz.verifyVocalFeasibility(clone(model), act.bale as any, state!)
+            return model
+
+        case Act.CHECK_SCENE_SOMATIC_STALENESS:
+            Buzz.checkSceneSomaticStaleness(
                 clone(model),
                 act.bale as any,
                 state!,
             )
+            return model
 
         default:
             return model
