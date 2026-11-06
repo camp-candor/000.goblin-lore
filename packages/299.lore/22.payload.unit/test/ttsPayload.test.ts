@@ -138,7 +138,7 @@ describe('22.payload.unit :: Task 6.1 Author Synthesis Ingress Payload Schema', 
             { type: 'DIALOGUE' as const, text: 'Four' },
         ]
         expect(() => assertDialogueRhythmRatio(fourLines, 2)).toThrowError(
-            'RHYTHM_BREACH: Exceeded maximum hard limit of 3 consecutive dialogue lines',
+            'RHYTHM_BREACH: Exceeded maximum hard limit of 3 consecutive dialogue lines without action or beat at index',
         )
     })
 
