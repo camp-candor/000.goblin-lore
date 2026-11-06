@@ -25,6 +25,12 @@ export function reducer(
     case Act.CHECK_SCENE_SOMATIC_STALENESS:
       return Buzz.checkSceneSomaticStaleness(clone(model), act.bale as any, state!);
 
+    case Act.HASH_TTS_GENERATION_PAYLOAD:
+      return Buzz.hashTtsGenerationPayload(clone(model), act.bale as any, state!);
+
+    case Act.VERIFY_PAYLOAD_HASH_PARITY:
+      return Buzz.verifyPayloadHashParity(clone(model), act.bale as any, state!);
+
     default:
       return model;
   }

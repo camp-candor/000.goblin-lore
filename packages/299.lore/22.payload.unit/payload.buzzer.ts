@@ -2,10 +2,15 @@ import type { PayloadModel } from './payload.model.js';
 import type PayloadBit from './fce/ttsPayload.bit.js';
 import type AphoniaGateBit from './fce/aphoniaGate.bit.js';
 import type FactPinningBit from './fce/factPinning.bit.js';
+import type PayloadHashBit from './fce/payloadHash.bit.js';
 import type State from '../99.core/state.js';
 import { validateTtsGenerationPayload } from './buz/validateTtsPayload.buzz.js';
 import { assertVocalMotorFeasibility } from './buz/vocalFeasibilityGate.buzz.js';
 import { evaluateSceneSomaticStaleness } from './buz/pinSomaticFactVersion.buzz.js';
+import {
+  hashTtsGenerationRequest,
+  verifyPayloadHashParity as verifyHashParityBuzz,
+} from './buz/canonicalPayloadHasher.buzz.js';
 
 const UPDATE_CONSOLE = '[Console action] Update Console';
 
@@ -14,6 +19,8 @@ export const initPayload = (cpy: PayloadModel, bal: PayloadBit, _ste: State): Pa
   cpy.validationReceipts = {};
   cpy.feasibilityReceipts = {};
   cpy.stalenessReceipts = {};
+  cpy.hashedPayloads = {};
+  cpy.parityReceipts = {};
   cpy.totalValidatedCount = 0;
   if (bal?.slv) {
     bal.slv({ pldBit: { idx: 'init-payload-ok', val: 1 } });
@@ -187,6 +194,119 @@ export const checkSceneSomaticStaleness = (
       bal.slv({
         pinBit: {
           idx: 'check-somatic-staleness-err',
+          val: -1,
+          src: message,
+        },
+      });
+    }
+  }
+
+  return cpy;
+};
+
+export const hashTtsGenerationPayload = (
+  cpy: PayloadModel,
+  bal: PayloadHashBit & { dat: any },
+  ste: State,
+): PayloadModel => {
+  const candidate = bal.dat?.payload || bal.dat;
+  if (!candidate) {
+    if (bal.slv) bal.slv({ hashBit: { idx: 'hash-tts-payload-fail', val: -1 } });
+    return cpy;
+  }
+
+  try {
+    const receipt = hashTtsGenerationRequest(candidate, bal.dat?.epoch || 0);
+    cpy.hashedPayloads[receipt.lineId] = receipt;
+
+    if (ste) {
+      ste.hunt(UPDATE_CONSOLE, {
+        idx: 'cns00',
+        src: `>> [PAYLOAD_HASH] Line: ${receipt.lineId} | SHA-256: ${receipt.payloadSha256.slice(0, 16)}... | Bytes: ${receipt.byteLength} [OK]`,
+      });
+    }
+
+    if (bal.slv) {
+      bal.slv({
+        hashBit: {
+          idx: 'hash-tts-payload-ok',
+          val: 1,
+          dat: receipt,
+        },
+      });
+    }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (ste) {
+      ste.hunt(UPDATE_CONSOLE, {
+        idx: 'cns00',
+        src: `:: [PAYLOAD_HASH FAIL] ${message}`,
+      });
+    }
+    if (bal.slv) {
+      bal.slv({
+        hashBit: {
+          idx: 'hash-tts-payload-err',
+          val: -1,
+          src: message,
+        },
+      });
+    }
+  }
+
+  return cpy;
+};
+
+export const verifyPayloadHashParity = (
+  cpy: PayloadModel,
+  bal: PayloadHashBit & { dat: any },
+  ste: State,
+): PayloadModel => {
+  const input = bal.dat;
+  if (!input || !input.expectedHash || !input.payload) {
+    if (bal.slv) bal.slv({ hashBit: { idx: 'verify-parity-fail', val: -1 } });
+    return cpy;
+  }
+
+  try {
+    const result = verifyHashParityBuzz(input.expectedHash, input.payload, input.epoch || 0);
+    cpy.parityReceipts[result.lineId] = result;
+
+    if (ste) {
+      if (result.isValid) {
+        ste.hunt(UPDATE_CONSOLE, {
+          idx: 'cns00',
+          src: `>> [PARITY_OK] Payload digest matches expected: ${result.expectedHash.slice(0, 16)}... [OK]`,
+        });
+      } else {
+        ste.hunt(UPDATE_CONSOLE, {
+          idx: 'cns00',
+          src: `:: [PARITY_FAIL] Digest divergence: expected ${result.expectedHash.slice(0, 8)} != actual ${result.actualHash.slice(0, 8)}`,
+        });
+      }
+    }
+
+    if (bal.slv) {
+      bal.slv({
+        hashBit: {
+          idx: result.isValid ? 'verify-parity-match' : 'verify-parity-mismatch',
+          val: result.isValid ? 1 : 0,
+          dat: result,
+        },
+      });
+    }
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : String(err);
+    if (ste) {
+      ste.hunt(UPDATE_CONSOLE, {
+        idx: 'cns00',
+        src: `:: [PARITY_ERR] ${message}`,
+      });
+    }
+    if (bal.slv) {
+      bal.slv({
+        hashBit: {
+          idx: 'verify-parity-err',
           val: -1,
           src: message,
         },
