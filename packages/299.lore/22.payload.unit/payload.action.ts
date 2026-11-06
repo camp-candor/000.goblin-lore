@@ -1,6 +1,7 @@
 import { Action } from '../99.core/interface/action.interface.js'
 import type PayloadBit from './fce/ttsPayload.bit.js'
-import type { TTSGenerationRequest } from './val/ttsPayload.val.js'
+import type AphoniaGateBit from './fce/aphoniaGate.bit.js'
+import type { VocalFeasibilityCandidate } from './val/aphoniaGate.val.js'
 
 export const INIT_PAYLOAD = '[Payload action] Init Payload'
 export class InitPayload implements Action {
@@ -26,4 +27,19 @@ export class ValidateTtsPayload implements Action {
     ) {}
 }
 
-export type Actions = InitPayload | UpdatePayload | ValidateTtsPayload
+export const VERIFY_VOCAL_FEASIBILITY =
+    '[Payload action] Verify Vocal Feasibility'
+export class VerifyVocalFeasibility implements Action {
+    readonly type = VERIFY_VOCAL_FEASIBILITY
+    constructor(
+        public bale: AphoniaGateBit & {
+            dat: {
+                candidate: VocalFeasibilityCandidate
+                epoch?: number
+            }
+        },
+    ) {}
+}
+
+export type Actions =
+    InitPayload | UpdatePayload | ValidateTtsPayload | VerifyVocalFeasibility

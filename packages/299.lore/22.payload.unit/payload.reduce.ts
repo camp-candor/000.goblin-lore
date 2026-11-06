@@ -21,7 +21,14 @@ export function reducer(
                 clone(model),
                 act.bale as any,
                 state!,
-            ) as any
+            )
+
+        case Act.VERIFY_VOCAL_FEASIBILITY:
+            return Buzz.verifyVocalFeasibility(
+                clone(model),
+                act.bale as any,
+                state!,
+            )
 
         default:
             return model

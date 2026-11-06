@@ -1,7 +1,9 @@
 import type { PayloadModel } from './payload.model.js'
 import type PayloadBit from './fce/ttsPayload.bit.js'
+import type AphoniaGateBit from './fce/aphoniaGate.bit.js'
 import type State from '../99.core/state.js'
 import { validateTtsGenerationPayload } from './buz/validateTtsPayload.buzz.js'
+import { assertVocalMotorFeasibility } from './buz/vocalFeasibilityGate.buzz.js'
 
 const UPDATE_CONSOLE = '[Console action] Update Console'
 
@@ -12,6 +14,7 @@ export const initPayload = (
 ): PayloadModel => {
     cpy.validatedPayloads = {}
     cpy.validationReceipts = {}
+    cpy.feasibilityReceipts = {}
     cpy.totalValidatedCount = 0
     if (bal?.slv) {
         bal.slv({ pldBit: { idx: 'init-payload-ok', val: 1 } })
@@ -77,6 +80,65 @@ export const validateTtsPayload = (
             bal.slv({
                 pldBit: {
                     idx: 'validate-tts-payload-err',
+                    val: -1,
+                    src: message,
+                },
+            })
+        }
+    }
+
+    return cpy
+}
+
+export const verifyVocalFeasibility = (
+    cpy: PayloadModel,
+    bal: AphoniaGateBit & { dat: any },
+    ste: State,
+): PayloadModel => {
+    const payload = bal.dat?.candidate || bal.dat
+    if (!payload || !payload.entityId) {
+        if (bal.slv)
+            bal.slv({
+                aphBit: { idx: 'verify-vocal-feasibility-fail', val: -1 },
+            })
+        return cpy
+    }
+
+    try {
+        const receipt = assertVocalMotorFeasibility(
+            payload,
+            bal.dat?.epoch || 0,
+        )
+        cpy.feasibilityReceipts[receipt.entityId] = receipt
+
+        if (ste) {
+            ste.hunt(UPDATE_CONSOLE, {
+                idx: 'cns00',
+                src: `>> [FEASIBILITY] Vocal-motor feasibility certified for ${receipt.entityId} (Aphonic: ${receipt.isAphonic}) [OK]`,
+            })
+        }
+
+        if (bal.slv) {
+            bal.slv({
+                aphBit: {
+                    idx: 'verify-vocal-feasibility-ok',
+                    val: receipt.isPhonationFeasible ? 1 : 0,
+                    dat: receipt,
+                },
+            })
+        }
+    } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err)
+        if (ste) {
+            ste.hunt(UPDATE_CONSOLE, {
+                idx: 'cns00',
+                src: `:: [FEASIBILITY FAIL] ${message}`,
+            })
+        }
+        if (bal.slv) {
+            bal.slv({
+                aphBit: {
+                    idx: 'verify-vocal-feasibility-err',
                     val: -1,
                     src: message,
                 },
