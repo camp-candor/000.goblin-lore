@@ -176,7 +176,7 @@ describe('22.payload.unit :: Task 6.3 Monotonic Fact Version Dependency Pinning'
                 idx: 'staleness-test',
                 dat: { input: samplePinnedInput, epoch: 50 },
                 slv: (res) => {
-                    emittedReceipt = res.pinBit?.dat
+                    emittedReceipt = res.pldBit?.dat
                 },
             },
             { hunt: async () => {} } as any,

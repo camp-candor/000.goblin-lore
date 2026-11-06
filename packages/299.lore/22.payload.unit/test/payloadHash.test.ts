@@ -146,7 +146,7 @@ describe('22.payload.unit :: Task 6.4 Deterministic RFC 8785 Payload Hasher', ()
                 idx: 'hash-test',
                 dat: { payload: baseRequest, epoch: 10 },
                 slv: (res) => {
-                    emittedReceipt = res.hashBit?.dat
+                    emittedReceipt = res.pldBit?.dat
                 },
             },
             { hunt: async () => {} } as any,
@@ -167,7 +167,7 @@ describe('22.payload.unit :: Task 6.4 Deterministic RFC 8785 Payload Hasher', ()
                     epoch: 10,
                 },
                 slv: (res) => {
-                    parityResult = res.hashBit?.dat
+                    parityResult = res.pldBit?.dat
                 },
             },
             { hunt: async () => {} } as any,
