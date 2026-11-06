@@ -1,9 +1,11 @@
 import type { PayloadModel } from './payload.model.js'
 import type PayloadBit from './fce/ttsPayload.bit.js'
 import type AphoniaGateBit from './fce/aphoniaGate.bit.js'
+import type FactPinningBit from './fce/factPinning.bit.js'
 import type State from '../99.core/state.js'
 import { validateTtsGenerationPayload } from './buz/validateTtsPayload.buzz.js'
 import { assertVocalMotorFeasibility } from './buz/vocalFeasibilityGate.buzz.js'
+import { evaluateSceneSomaticStaleness } from './buz/pinSomaticFactVersion.buzz.js'
 
 const UPDATE_CONSOLE = '[Console action] Update Console'
 
@@ -15,6 +17,7 @@ export const initPayload = (
     cpy.validatedPayloads = {}
     cpy.validationReceipts = {}
     cpy.feasibilityReceipts = {}
+    cpy.stalenessReceipts = {}
     cpy.totalValidatedCount = 0
     if (bal?.slv) {
         bal.slv({ pldBit: { idx: 'init-payload-ok', val: 1 } })
@@ -69,9 +72,7 @@ export const validateTtsPayload = (
             })
         }
     } catch (err: unknown) {
-        const message =
-            (err as any)?.issues?.[0]?.message ||
-            (err instanceof Error ? err.message : String(err))
+        const message = err instanceof Error ? err.message : String(err)
         if (ste) {
             ste.hunt(UPDATE_CONSOLE, {
                 idx: 'cns00',
@@ -141,6 +142,76 @@ export const verifyVocalFeasibility = (
             bal.slv({
                 aphBit: {
                     idx: 'verify-vocal-feasibility-err',
+                    val: -1,
+                    src: message,
+                },
+            })
+        }
+    }
+
+    return cpy
+}
+
+export const checkSceneSomaticStaleness = (
+    cpy: PayloadModel,
+    bal: FactPinningBit & { dat: any },
+    ste: State,
+): PayloadModel => {
+    const payload = bal.dat?.input || bal.dat
+    if (!payload || !payload.sceneId || !payload.pinnedFacts) {
+        if (bal.slv)
+            bal.slv({
+                pinBit: { idx: 'check-somatic-staleness-fail', val: -1 },
+            })
+        return cpy
+    }
+
+    try {
+        const receipt = evaluateSceneSomaticStaleness(
+            payload,
+            bal.dat?.epoch || 0,
+        )
+        cpy.stalenessReceipts[receipt.sceneId] = receipt
+
+        if (ste) {
+            const statusLabel = receipt.isDirty
+                ? `[!] DIRTY (${receipt.staleFactCount} mutated facts)`
+                : '[OK] CLEAN'
+            ste.hunt(UPDATE_CONSOLE, {
+                idx: 'cns00',
+                src: `>> [STALENESS] Evaluated ${receipt.sceneId} -> ${statusLabel}`,
+            })
+            for (const diff of receipt.diffs) {
+                ste.hunt(UPDATE_CONSOLE, {
+                    idx: 'cns00',
+                    src: `>> [VERSION_BUMP] ${diff.invalidationReason}`,
+                })
+            }
+        }
+
+        if (bal.slv) {
+            bal.slv({
+                pinBit: {
+                    idx: receipt.isDirty
+                        ? 'check-somatic-staleness-dirty'
+                        : 'check-somatic-staleness-clean',
+                    val: receipt.isDirty ? 1 : 0,
+                    dat: receipt,
+                },
+            })
+        }
+    } catch (err: unknown) {
+        const message = err instanceof Error ? err.message : String(err)
+        if (ste) {
+            ste.hunt(UPDATE_CONSOLE, {
+                idx: 'cns00',
+                src: `:: [STALENESS FAIL] ${message}`,
+            })
+        }
+        if (bal.slv) {
+            bal.slv({
+                pinBit: {
+                    idx: 'check-somatic-staleness-err',
                     val: -1,
                     src: message,
                 },

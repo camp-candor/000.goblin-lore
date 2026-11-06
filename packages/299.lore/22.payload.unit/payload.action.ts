@@ -1,7 +1,9 @@
 import { Action } from '../99.core/interface/action.interface.js'
 import type PayloadBit from './fce/ttsPayload.bit.js'
 import type AphoniaGateBit from './fce/aphoniaGate.bit.js'
+import type FactPinningBit from './fce/factPinning.bit.js'
 import type { VocalFeasibilityCandidate } from './val/aphoniaGate.val.js'
+import type { StalenessEvaluationInput } from './val/factPinning.val.js'
 
 export const INIT_PAYLOAD = '[Payload action] Init Payload'
 export class InitPayload implements Action {
@@ -41,5 +43,23 @@ export class VerifyVocalFeasibility implements Action {
     ) {}
 }
 
+export const CHECK_SCENE_SOMATIC_STALENESS =
+    '[Payload action] Check Scene Somatic Staleness'
+export class CheckSceneSomaticStaleness implements Action {
+    readonly type = CHECK_SCENE_SOMATIC_STALENESS
+    constructor(
+        public bale: FactPinningBit & {
+            dat: {
+                input: StalenessEvaluationInput
+                epoch?: number
+            }
+        },
+    ) {}
+}
+
 export type Actions =
-    InitPayload | UpdatePayload | ValidateTtsPayload | VerifyVocalFeasibility
+    | InitPayload
+    | UpdatePayload
+    | ValidateTtsPayload
+    | VerifyVocalFeasibility
+    | CheckSceneSomaticStaleness
