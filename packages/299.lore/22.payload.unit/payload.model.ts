@@ -1,4 +1,4 @@
-import Payload from './fce/payload.interface.js'
+import type Payload from './fce/payload.interface.js'
 import type { TTSGenerationRequest } from './val/ttsPayload.val.js'
 import type { TTSPayloadValidationReceiptBit } from './fce/ttsPayload.bit.js'
 import type { VocalFeasibilityReceipt } from './val/aphoniaGate.val.js'
