@@ -62,5 +62,8 @@ export function assertVocalMotorFeasibility(
         verifiedAtEpoch: epoch,
     }
 
-    return Object.freeze(VocalFeasibilityReceiptSchema.parse(receipt))
+    const parsed = VocalFeasibilityReceiptSchema.parse(receipt)
+    Object.freeze(parsed.matchedAphonicConditions)
+    Object.freeze(parsed.matchedBannedVerbs)
+    return Object.freeze(parsed)
 }

@@ -35,6 +35,7 @@ import { runAcousticParanoiaInspectorMenu } from './07.acoustic.inspector.buzz'
 import { runAlgebraicDspInspectorMenu } from './08.algebraic.inspector.buzz'
 import { runPostBreakFinalityTriggerMenu } from './09.postbreak.trigger.buzz'
 import { runSynthesisPayloadValidatorMenu } from './10.payload.validator.buzz'
+import { runVocalFeasibilityInspectorMenu } from './11.vocal.feasibility.buzz'
 import {
     COMPILE_MENU_OPTIONS,
     emitConsoleLine,
@@ -861,6 +862,7 @@ export const openSomaticDspHub = async (
         '[Algebraic DSP Matrix Inspector]',
         '[Post-Break Finality Trigger]',
         '[Synthesis Ingress Payload Validator]',
+        '[Vocal-Motor Feasibility Gate Inspector]',
         '[<] RETURN TO LORE MENU',
     ]
 
@@ -928,6 +930,11 @@ export const openSomaticDspHub = async (
 
     if (hubSelection === '[Synthesis Ingress Payload Validator]') {
         await runSynthesisPayloadValidatorMenu(ste)
+        return cpy
+    }
+
+    if (hubSelection === '[Vocal-Motor Feasibility Gate Inspector]') {
+        await runVocalFeasibilityInspectorMenu(ste)
         return cpy
     }
 
