@@ -1,35 +1,39 @@
 {
-    "name": "@camp_candor/299.lore",
-    "version": "0.0.3",
-    "private": true,
-    "type": "module",
-    "main": "BEE.ts",
-    "terminal": {
-        "globalKey": "LORE",
-        "menuTitle": "LORE MENU",
-        "menuDesc": "Open the Lore Menu\nto manage lore."
+  "name": "@camp_candor/299.lore",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "BEE.ts",
+  "terminal": {
+    "globalKey": "LORE",
+    "menuTitle": "LORE MENU",
+    "menuDesc": "Open the Lore Menu\nto manage lore."
+  },
+  "exports": {
+    ".": {
+      "types": "./BEE.ts",
+      "import": "./BEE.ts",
+      "require": "./BEE.ts",
+      "default": "./BEE.ts"
     },
-    "exports": {
-        ".": {
-            "types": "./BEE.ts",
-            "import": "./BEE.ts",
-            "require": "./BEE.ts",
-            "default": "./BEE.ts"
-        },
-        "./hunt": {
-            "types": "./hunt.ts",
-            "import": "./hunt.ts",
-            "require": "./hunt.ts",
-            "default": "./hunt.ts"
-        }
-    },
-    "scripts": {
-        "test": "vitest run"
-    },
-    "dependencies": {
-        "better-sqlite3": "13.0.3"
-    },
-    "devDependencies": {
-        "@types/better-sqlite3": "9.6.0"
+    "./hunt": {
+      "types": "./hunt.ts",
+      "import": "./hunt.ts",
+      "require": "./hunt.ts",
+      "default": "./hunt.ts"
     }
+  },
+  "scripts": {
+    "test": "vitest run",
+    "check:types": "tsc --noEmit -p tsconfig.json",
+    "check:boundary": "git status -s apps/995.library/995.library/",
+    "check:sentry": "git grep -P \"[\\x{1F300}-\\x{1FAD6}]\" packages/299.lore/ || true",
+    "gauntlet": "tsx scripts/verify-somatic-gauntlet.ts"
+  },
+  "dependencies": {
+    "better-sqlite3": "13.0.3"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "9.6.0"
+  }
 }
