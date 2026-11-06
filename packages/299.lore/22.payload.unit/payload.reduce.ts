@@ -17,11 +17,8 @@ export function reducer(
             return Buzz.updatePayload(clone(model), act.bale, state!)
 
         case Act.VALIDATE_TTS_PAYLOAD:
-            return Buzz.validateTtsPayload(
-                clone(model),
-                act.bale as any,
-                state!,
-            ) as any
+            Buzz.validateTtsPayload(clone(model), act.bale as any, state!)
+            return model
 
         default:
             return model

@@ -147,7 +147,7 @@ describe('22.payload.unit :: Task 6.1 Author Synthesis Ingress Payload Schema', 
         initPayload(model, { idx: 'init' }, {} as any)
 
         let emittedReceipt: any
-        validateTtsPayload(
+        await validateTtsPayload(
             model,
             {
                 idx: 'validate-test',
