@@ -37,6 +37,7 @@ import { runPostBreakFinalityTriggerMenu } from './09.postbreak.trigger.buzz'
 import { runSynthesisPayloadValidatorMenu } from './10.payload.validator.buzz'
 import { runVocalFeasibilityInspectorMenu } from './11.vocal.feasibility.buzz'
 import { runFactStalenessCheckerMenu } from './12.fact.staleness.buzz'
+import { runDeterministicPayloadHasherMenu } from './13.payload.hasher.buzz'
 import {
     COMPILE_MENU_OPTIONS,
     emitConsoleLine,
@@ -865,6 +866,7 @@ export const openSomaticDspHub = async (
         '[Synthesis Ingress Payload Validator]',
         '[Vocal-Motor Feasibility Gate Inspector]',
         '[Monotonic Fact Staleness Checker]',
+        '[Deterministic Payload Hasher]',
         '[<] RETURN TO LORE MENU',
     ]
 
@@ -942,6 +944,11 @@ export const openSomaticDspHub = async (
 
     if (hubSelection === '[Monotonic Fact Staleness Checker]') {
         await runFactStalenessCheckerMenu(ste)
+        return cpy
+    }
+
+    if (hubSelection === '[Deterministic Payload Hasher]') {
+        await runDeterministicPayloadHasherMenu(ste)
         return cpy
     }
 
