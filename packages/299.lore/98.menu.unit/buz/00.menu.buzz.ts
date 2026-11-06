@@ -38,6 +38,7 @@ import { runSynthesisPayloadValidatorMenu } from './10.payload.validator.buzz'
 import { runVocalFeasibilityInspectorMenu } from './11.vocal.feasibility.buzz'
 import { runFactStalenessCheckerMenu } from './12.fact.staleness.buzz'
 import { runDeterministicPayloadHasherMenu } from './13.payload.hasher.buzz'
+import { runPayloadReducerConsoleMenu } from './14.payload.reducer.buzz'
 import {
     COMPILE_MENU_OPTIONS,
     emitConsoleLine,
@@ -867,6 +868,7 @@ export const openSomaticDspHub = async (
         '[Vocal-Motor Feasibility Gate Inspector]',
         '[Monotonic Fact Staleness Checker]',
         '[Deterministic Payload Hasher]',
+        '[Payload Serialization Reducer Console]',
         '[<] RETURN TO LORE MENU',
     ]
 
@@ -949,6 +951,11 @@ export const openSomaticDspHub = async (
 
     if (hubSelection === '[Deterministic Payload Hasher]') {
         await runDeterministicPayloadHasherMenu(ste)
+        return cpy
+    }
+
+    if (hubSelection === '[Payload Serialization Reducer Console]') {
+        await runPayloadReducerConsoleMenu(ste)
         return cpy
     }
 
