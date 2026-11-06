@@ -10,7 +10,9 @@
         "noUnusedLocals": false,
         "noUnusedParameters": false,
         "esModuleInterop": true,
-        "allowSyntheticDefaultImports": true
+        "allowSyntheticDefaultImports": true,
+        "module": "NodeNext",
+        "moduleResolution": "NodeNext"
     },
     "include": ["**/*"],
     "exclude": ["**/node_modules"]
