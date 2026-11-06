@@ -2,8 +2,10 @@ import { Action } from '../99.core/interface/action.interface.js';
 import type PayloadBit from './fce/ttsPayload.bit.js';
 import type AphoniaGateBit from './fce/aphoniaGate.bit.js';
 import type FactPinningBit from './fce/factPinning.bit.js';
+import type PayloadHashBit from './fce/payloadHash.bit.js';
 import type { VocalFeasibilityCandidate } from './val/aphoniaGate.val.js';
 import type { StalenessEvaluationInput } from './val/factPinning.val.js';
+import type { PayloadParityVerificationInput } from './val/payloadHash.val.js';
 
 export const INIT_PAYLOAD = '[Payload action] Init Payload';
 export class InitPayload implements Action {
@@ -55,9 +57,34 @@ export class CheckSceneSomaticStaleness implements Action {
   ) {}
 }
 
+export const HASH_TTS_GENERATION_PAYLOAD = '[Payload action] Hash TTS Generation Payload';
+export class HashTtsGenerationPayload implements Action {
+  readonly type = HASH_TTS_GENERATION_PAYLOAD;
+  constructor(
+    public bale: PayloadHashBit & {
+      dat: {
+        payload: unknown;
+        epoch?: number;
+      };
+    },
+  ) {}
+}
+
+export const VERIFY_PAYLOAD_HASH_PARITY = '[Payload action] Verify Payload Hash Parity';
+export class VerifyPayloadHashParity implements Action {
+  readonly type = VERIFY_PAYLOAD_HASH_PARITY;
+  constructor(
+    public bale: PayloadHashBit & {
+      dat: PayloadParityVerificationInput;
+    },
+  ) {}
+}
+
 export type Actions =
   | InitPayload
   | UpdatePayload
   | ValidateTtsPayload
   | VerifyVocalFeasibility
-  | CheckSceneSomaticStaleness;
+  | CheckSceneSomaticStaleness
+  | HashTtsGenerationPayload
+  | VerifyPayloadHashParity;
