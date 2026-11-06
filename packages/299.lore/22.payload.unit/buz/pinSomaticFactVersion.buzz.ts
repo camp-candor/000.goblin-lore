@@ -70,7 +70,7 @@ export function evaluateSceneSomaticStaleness(
         sceneId: parsed.sceneId,
         isDirty,
         staleFactCount: diffs.length,
-        diffs: Object.freeze(diffs),
+        diffs,
         status: isDirty ? 'DIRTY_PENDING_REVALIDATION' : 'CLEAN',
         evaluatedAtEpoch: epoch,
     }

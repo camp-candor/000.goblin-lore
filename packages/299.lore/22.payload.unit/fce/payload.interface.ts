@@ -1,4 +1,4 @@
-import type { Model } from '../../99.core/interface/model.interface.js'
+import type Model from '../../99.core/interface/model.interface.js'
 import type { TTSGenerationRequest } from '../val/ttsPayload.val.js'
 import type { TTSPayloadValidationReceiptBit } from './ttsPayload.bit.js'
 import type { VocalFeasibilityReceipt } from '../val/aphoniaGate.val.js'

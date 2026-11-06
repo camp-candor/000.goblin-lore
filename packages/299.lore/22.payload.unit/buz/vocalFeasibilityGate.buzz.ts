@@ -53,10 +53,8 @@ export function assertVocalMotorFeasibility(
         entityId: candidate.entityId,
         isPhonationFeasible: !isAphonic || !hasVerbalDirectives,
         isAphonic,
-        matchedAphonicConditions: Object.freeze(
-            matchedAphonicConditions.sort(),
-        ),
-        matchedBannedVerbs: Object.freeze(matchedBannedVerbs.sort()),
+        matchedAphonicConditions: matchedAphonicConditions.sort(),
+        matchedBannedVerbs: matchedBannedVerbs.sort(),
         hasVerbalDirectives,
         status: 'VALID',
         verifiedAtEpoch: epoch,
