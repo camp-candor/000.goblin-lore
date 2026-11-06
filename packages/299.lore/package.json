@@ -24,7 +24,11 @@
         }
     },
     "scripts": {
-        "test": "vitest run"
+        "test": "vitest run",
+        "check:types": "tsc --noEmit -p tsconfig.json",
+        "check:boundary": "git status -s apps/995.library/995.library/",
+        "check:sentry": "git grep -P \"[\\x{1F300}-\\x{1FAD6}]\" packages/299.lore/ || true",
+        "gauntlet": "tsx scripts/verify-somatic-gauntlet.ts"
     },
     "dependencies": {
         "better-sqlite3": "13.0.3"
