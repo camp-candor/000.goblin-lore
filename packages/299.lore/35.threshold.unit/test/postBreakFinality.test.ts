@@ -168,7 +168,7 @@ describe('35.threshold.unit :: Post-Break Irreversible Finality Engine', () => {
         initThreshold(model, { idx: 'init' }, {} as any)
 
         let emittedReceipt: any
-        evaluatePostBreakThreshold(
+        await evaluatePostBreakThreshold(
             model,
             {
                 idx: 'break-test',

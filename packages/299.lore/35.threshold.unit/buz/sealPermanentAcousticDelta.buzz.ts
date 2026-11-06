@@ -79,13 +79,11 @@ export function sealPermanentAcousticProfile(
         (c) => !removedCadencesSet.has(c.trim().toUpperCase()),
     )
 
-    const receipt: SealedAcousticProfileReceipt = {
+    return Object.freeze({
         pitchShiftCentitones,
         formantWarpingBps,
         vocalFryDensityBps,
         breathinessPauseMultiplierBps,
-        remainingBannedCadences: remainingBannedCadences.sort(),
-    }
-    Object.freeze(receipt.remainingBannedCadences)
-    return Object.freeze(receipt)
+        remainingBannedCadences: Object.freeze(remainingBannedCadences.sort()),
+    })
 }
