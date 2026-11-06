@@ -4,8 +4,8 @@
  * Action envelopes and typed constructors for Blessed terminal menu operations.
  */
 
-import type { Action } from '../99.core/interface/action.interface'
-import type MenuBit from './fce/menu.bit'
+import { Action } from '../99.core/interface/action.interface.js'
+import type MenuBit from './fce/menu.bit.js'
 
 export const INIT_MENU = '[Menu action] Init Menu'
 export class InitMenu implements Action {
@@ -23,6 +23,25 @@ export const EXECUTE_MENU_CHOICE = '[Menu action] Execute Menu Choice'
 export class ExecuteMenuChoice implements Action {
     readonly type = EXECUTE_MENU_CHOICE
     constructor(public bale: MenuBit) {}
+}
+
+export const SOMATIC_HUB_MENU = '[Menu action] Somatic Hub Menu'
+export class SomaticHubMenu implements Action {
+    readonly type = SOMATIC_HUB_MENU
+    constructor(public bale: MenuBit) {}
+}
+
+export const EXECUTE_SOMATIC_CHOICE = '[Menu action] Execute Somatic Choice'
+export class ExecuteSomaticChoice implements Action {
+    readonly type = EXECUTE_SOMATIC_CHOICE
+    constructor(
+        public bale: MenuBit & {
+            dat: {
+                choiceId: string
+                entityId?: string
+            }
+        },
+    ) {}
 }
 
 // Compile Menu Action Constants
@@ -47,5 +66,7 @@ export type Actions =
     | InitMenu
     | UpdateMenu
     | ExecuteMenuChoice
+    | SomaticHubMenu
+    | ExecuteSomaticChoice
     | OpenCompileMenu
     | TriggerCompileAction

@@ -5,37 +5,52 @@
  */
 
 import clone from 'clone-deep'
-import * as Act from './menu.action'
-import * as Buzz from './menu.buzzer'
-import { MenuModel } from './menu.model'
-import type { Actions } from './menu.action'
-import type State from '../99.core/state'
+import * as Act from './menu.action.js'
+import * as Buzz from './menu.buzzer.js'
+import { MenuModel } from './menu.model.js'
+import type { Actions } from './menu.action.js'
+import type State from '../99.core/state.js'
 
-export const reducer = (
+export function reducer(
     model: MenuModel = new MenuModel(),
     act: Actions,
     state?: State,
-): MenuModel => {
-    const cpy: MenuModel = clone(model, true)
-
+): MenuModel {
     switch (act.type) {
         case Act.INIT_MENU:
-            return Buzz.initMenu(cpy, act.bale, state!)
+            Buzz.initMenu(clone(model), act.bale, state!)
+            return model
 
         case Act.UPDATE_MENU:
-            Buzz.updateMenu(cpy, act.bale, state!)
-            return cpy
+            Buzz.updateMenu(clone(model), act.bale, state!)
+            return model
 
-        case Act.OPEN_COMPILE_MENU:
+        case Act.SOMATIC_HUB_MENU: {
+            const cpy = clone(model)
+            Buzz.openSomaticDspHub(cpy, act.bale, state!)
+            return cpy
+        }
+
+        case Act.EXECUTE_SOMATIC_CHOICE:
+            if (state?.hunt) {
+                void Buzz.dispatchSomaticChoice(act.bale.dat.choiceId, state)
+            }
+            return model
+
+        case Act.OPEN_COMPILE_MENU: {
+            const cpy = clone(model)
             Buzz.openCompileMenu(cpy, act.bale, state!)
             return cpy
+        }
 
-        case Act.TRIGGER_COMPILE_ACTION:
+        case Act.TRIGGER_COMPILE_ACTION: {
+            const cpy = clone(model)
             Buzz.triggerCompileAction(cpy, act.bale, state!)
             return cpy
+        }
 
         default:
-            return cpy
+            return model
     }
 }
 
