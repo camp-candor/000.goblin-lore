@@ -4,11 +4,11 @@
  * Bit communication contract for terminal menu operations in 299.lore.
  */
 
-export default interface MenuBit {
+export default interface MenuBit<TDat = any, TLst = string> {
     idx: string
     src?: string
     val?: number
-    dat?: any
-    lst?: string[]
-    slv?: (result: { mnuBit: MenuBit }) => void
+    dat?: TDat
+    lst?: TLst[]
+    slv?: (result: { mnuBit: Partial<MenuBit<TDat, TLst>> }) => void
 }

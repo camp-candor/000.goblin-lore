@@ -12,7 +12,13 @@ export {
     openSomaticDspHub,
     discoverSomaticSeriesSlugs,
     discoverSeriesCharacters,
-} from './buz/00.menu.buzz'
-export { runPressureMeterSimulatorMenu } from './buz/06.pressure.simulator.buzz'
-export { runAcousticParanoiaInspectorMenu } from './buz/07.acoustic.inspector.buzz'
-export { runSynthesisPayloadValidatorMenu } from './buz/10.payload.validator.buzz'
+} from './buz/00.menu.buzz.js'
+export {
+    dispatchSomaticChoice,
+    getChoiceById,
+    getSomaticChoiceList,
+    SOMATIC_MENU_CHOICES,
+} from './buz/somaticMenu.buzz.js'
+export { runPressureMeterSimulatorMenu } from './buz/06.pressure.simulator.buzz.js'
+export { runAcousticParanoiaInspectorMenu } from './buz/07.acoustic.inspector.buzz.js'
+export { runSynthesisPayloadValidatorMenu } from './buz/10.payload.validator.buzz.js'

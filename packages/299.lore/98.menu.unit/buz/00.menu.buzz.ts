@@ -39,6 +39,7 @@ import { runVocalFeasibilityInspectorMenu } from './11.vocal.feasibility.buzz'
 import { runFactStalenessCheckerMenu } from './12.fact.staleness.buzz'
 import { runDeterministicPayloadHasherMenu } from './13.payload.hasher.buzz'
 import { runPayloadReducerConsoleMenu } from './14.payload.reducer.buzz'
+import { getChoiceById, dispatchSomaticChoice } from './somaticMenu.buzz.js'
 import {
     COMPILE_MENU_OPTIONS,
     emitConsoleLine,
@@ -60,6 +61,23 @@ const TERMINAL_CLOSE = '[Terminal action] Close Terminal'
 // master switchboard. Null in headless/test contexts.
 let rootSlv: ((result: { mnuBit: MenuBit }) => void) | null = null
 let screenExitHooked = false
+
+function resolveHeadlessMenu(
+    bal: MenuBit | undefined,
+    lst: string[],
+    activeSeries: string,
+): void {
+    if (bal?.slv) {
+        bal.slv({
+            mnuBit: {
+                idx: 'update-menu-headless',
+                lst,
+                val: 1,
+                dat: { activeSeries },
+            },
+        })
+    }
+}
 
 function attachCleanExitBindings(lib: any): void {
     if (screenExitHooked || !lib) return
@@ -160,7 +178,7 @@ export const initMenu = (
                 }
             })
         } else {
-            bal.slv({ mnuBit: bal })
+            bal.slv({ mnuBit: { idx: 'init-menu-headless', val: 1 } })
         }
     }
     return cpy
@@ -172,7 +190,8 @@ export const updateMenu = async (
     ste: State,
 ): Promise<MenuModel> => {
     const activeSeries = cpy.activeSeries || '001.goblin-lore'
-    const lib = (globalThis as any).LIBRARY || (global as any).LIBRARY
+    const library = (globalThis as any).LIBRARY || (global as any).LIBRARY
+    const lib = library
 
     const lst = [
         '1. VALIDATE SCHEMA INVARIANTS',
@@ -191,17 +210,13 @@ export const updateMenu = async (
     ]
 
     // Headless execution safety fallback for CI and non-TTY test environments
-    if (!lib || typeof lib.hunt !== 'function') {
-        if (bal?.slv) {
-            bal.slv({
-                mnuBit: {
-                    idx: 'update-menu-headless',
-                    lst,
-                    val: 0,
-                    dat: { activeSeries },
-                },
-            })
-        }
+    if (!library) {
+        resolveHeadlessMenu(bal, lst, activeSeries)
+        return cpy
+    }
+
+    if (typeof library.hunt !== 'function') {
+        resolveHeadlessMenu(bal, lst, activeSeries)
         return cpy
     }
 
@@ -245,8 +260,17 @@ export const updateMenu = async (
         dat: {
             clr0: 0, // Color.BLACK
             clr1: 3, // Color.YELLOW
-            cb: (choice: string) => {
-                const text = descriptions[choice] || 'No description available.'
+            cb: async (focusedLabel: string) => {
+                const somaticItem = getChoiceById(focusedLabel)
+                if (somaticItem) {
+                    await lib.hunt(CONSOLE_UPDATE, {
+                        idx: 'cns00',
+                        src: `:: [TOOLTIP] ${somaticItem.label} -> ${somaticItem.tooltip}`,
+                    })
+                    return
+                }
+                const text =
+                    descriptions[focusedLabel] || 'No description available.'
                 lib.hunt(CONSOLE_UPDATE, {
                     idx: 'cns00',
                     src: `:: ${text}`,
@@ -260,6 +284,32 @@ export const updateMenu = async (
 
     const src = choiceBit?.chcBit?.src
     cpy.activeSelection = src || 'ROOT'
+    cpy.totalInteractions = (cpy.totalInteractions || 0) + 1
+    cpy.lastActionTimestamp = Date.now()
+
+    const somaticItem = getChoiceById(src || '')
+    if (somaticItem && somaticItem.id !== 'CHOICE_ROOT_RETURN') {
+        await lib.hunt(CONSOLE_UPDATE, {
+            idx: 'cns00',
+            src: `>> [DISPATCH] Executing: ${src}`,
+        })
+        const dispatchResult = await dispatchSomaticChoice(src, ste)
+        cpy.lastSomaticReceipt = dispatchResult.receiptTag
+        cpy.statusMessage = `${dispatchResult.receiptTag} ${dispatchResult.label}`
+        await lib.hunt(CONSOLE_UPDATE, {
+            idx: 'cns00',
+            src: `>> [RECEIPT] ${dispatchResult.receiptTag} Finished [OK]`,
+        })
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        if (bal?.slv) {
+            bal.slv({ mnuBit: bal })
+        }
+        return cpy
+    }
 
     switch (src) {
         case '1. VALIDATE SCHEMA INVARIANTS': {
@@ -553,7 +603,8 @@ export const updateMenu = async (
 
         case '':
         case undefined:
-        case 'ROOT MENU': {
+        case 'ROOT MENU':
+        case '[0] ROOT MENU': {
             await lib.hunt(TERMINAL_CLEAR, {})
             await mountConsolePane(lib)
             if (rootSlv) {
