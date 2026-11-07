@@ -1213,6 +1213,37 @@ export const pass2Traverse = (
     return cpy
 }
 
+function safeAtomicRenameSync(
+    source: string,
+    destination: string,
+    retries = 10,
+): void {
+    for (let i = 0; i < retries; i++) {
+        try {
+            fs.renameSync(source, destination)
+            return
+        } catch (err: any) {
+            if (
+                (err.code === 'EPERM' || err.code === 'EBUSY') &&
+                i < retries - 1
+            ) {
+                const start = Date.now()
+                while (Date.now() - start < 20) {
+                    /* busy wait for Windows file handle release */
+                }
+                continue
+            }
+            try {
+                fs.copyFileSync(source, destination)
+                fs.unlinkSync(source)
+                return
+            } catch {
+                throw err
+            }
+        }
+    }
+}
+
 /**
  * PASS 3: Deterministic Sealing, RFC 8785 JCS, Atomic Write & V8 Deep-Freeze
  */
@@ -1327,10 +1358,10 @@ export const pass3Seal = (
     )
 
     fs.writeFileSync(tmpCanonical, formattedJson, { encoding: 'utf8' })
-    fs.renameSync(tmpCanonical, canonicalPath)
+    safeAtomicRenameSync(tmpCanonical, canonicalPath)
 
     fs.writeFileSync(tmpArchive, formattedJson, { encoding: 'utf8' })
-    fs.renameSync(tmpArchive, archivePath)
+    safeAtomicRenameSync(tmpArchive, archivePath)
 
     report.atomicWriteVerified =
         fs.existsSync(canonicalPath) && fs.existsSync(archivePath)
