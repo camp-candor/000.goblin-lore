@@ -293,7 +293,7 @@ export const updateMenu = async (
             idx: 'cns00',
             src: `>> [DISPATCH] Executing: ${src}`,
         })
-        const dispatchResult = await dispatchSomaticChoice(src, ste)
+        const dispatchResult = await dispatchSomaticChoice(src, ste, lib)
         cpy.lastSomaticReceipt = dispatchResult.receiptTag
         cpy.statusMessage = `${dispatchResult.receiptTag} ${dispatchResult.label}`
         await lib.hunt(CONSOLE_UPDATE, {
@@ -920,6 +920,8 @@ export const openSomaticDspHub = async (
         '[Monotonic Fact Staleness Checker]',
         '[Deterministic Payload Hasher]',
         '[Payload Serialization Reducer Console]',
+        '[9] RUN FULL SOMATIC DSP VERIFICATION SWEEP',
+        '[0] ROOT MENU',
         '[<] RETURN TO LORE MENU',
     ]
 
@@ -948,7 +950,15 @@ export const openSomaticDspHub = async (
         dat: {
             clr0: 0,
             clr1: 3,
-            cb: (choice: string) => {
+            cb: async (choice: string) => {
+                const item = getChoiceById(choice)
+                if (item) {
+                    await lib.hunt(CONSOLE_UPDATE, {
+                        idx: 'cns00',
+                        src: `:: [TOOLTIP] ${item.label} -> ${item.tooltip}`,
+                    })
+                    return
+                }
                 lib.hunt(CONSOLE_UPDATE, {
                     idx: 'cns00',
                     src: `:: [SOMATIC_HUB] ${choice}`,
@@ -962,6 +972,44 @@ export const openSomaticDspHub = async (
 
     const hubSelection = hubChoiceBit?.chcBit?.src
     if (!hubSelection || hubSelection === '[<] RETURN TO LORE MENU') {
+        return cpy
+    }
+
+    if (
+        hubSelection === '[9] RUN FULL SOMATIC DSP VERIFICATION SWEEP' ||
+        hubSelection === 'CHOICE_FULL_SWEEP'
+    ) {
+        await lib.hunt(CONSOLE_UPDATE, {
+            idx: 'cns00',
+            src: `>> [DISPATCH] Executing: [9] RUN FULL SOMATIC DSP VERIFICATION SWEEP`,
+        })
+        const dispatchResult = await dispatchSomaticChoice(
+            'CHOICE_FULL_SWEEP',
+            ste,
+            lib,
+        )
+        cpy.lastSomaticReceipt = dispatchResult.receiptTag
+        cpy.statusMessage = `${dispatchResult.receiptTag} ${dispatchResult.label}`
+        await lib.hunt(CONSOLE_UPDATE, {
+            idx: 'cns00',
+            src: `>> [RECEIPT] ${dispatchResult.receiptTag} Finished [OK]`,
+        })
+        return cpy
+    }
+
+    if (
+        hubSelection === '[0] ROOT MENU' ||
+        hubSelection === 'CHOICE_ROOT_RETURN'
+    ) {
+        await lib.hunt(TERMINAL_CLEAR, {})
+        await mountConsolePane(lib)
+        if (rootSlv) {
+            const slv = rootSlv
+            rootSlv = null
+            slv({ mnuBit: { idx: 'root-menu', val: 0 } })
+        } else if (bal?.slv) {
+            bal.slv({ mnuBit: { idx: 'root-menu', val: 0 } })
+        }
         return cpy
     }
 

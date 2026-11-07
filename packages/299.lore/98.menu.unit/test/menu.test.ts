@@ -256,6 +256,77 @@ describe('98.menu.unit: Blessed Terminal Menu Integration', () => {
             '>> [SQLITE] Materialized entities_somatic_live record for char_wart [OK]',
         )
     })
+
+    it('executes Level 4 TUI journey: [Somatic DSP Modulation Hub] -> tooltip -> [9] RUN FULL SOMATIC DSP VERIFICATION SWEEP -> [0] ROOT MENU', async () => {
+        const consoleLogs: string[] = []
+        const choiceQueue = [
+            '[Somatic DSP Modulation Hub]',
+            '[9] RUN FULL SOMATIC DSP VERIFICATION SWEEP',
+        ]
+        const observedChoiceLists: string[][] = []
+
+        const mockLibrary = {
+            hunt: async (action: string, payload: any) => {
+                if (action === '[Open action] Open Choice') {
+                    observedChoiceLists.push(payload.lst || [])
+                    if (payload.dat?.cb) {
+                        await payload.dat.cb(
+                            '[9] RUN FULL SOMATIC DSP VERIFICATION SWEEP',
+                        )
+                    }
+                    const nextChoice = choiceQueue.shift() || 'ROOT MENU'
+                    return { chcBit: { src: nextChoice } }
+                }
+                if (action === '[Grid action] Update Grid') {
+                    return {
+                        grdBit: { dat: { x: 0, y: 4, xSpan: 4, ySpan: 8 } },
+                    }
+                }
+                if (action === '[Console action] Update Console') {
+                    consoleLogs.push(payload.src)
+                    return {}
+                }
+                return {}
+            },
+        }
+
+        ;(globalThis as any).LIBRARY = mockLibrary
+
+        const liveState = new State()
+        const bal: any = { idx: 'test_somatic_hub_gauntlet_journey' }
+        await updateMenu(model, bal, liveState)
+
+        expect(observedChoiceLists[0]).toContain('[Somatic DSP Modulation Hub]')
+        expect(observedChoiceLists[1]).toContain(
+            '[9] RUN FULL SOMATIC DSP VERIFICATION SWEEP',
+        )
+        expect(observedChoiceLists[1]).toContain('[0] ROOT MENU')
+
+        expect(consoleLogs).toContain(
+            ':: [TOOLTIP] [9] RUN FULL SOMATIC DSP VERIFICATION SWEEP -> Execute end-to-end integration pass across all 5 somatic units with zero cloud spend at T0 = $0.00.',
+        )
+        expect(consoleLogs).toContain(
+            '>> [DISPATCH] Executing: [9] RUN FULL SOMATIC DSP VERIFICATION SWEEP',
+        )
+        expect(consoleLogs).toContain(
+            '>> [STAGE_1] Float Metric Trap -> [OK] TRAPPED',
+        )
+        expect(consoleLogs).toContain(
+            '>> [STAGE_2] Strict Key Closure Trap -> [OK] TRAPPED',
+        )
+        expect(consoleLogs).toContain(
+            '>> [STAGE_3] Aphonia Delivery Trap -> [OK] TRAPPED',
+        )
+        expect(consoleLogs).toContain(
+            '>> [STAGE_4] Monotonic Regression Trap -> [OK] TRAPPED',
+        )
+        expect(consoleLogs).toContain(
+            '>> [STAGE_5] Hash Parity Sentinel Trap -> [OK] TRAPPED',
+        )
+        expect(consoleLogs).toContain(
+            '>> [RECEIPT] [GAUNTLET_PASS: 5/5 TRAPS VERIFIED AT T0 = $0.00] Finished [OK]',
+        )
+    })
 })
 
 describe('98.menu.unit: Phase 7 Somatic DSP Contracts', () => {

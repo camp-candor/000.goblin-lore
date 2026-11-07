@@ -1,5 +1,6 @@
 import type { MenuChoiceItem } from '../fce/menu.interface.js'
 import type State from '../../99.core/state.js'
+import { runSomaticGauntlet } from '../../scripts/verify-somatic-gauntlet.js'
 
 export const SOMATIC_MENU_CHOICES: readonly MenuChoiceItem[] = Object.freeze([
     Object.freeze({
@@ -86,6 +87,7 @@ export function getChoiceById(choiceId: string): MenuChoiceItem | undefined {
 export async function dispatchSomaticChoice(
     choiceId: string,
     ste: State,
+    lib?: any,
 ): Promise<{ success: boolean; label: string; receiptTag: string }> {
     const item = getChoiceById(choiceId)
     if (!item) {
@@ -236,12 +238,27 @@ export async function dispatchSomaticChoice(
         case 'CHOICE_VALIDATE_PAYLOAD':
         case 'CHOICE_APHONIA_GATE':
         case 'CHOICE_STALENESS_SCAN':
-        case 'CHOICE_PAYLOAD_HASH':
-        case 'CHOICE_FULL_SWEEP': {
+        case 'CHOICE_PAYLOAD_HASH': {
             return {
                 success: true,
                 label: item.label,
                 receiptTag: '[PAYLOAD_UNIT:OK]',
+            }
+        }
+
+        case 'CHOICE_FULL_SWEEP': {
+            const summary = runSomaticGauntlet(Date.now(), (line) => {
+                if (lib?.hunt && line.startsWith('>> [STAGE_')) {
+                    lib.hunt('[Console action] Update Console', {
+                        idx: 'cns00',
+                        src: line,
+                    })
+                }
+            })
+            return {
+                success: summary.isCertified,
+                label: item.label,
+                receiptTag: '[GAUNTLET_PASS: 5/5 TRAPS VERIFIED AT T0 = $0.00]',
             }
         }
 

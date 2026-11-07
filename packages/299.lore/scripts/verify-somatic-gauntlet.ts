@@ -11,12 +11,22 @@ import {
 import { assertVocalMotorFeasibility } from '../22.payload.unit/buz/vocalFeasibilityGate.buzz.js'
 import { evaluateSceneSomaticStaleness } from '../22.payload.unit/buz/pinSomaticFactVersion.buzz.js'
 import { assertPayloadHashParity } from '../22.payload.unit/buz/canonicalPayloadHasher.buzz.js'
+import { fileURLToPath } from 'node:url'
+import path from 'node:path'
 
 export function runSomaticGauntlet(
     epoch: number = Date.now(),
+    onLog?: (msg: string) => void,
 ): SomaticGauntletSummary {
     const startTime = Date.now()
     const results: GauntletTrapResult[] = []
+
+    const emitLog = (msg: string) => {
+        console.log(msg)
+        if (onLog) {
+            onLog(msg)
+        }
+    }
 
     console.log('------------------------------------------------------------')
     console.log(
@@ -55,7 +65,7 @@ export function runSomaticGauntlet(
                 : 'CRITICAL: Float injection bypassed validator.',
         }),
     )
-    console.log(
+    emitLog(
         `>> [STAGE_1] Float Metric Trap -> ${t1Passed ? '[OK] TRAPPED' : '[FAIL] LEAKED'}`,
     )
 
@@ -120,7 +130,7 @@ export function runSomaticGauntlet(
                 : 'CRITICAL: Un-schemaed key leaked into ingress payload.',
         }),
     )
-    console.log(
+    emitLog(
         `>> [STAGE_2] Strict Key Closure Trap -> ${t2Passed ? '[OK] TRAPPED' : '[FAIL] LEAKED'}`,
     )
 
@@ -157,7 +167,7 @@ export function runSomaticGauntlet(
                 : 'CRITICAL: Aphonic actor permitted verbal dialogue dispatch.',
         }),
     )
-    console.log(
+    emitLog(
         `>> [STAGE_3] Aphonia Delivery Trap -> ${t3Passed ? '[OK] TRAPPED' : '[FAIL] LEAKED'}`,
     )
 
@@ -208,7 +218,7 @@ export function runSomaticGauntlet(
                 : 'CRITICAL: Retrograde version regression allowed.',
         }),
     )
-    console.log(
+    emitLog(
         `>> [STAGE_4] Monotonic Regression Trap -> ${t4Passed ? '[OK] TRAPPED' : '[FAIL] LEAKED'}`,
     )
 
@@ -272,7 +282,7 @@ export function runSomaticGauntlet(
                 : 'CRITICAL: Hash parity divergence failed to halt execution.',
         }),
     )
-    console.log(
+    emitLog(
         `>> [STAGE_5] Hash Parity Sentinel Trap -> ${t5Passed ? '[OK] TRAPPED' : '[FAIL] LEAKED'}`,
     )
 
@@ -306,7 +316,11 @@ export function runSomaticGauntlet(
 }
 
 // Direct CLI invocation
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (
+    process.argv[1] &&
+    fileURLToPath(import.meta.url).toLowerCase() ===
+        path.resolve(process.argv[1]).toLowerCase()
+) {
     const summary = runSomaticGauntlet()
     if (!summary.isCertified) {
         process.exit(1)
