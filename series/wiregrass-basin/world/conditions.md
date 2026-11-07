@@ -59,6 +59,7 @@ conditions:
       breathiness_pause_bps: 11500
       banned_cadences:
         - RAPID_STACCATO
+        - CLIPPED_MILITARY
   - condition_slug: cnd_euclidean_posture
     title: Euclidean Cervical Spine Lock
     arm_penalty_bps: 0
