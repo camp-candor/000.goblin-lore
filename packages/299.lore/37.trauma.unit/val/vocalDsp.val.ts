@@ -2,6 +2,8 @@ import { z } from 'zod'
 
 export const BannedCadenceEnum = z.enum([
     'RAPID_STACCATO',
+    'CLIPPED_MILITARY',
+    'DRAWLING_SLUR',
     'SLOW_DRAWL',
     'MONOTONE',
     'WHISPER',
