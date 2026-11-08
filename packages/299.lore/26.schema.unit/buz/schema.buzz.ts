@@ -9,7 +9,7 @@ export const initSchema = (
 ): SchemaModel => {
     cpy.idx = bal.idx || '26.schema'
     if (bal.slv) {
-        bal.slv({ scmBit: { idx: 'init-schema', val: 0 } })
+        bal.slv({ schBit: { idx: 'init-schema', val: 0 } })
     }
     return cpy
 }
@@ -20,7 +20,7 @@ export const updateSchema = (
     ste?: State,
 ): SchemaModel => {
     if (bal.slv) {
-        bal.slv({ scmBit: { idx: 'update-schema', val: 0 } })
+        bal.slv({ schBit: { idx: 'update-schema', val: 0 } })
     }
     return cpy
 }

@@ -39,7 +39,16 @@ import { runVocalFeasibilityInspectorMenu } from './11.vocal.feasibility.buzz'
 import { runFactStalenessCheckerMenu } from './12.fact.staleness.buzz'
 import { runDeterministicPayloadHasherMenu } from './13.payload.hasher.buzz'
 import { runPayloadReducerConsoleMenu } from './14.payload.reducer.buzz'
+import {
+    runConstitutionalRegistryAudit,
+    REGISTRY_MENU_LABEL,
+} from './15.constitutional.registry.buzz'
+import {
+    runErrataLedgerAudit,
+    ERRATA_MENU_LABEL,
+} from './16.errata.ledger.buzz'
 import { getChoiceById, dispatchSomaticChoice } from './somaticMenu.buzz.js'
+import { SCHEMA_SOLVER_MENU_LABEL } from './05.schema.solver.audit.buzz'
 import {
     COMPILE_MENU_OPTIONS,
     emitConsoleLine,
@@ -195,6 +204,7 @@ export const updateMenu = async (
 
     const lst = [
         '1. VALIDATE SCHEMA INVARIANTS',
+        SCHEMA_SOLVER_MENU_LABEL,
         '[Somatic DSP Modulation Hub]',
         '2. RUN SOMATIC SAT SOLVER',
         '3. AUDIT KINETIC MOTOR MASKS',
@@ -223,6 +233,8 @@ export const updateMenu = async (
     const descriptions: Record<string, string> = {
         '1. VALIDATE SCHEMA INVARIANTS':
             'Validate frontmatter entities, basis-point bounds, and Banker rounding.',
+        '[ 26. SCHEMA & INVARIANTS ]':
+            'Open entity manifests, somatic SAT, and constitutional rule registry audits.',
         '[Somatic DSP Modulation Hub]':
             'Extract disk-backed Somatic Ledger dossiers, trauma floors, and SQLite records.',
         '2. RUN SOMATIC SAT SOLVER':
@@ -363,14 +375,13 @@ export const updateMenu = async (
                     idx: 'cns00',
                     src: '>> [RULES:AUDIT] Verifying Constitutional Rule Registry invariants...',
                 })
-                await lib.hunt(CONSOLE_UPDATE, {
-                    idx: 'cns00',
-                    src: '>> [PARDON:AUDITED] Canonical rules loaded (3 active).',
-                })
-                await lib.hunt(CONSOLE_UPDATE, {
-                    idx: 'cns00',
-                    src: '>> [PARDON:AUDITED] Authorized roles verified (1 authorizer).',
-                })
+                const registryLines = await runConstitutionalRegistryAudit()
+                for (const line of registryLines) {
+                    await lib.hunt(CONSOLE_UPDATE, {
+                        idx: 'cns00',
+                        src: line,
+                    })
+                }
             } catch (err: any) {
                 await lib.hunt(CONSOLE_UPDATE, {
                     idx: 'cns00',
@@ -603,6 +614,11 @@ export const updateMenu = async (
             break
         }
 
+        case '[ 26. SCHEMA & INVARIANTS ]': {
+            await openSchemaInvariantsMenu(cpy, bal, ste)
+            break
+        }
+
         case '[Somatic DSP Modulation Hub]': {
             await openSomaticDspHub(cpy, bal, ste)
             break
@@ -646,6 +662,171 @@ export const updateMenu = async (
     }
 
     return cpy
+}
+
+/**
+ * Opens the dedicated Compile Menu Flight Deck.
+ */
+export const openSchemaInvariantsMenu = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste: State,
+): Promise<MenuModel> => {
+    const schemaOptions = [
+        '[ 1. VALIDATE ENTITY MANIFESTS ]',
+        '[ 2. RUN SOMATIC SAT SOLVER ]',
+        REGISTRY_MENU_LABEL,
+        ERRATA_MENU_LABEL,
+        '[ BACK ]',
+    ]
+    const schemaDescriptions: Record<string, string> = {
+        '[ 1. VALIDATE ENTITY MANIFESTS ]':
+            'Stream entity manifests through 26.schema.unit and assert fail-closed routing.',
+        '[ 2. RUN SOMATIC SAT SOLVER ]':
+            'Solve hand-capacity SAT matrix for baseline and impaired loadouts.',
+        '[ 3. CONSTITUTIONAL RULE REGISTRY ]':
+            'Load canonical rules, authorizers, and sweep every series pardon ledger.',
+        '[ 4. CRYPTOGRAPHIC ERRATA LEDGER ]':
+            'Verify append-only errata hash-chain lineage and active Merkle heads.',
+        '[ BACK ]': 'Return to the primary lore dashboard.',
+    }
+
+    const lib = (globalThis as any).LIBRARY || (global as any).LIBRARY
+    if (!lib || typeof lib.hunt !== 'function') {
+        if (bal?.slv) {
+            bal.slv({
+                mnuBit: {
+                    idx: 'open-schema-invariants-menu',
+                    lst: schemaOptions,
+                    val: 0,
+                },
+            })
+        }
+        return cpy
+    }
+
+    const gridBit = await lib.hunt(GRID_UPDATE, {
+        x: 0,
+        y: 4,
+        xSpan: 4,
+        ySpan: 8,
+    })
+
+    const schemaChoiceBit = await lib.hunt(CHOICE_OPEN, {
+        dat: {
+            clr0: 0,
+            clr1: 3,
+            cb: async (choice: string) => {
+                const text = schemaDescriptions[choice]
+                await lib.hunt(CONSOLE_UPDATE, {
+                    idx: 'cns00',
+                    src: `:: ${text || 'No description available.'}`,
+                })
+            },
+        },
+        src: 'VERTICAL',
+        lst: schemaOptions,
+        net: gridBit?.grdBit?.dat,
+    })
+
+    const selection = schemaChoiceBit?.chcBit?.src
+
+    if (selection === '[ 1. VALIDATE ENTITY MANIFESTS ]') {
+        await lib.hunt(CONSOLE_UPDATE, {
+            idx: 'cns00',
+            src: '>> [SCHEMA:AUDIT] Streaming entity manifests through 26.schema.unit...',
+        })
+        const primLines = await auditPrimitiveStandards()
+        for (const line of primLines) {
+            await lib.hunt(CONSOLE_UPDATE, { idx: 'cns00', src: line })
+        }
+        const manifestLines = await runEntityManifestAudit()
+        for (const line of manifestLines) {
+            await lib.hunt(CONSOLE_UPDATE, { idx: 'cns00', src: line })
+        }
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        if (bal?.slv) {
+            bal.slv({ mnuBit: bal })
+        }
+        return cpy
+    }
+
+    if (selection === '[ 2. RUN SOMATIC SAT SOLVER ]') {
+        await lib.hunt(CONSOLE_UPDATE, {
+            idx: 'cns00',
+            src: '>> [SAT:AUDIT] Solving hand-capacity satisfiability matrix...',
+        })
+        const satLines = await runSomaticSolverAudit()
+        for (const line of satLines) {
+            await lib.hunt(CONSOLE_UPDATE, { idx: 'cns00', src: line })
+        }
+        const rosterLines = await runHandCapacityAudit()
+        for (const line of rosterLines) {
+            await lib.hunt(CONSOLE_UPDATE, { idx: 'cns00', src: line })
+        }
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        if (bal?.slv) {
+            bal.slv({ mnuBit: bal })
+        }
+        return cpy
+    }
+
+    if (selection === REGISTRY_MENU_LABEL) {
+        await lib.hunt(CONSOLE_UPDATE, {
+            idx: 'cns00',
+            src: '>> [RULES:AUDIT] Sweeping constitutional rule registry...',
+        })
+        const registryLines = await runConstitutionalRegistryAudit()
+        for (const line of registryLines) {
+            await lib.hunt(CONSOLE_UPDATE, { idx: 'cns00', src: line })
+        }
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        if (bal?.slv) {
+            bal.slv({ mnuBit: bal })
+        }
+        return cpy
+    }
+
+    if (selection === ERRATA_MENU_LABEL) {
+        await lib.hunt(CONSOLE_UPDATE, {
+            idx: 'cns00',
+            src: '>> [ERRATA:AUDIT] Verifying append-only errata hash-chain lineage...',
+        })
+        try {
+            const errataLines = await runErrataLedgerAudit()
+            for (const line of errataLines) {
+                await lib.hunt(CONSOLE_UPDATE, { idx: 'cns00', src: line })
+            }
+        } catch (err: any) {
+            await lib.hunt(CONSOLE_UPDATE, {
+                idx: 'cns00',
+                src: `:: ${err?.message || String(err)}`,
+            })
+        }
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        if (bal?.slv) {
+            bal.slv({ mnuBit: bal })
+        }
+        return cpy
+    }
+
+    return updateMenu(cpy, bal, ste)
 }
 
 /**
