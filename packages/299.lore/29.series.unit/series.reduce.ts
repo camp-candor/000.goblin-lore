@@ -1,22 +1,25 @@
 import clone from 'clone-deep'
-import * as Act from './series.action'
-import { SeriesModel } from './series.model'
-import * as Buzz from './series.buzzer'
-import State from '../99.core/state'
+import * as Act from './series.action.js'
+import { SeriesModel } from './series.model.js'
+import * as Buzz from './series.buzzer.js'
+import type State from '../99.core/state.js'
 
 export function reducer(
-    model: SeriesModel = new SeriesModel(),
-    act: Act.Actions,
-    state?: State,
+  model: SeriesModel = new SeriesModel(),
+  act: Act.Actions,
+  state?: State,
 ) {
-    switch (act.type) {
-        case Act.UPDATE_SERIES:
-            return Buzz.updateSeries(clone(model), act.bale, state)
+  switch (act.type) {
+    case Act.INIT_SERIES:
+      return Buzz.initSeries(clone(model), act.bale, state)
 
-        case Act.INIT_SERIES:
-            return Buzz.initSeries(clone(model), act.bale, state)
+    case Act.UPDATE_SERIES:
+      return Buzz.updateSeries(clone(model), act.bale, state)
 
-        default:
-            return model
-    }
+    case Act.SCAFFOLD_SERIES_TREE:
+      return Buzz.scaffoldSeriesTree(clone(model), act.bale, state)
+
+    default:
+      return model
+  }
 }
