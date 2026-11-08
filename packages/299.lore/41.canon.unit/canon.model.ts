@@ -1,8 +1,8 @@
-import Canon from './fce/canon.interface'
-import CanonBit from './fce/canon.interface'
+import type Canon from './fce/canon.interface.js'
+import type CanonBit from './fce/canon.bit.js'
 
 export class CanonModel implements Canon {
-    //idx:string;
-    //canonBitList: CanonBit[] = [];
-    //canonBits: any = {};
+  idx: string = '41.canon'
+  canonBitList: CanonBit[] = []
+  canonBits: Record<string, CanonBit> = {}
 }

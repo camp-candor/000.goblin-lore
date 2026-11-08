@@ -1,12 +1,18 @@
-export const initLedger = (cpy: LedgerModel, bal: LedgerBit, ste: State) => {
-    debugger
-    return cpy
+import { LedgerModel } from '../ledger.model.js'
+import type LedgerBit from '../fce/ledger.bit.js'
+import type State from '../../99.core/state.js'
+
+export const initLedger = (cpy: LedgerModel, bal: LedgerBit, ste?: State): LedgerModel => {
+  cpy.idx = bal.idx || '16.ledger'
+  if (bal.slv) {
+    bal.slv({ ledBit: { idx: 'init-ledger', val: 0 } })
+  }
+  return cpy
 }
 
-export const updateLedger = (cpy: LedgerModel, bal: LedgerBit, ste: State) => {
-    return cpy
+export const updateLedger = (cpy: LedgerModel, bal: LedgerBit, ste?: State): LedgerModel => {
+  if (bal.slv) {
+    bal.slv({ ledBit: { idx: 'update-ledger', val: 0 } })
+  }
+  return cpy
 }
-
-import { LedgerModel } from '../ledger.model'
-import LedgerBit from '../fce/ledger.bit'
-import State from '../../99.core/state'

@@ -1,7 +1,7 @@
-import GearBit from './gear.bit'
+import type GearBit from './gear.bit.js'
 
 export default interface Gear {
-    // idx:string;
-    // gearBitList: GearBit[];
-    // gearBits:any;
+  idx: string
+  gearBitList: GearBit[]
+  gearBits: Record<string, GearBit>
 }

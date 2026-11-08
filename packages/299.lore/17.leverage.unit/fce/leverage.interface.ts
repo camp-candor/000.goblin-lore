@@ -1,7 +1,7 @@
-import LeverageBit from './leverage.bit'
+import type LeverageBit from './leverage.bit.js'
 
 export default interface Leverage {
-    // idx:string;
-    // leverageBitList: LeverageBit[];
-    // leverageBits:any;
+  idx: string
+  leverageBitList: LeverageBit[]
+  leverageBits: Record<string, LeverageBit>
 }

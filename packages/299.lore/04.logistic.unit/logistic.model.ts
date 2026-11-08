@@ -1,8 +1,8 @@
-import Logistic from './fce/logistic.interface'
-import LogisticBit from './fce/logistic.interface'
+import type Logistic from './fce/logistic.interface.js'
+import type LogisticBit from './fce/logistic.bit.js'
 
 export class LogisticModel implements Logistic {
-    //idx:string;
-    //logisticBitList: LogisticBit[] = [];
-    //logisticBits: any = {};
+  idx: string = '04.logistic'
+  logisticBitList: LogisticBit[] = []
+  logisticBits: Record<string, LogisticBit> = {}
 }

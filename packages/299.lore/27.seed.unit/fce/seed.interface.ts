@@ -1,7 +1,7 @@
-import SeedBit from './seed.bit'
+import type SeedBit from './seed.bit.js'
 
 export default interface Seed {
-    // idx:string;
-    // seedBitList: SeedBit[];
-    // seedBits:any;
+  idx: string
+  seedBitList: SeedBit[]
+  seedBits: Record<string, SeedBit>
 }

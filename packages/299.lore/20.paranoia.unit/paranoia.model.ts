@@ -1,15 +1,8 @@
-import Paranoia from './fce/paranoia.interface.js'
-import type {
-    ParanoiaMeterState,
-    PitchFlutterResult,
-} from './val/paranoiaClock.val.js'
-import type { AcousticImpulseReceiptBit } from './fce/paranoiaClock.bit.js'
+import type Paranoia from './fce/paranoia.interface.js'
+import type ParanoiaBit from './fce/paranoia.bit.js'
 
 export class ParanoiaModel implements Paranoia {
-    idx: string = '20.paranoia'
-    clocksByEntity: Record<string, ParanoiaMeterState> = {}
-    lastReceipts: Record<string, AcousticImpulseReceiptBit> = {}
-    flutterProfiles: Record<string, PitchFlutterResult> = {}
+  idx: string = '20.paranoia'
+  paranoiaBitList: ParanoiaBit[] = []
+  paranoiaBits: Record<string, ParanoiaBit> = {}
 }
-
-export default ParanoiaModel

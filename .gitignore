@@ -203,3 +203,5 @@ dist/
 
 data/flat
 data/unit
+packages/299.lore/test/debugger-sentinel.test.ts
+node_modules
