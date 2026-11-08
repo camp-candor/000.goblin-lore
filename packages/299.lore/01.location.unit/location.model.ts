@@ -1,8 +1,8 @@
-import Location from './fce/location.interface'
-import LocationBit from './fce/location.interface'
+import type Location from './fce/location.interface.js'
+import type LocationBit from './fce/location.bit.js'
 
 export class LocationModel implements Location {
-    //idx:string;
-    //locationBitList: LocationBit[] = [];
-    //locationBits: any = {};
+  idx: string = '01.location'
+  locationBitList: LocationBit[] = []
+  locationBits: Record<string, LocationBit> = {}
 }

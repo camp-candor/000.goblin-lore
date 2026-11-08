@@ -1,7 +1,7 @@
-import ClockBit from './clock.bit'
+import type ClockBit from './clock.bit.js'
 
 export default interface Clock {
-    // idx:string;
-    // clockBitList: ClockBit[];
-    // clockBits:any;
+  idx: string
+  clockBitList: ClockBit[]
+  clockBits: Record<string, ClockBit>
 }

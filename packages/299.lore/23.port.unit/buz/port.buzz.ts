@@ -1,12 +1,18 @@
-export const initPort = (cpy: PortModel, bal: PortBit, ste: State) => {
-    debugger
-    return cpy
+import { PortModel } from '../port.model.js'
+import type PortBit from '../fce/port.bit.js'
+import type State from '../../99.core/state.js'
+
+export const initPort = (cpy: PortModel, bal: PortBit, ste?: State): PortModel => {
+  cpy.idx = bal.idx || '23.port'
+  if (bal.slv) {
+    bal.slv({ porBit: { idx: 'init-port', val: 0 } })
+  }
+  return cpy
 }
 
-export const updatePort = (cpy: PortModel, bal: PortBit, ste: State) => {
-    return cpy
+export const updatePort = (cpy: PortModel, bal: PortBit, ste?: State): PortModel => {
+  if (bal.slv) {
+    bal.slv({ porBit: { idx: 'update-port', val: 0 } })
+  }
+  return cpy
 }
-
-import { PortModel } from '../port.model'
-import PortBit from '../fce/port.bit'
-import State from '../../99.core/state'

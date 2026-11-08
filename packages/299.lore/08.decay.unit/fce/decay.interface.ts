@@ -1,7 +1,7 @@
-import DecayBit from './decay.bit'
+import type DecayBit from './decay.bit.js'
 
 export default interface Decay {
-    // idx:string;
-    // decayBitList: DecayBit[];
-    // decayBits:any;
+  idx: string
+  decayBitList: DecayBit[]
+  decayBits: Record<string, DecayBit>
 }

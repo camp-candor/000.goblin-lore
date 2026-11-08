@@ -1,8 +1,8 @@
-import Cooldown from './fce/cooldown.interface'
-import CooldownBit from './fce/cooldown.interface'
+import type Cooldown from './fce/cooldown.interface.js'
+import type CooldownBit from './fce/cooldown.bit.js'
 
 export class CooldownModel implements Cooldown {
-    //idx:string;
-    //cooldownBitList: CooldownBit[] = [];
-    //cooldownBits: any = {};
+  idx: string = '06.cooldown'
+  cooldownBitList: CooldownBit[] = []
+  cooldownBits: Record<string, CooldownBit> = {}
 }

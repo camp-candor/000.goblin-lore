@@ -1,8 +1,8 @@
-import Clock from './fce/clock.interface'
-import ClockBit from './fce/clock.interface'
+import type Clock from './fce/clock.interface.js'
+import type ClockBit from './fce/clock.bit.js'
 
 export class ClockModel implements Clock {
-    //idx:string;
-    //clockBitList: ClockBit[] = [];
-    //clockBits: any = {};
+  idx: string = '05.clock'
+  clockBitList: ClockBit[] = []
+  clockBits: Record<string, ClockBit> = {}
 }

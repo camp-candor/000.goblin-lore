@@ -1,8 +1,8 @@
-import State from './fce/state.interface'
-import StateBit from './fce/state.interface'
+import type State from './fce/state.interface.js'
+import type StateBit from './fce/state.bit.js'
 
 export class StateModel implements State {
-    //idx:string;
-    //stateBitList: StateBit[] = [];
-    //stateBits: any = {};
+  idx: string = '31.state'
+  stateBitList: StateBit[] = []
+  stateBits: Record<string, StateBit> = {}
 }

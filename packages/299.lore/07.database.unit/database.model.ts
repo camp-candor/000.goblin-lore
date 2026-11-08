@@ -1,8 +1,8 @@
-import Database from './fce/database.interface'
-import DatabaseBit from './fce/database.interface'
+import type Database from './fce/database.interface.js'
+import type DatabaseBit from './fce/database.bit.js'
 
 export class DatabaseModel implements Database {
-    //idx:string;
-    //databaseBitList: DatabaseBit[] = [];
-    //databaseBits: any = {};
+  idx: string = '07.database'
+  databaseBitList: DatabaseBit[] = []
+  databaseBits: Record<string, DatabaseBit> = {}
 }

@@ -1,12 +1,18 @@
-export const initSeries = (cpy: SeriesModel, bal: SeriesBit, ste: State) => {
-    debugger
-    return cpy
+import { SeriesModel } from '../series.model.js'
+import type SeriesBit from '../fce/series.bit.js'
+import type State from '../../99.core/state.js'
+
+export const initSeries = (cpy: SeriesModel, bal: SeriesBit, ste?: State): SeriesModel => {
+  cpy.idx = bal.idx || '29.series'
+  if (bal.slv) {
+    bal.slv({ serBit: { idx: 'init-series', val: 0 } })
+  }
+  return cpy
 }
 
-export const updateSeries = (cpy: SeriesModel, bal: SeriesBit, ste: State) => {
-    return cpy
+export const updateSeries = (cpy: SeriesModel, bal: SeriesBit, ste?: State): SeriesModel => {
+  if (bal.slv) {
+    bal.slv({ serBit: { idx: 'update-series', val: 0 } })
+  }
+  return cpy
 }
-
-import { SeriesModel } from '../series.model'
-import SeriesBit from '../fce/series.bit'
-import State from '../../99.core/state'

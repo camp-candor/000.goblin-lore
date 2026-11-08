@@ -1,7 +1,7 @@
-import StateBit from './state.bit'
+import type StateBit from './state.bit.js'
 
 export default interface State {
-    // idx:string;
-    // stateBitList: StateBit[];
-    // stateBits:any;
+  idx: string
+  stateBitList: StateBit[]
+  stateBits: Record<string, StateBit>
 }

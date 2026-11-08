@@ -1,12 +1,18 @@
-export const initWound = (cpy: WoundModel, bal: WoundBit, ste: State) => {
-    debugger
-    return cpy
+import { WoundModel } from '../wound.model.js'
+import type WoundBit from '../fce/wound.bit.js'
+import type State from '../../99.core/state.js'
+
+export const initWound = (cpy: WoundModel, bal: WoundBit, ste?: State): WoundModel => {
+  cpy.idx = bal.idx || '40.wound'
+  if (bal.slv) {
+    bal.slv({ wouBit: { idx: 'init-wound', val: 0 } })
+  }
+  return cpy
 }
 
-export const updateWound = (cpy: WoundModel, bal: WoundBit, ste: State) => {
-    return cpy
+export const updateWound = (cpy: WoundModel, bal: WoundBit, ste?: State): WoundModel => {
+  if (bal.slv) {
+    bal.slv({ wouBit: { idx: 'update-wound', val: 0 } })
+  }
+  return cpy
 }
-
-import { WoundModel } from '../wound.model'
-import WoundBit from '../fce/wound.bit'
-import State from '../../99.core/state'
