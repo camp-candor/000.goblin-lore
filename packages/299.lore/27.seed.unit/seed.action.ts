@@ -1,7 +1,5 @@
-import { Action } from '../99.core/interface/action.interface'
-import SeedBit from './fce/seed.bit'
-
-// Seed actions
+import type { Action } from '../99.core/interface/action.interface.js'
+import type SeedBit from './fce/seed.bit.js'
 
 export const INIT_SEED = '[Seed action] Init Seed'
 export class InitSeed implements Action {
@@ -15,4 +13,10 @@ export class UpdateSeed implements Action {
     constructor(public bale: SeedBit) {}
 }
 
-export type Actions = InitSeed | UpdateSeed
+export const POPULATE_GENESIS_SEEDS = '[Seed action] Populate Genesis Seeds'
+export class PopulateGenesisSeeds implements Action {
+    readonly type = POPULATE_GENESIS_SEEDS
+    constructor(public bale: SeedBit) {}
+}
+
+export type Actions = InitSeed | UpdateSeed | PopulateGenesisSeeds
