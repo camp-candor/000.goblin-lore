@@ -12,8 +12,8 @@
         "possessionCount": 1,
         "totalEntities": 6
     },
-    "compiled_at": "2026-11-08T22:23:14.630Z",
-    "compiler_duration_ms": 2,
+    "compiled_at": "2026-11-08T20:13:30.053Z",
+    "compiler_duration_ms": 1,
     "entities": {
         "char_gristle": {
             "available_arms": 2,
