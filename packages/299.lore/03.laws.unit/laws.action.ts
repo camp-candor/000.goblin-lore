@@ -1,7 +1,5 @@
-import { Action } from '../99.core/interface/action.interface'
-import LawsBit from './fce/laws.bit'
-
-// Laws actions
+import type { Action } from '../99.core/interface/action.interface.js'
+import type LawsBit from './fce/laws.bit.js'
 
 export const INIT_LAWS = '[Laws action] Init Laws'
 export class InitLaws implements Action {
@@ -15,4 +13,16 @@ export class UpdateLaws implements Action {
     constructor(public bale: LawsBit) {}
 }
 
-export type Actions = InitLaws | UpdateLaws
+export const APPEND_ERRATA = '[Laws action] Append Errata'
+export class AppendErrata implements Action {
+    readonly type = APPEND_ERRATA
+    constructor(public bale: LawsBit) {}
+}
+
+export const VERIFY_ERRATA = '[Laws action] Verify Errata'
+export class VerifyErrata implements Action {
+    readonly type = VERIFY_ERRATA
+    constructor(public bale: LawsBit) {}
+}
+
+export type Actions = InitLaws | UpdateLaws | AppendErrata | VerifyErrata
