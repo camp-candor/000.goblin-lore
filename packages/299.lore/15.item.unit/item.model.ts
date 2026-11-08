@@ -1,8 +1,8 @@
-import Item from './fce/item.interface'
-import ItemBit from './fce/item.interface'
+import type Item from './fce/item.interface.js'
+import type ItemBit from './fce/item.bit.js'
 
 export class ItemModel implements Item {
-    //idx:string;
-    //itemBitList: ItemBit[] = [];
-    //itemBits: any = {};
+    idx: string = '15.item'
+    itemBitList: ItemBit[] = []
+    itemBits: Record<string, ItemBit> = {}
 }

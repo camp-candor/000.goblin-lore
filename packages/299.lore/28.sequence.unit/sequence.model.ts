@@ -1,8 +1,8 @@
-import Sequence from './fce/sequence.interface'
-import SequenceBit from './fce/sequence.interface'
+import type Sequence from './fce/sequence.interface.js'
+import type SequenceBit from './fce/sequence.bit.js'
 
 export class SequenceModel implements Sequence {
-    //idx:string;
-    //sequenceBitList: SequenceBit[] = [];
-    //sequenceBits: any = {};
+    idx: string = '28.sequence'
+    sequenceBitList: SequenceBit[] = []
+    sequenceBits: Record<string, SequenceBit> = {}
 }

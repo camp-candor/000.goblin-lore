@@ -1,8 +1,8 @@
-import Port from './fce/port.interface'
-import PortBit from './fce/port.interface'
+import type Port from './fce/port.interface.js'
+import type PortBit from './fce/port.bit.js'
 
 export class PortModel implements Port {
-    //idx:string;
-    //portBitList: PortBit[] = [];
-    //portBits: any = {};
+    idx: string = '23.port'
+    portBitList: PortBit[] = []
+    portBits: Record<string, PortBit> = {}
 }

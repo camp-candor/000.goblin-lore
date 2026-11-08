@@ -12,6 +12,52 @@ import type {
 } from '../fce/compile.bit'
 import type State from '../../99.core/state'
 import * as ActCns from '../../act/console.action'
+import { validatePass2Pardons } from '../../03.laws.unit/laws.buzzer.js'
+import type { Rule, Authorizer } from '../../03.laws.unit/fce/rule.schema.js'
+import type { PardonRecord } from '../../03.laws.unit/fce/pardon.schema.js'
+
+// Canonical Hard Invariant Baseline Rules
+export const CANONICAL_RULES: Rule[] = [
+    {
+        id: 'rule_somatic_limb_capacity',
+        category: 'SOMATIC',
+        severity_class: 'TIER_1_HARD_INVARIANT',
+        description: 'Anatomical arm and leg capacities cannot be exceeded',
+        pardonable: false,
+        max_tolerated_pardon_frequency: 0,
+        owning_entity_types: ['character'],
+    },
+    {
+        id: 'rule_bimanual_lift',
+        category: 'PHYSICAL',
+        severity_class: 'TIER_1_HARD_INVARIANT',
+        description: 'Two-handed tasks require two functioning arm limbs',
+        pardonable: false,
+        max_tolerated_pardon_frequency: 0,
+        owning_entity_types: ['character'],
+    },
+    {
+        id: 'rule_carrying_capacity',
+        category: 'LOGISTICAL',
+        severity_class: 'TIER_2_AUDITED_ONTOLOGY',
+        description: 'Carrying mass limits under extreme exertion',
+        pardonable: true,
+        max_tolerated_pardon_frequency: 5,
+        owning_entity_types: ['character', 'possession'],
+    },
+]
+
+export const CANONICAL_AUTHORIZERS: Authorizer[] = [
+    {
+        id: 'auth_showrunner_main',
+        name: 'Lead Showrunner',
+        role: 'SHOWRUNNER',
+        permitted_severity_classes: [
+            'TIER_2_AUDITED_ONTOLOGY',
+            'TIER_3_SOFT_STYLOMETRIC',
+        ],
+    },
+]
 
 export const EMPTY_STREAM_SHA256 =
     'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
@@ -1168,6 +1214,56 @@ export const pass2Traverse = (
                 )
             }
         }
+    }
+
+    // 5. Pass 2: Sweeping pardons and waivers
+    const seriesDir = resolveSeriesDirectory(bal, cpy.activeSeries)
+    const pardonsDir = path.join(seriesDir, 'pardons')
+    const rulesMap = new Map<string, Rule>(
+        CANONICAL_RULES.map((r) => [r.id, r]),
+    )
+    const authMap = new Map<string, Authorizer>(
+        CANONICAL_AUTHORIZERS.map((a) => [a.id, a]),
+    )
+    const pardonsMap = new Map<string, PardonRecord>()
+
+    if (fs.existsSync(pardonsDir)) {
+        const pardonFiles = fs
+            .readdirSync(pardonsDir)
+            .filter((f) => f.endsWith('.json'))
+        for (const pFile of pardonFiles) {
+            try {
+                const pRaw = JSON.parse(
+                    fs.readFileSync(path.join(pardonsDir, pFile), 'utf8'),
+                )
+                pardonsMap.set(pRaw.id, pRaw)
+            } catch {
+                report.errors.push(
+                    `[PARSE_ERROR] Corrupted pardon JSON: ${pFile}`,
+                )
+            }
+        }
+    }
+
+    const currentDummyHash = cpy.lastMerkleHash || 'a'.repeat(64)
+    const pardonAudit = validatePass2Pardons(
+        pardonsMap,
+        rulesMap,
+        authMap,
+        { characters: cpy.entityCatalog },
+        currentDummyHash,
+        false,
+    )
+
+    if (!pardonAudit.valid) {
+        report.foreignKeysValid = false
+        for (const err of pardonAudit.errors) {
+            report.errors.push(err)
+        }
+    }
+    for (const warn of pardonAudit.warnings) {
+        report.warnings = report.warnings || []
+        report.warnings.push(warn)
     }
 
     finalizeReport(report, 'PASS_2_TOPOLOGY')

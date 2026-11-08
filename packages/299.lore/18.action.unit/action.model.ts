@@ -1,8 +1,8 @@
-import Action from './fce/action.interface'
-import ActionBit from './fce/action.interface'
+import type Action from './fce/action.interface.js'
+import type ActionBit from './fce/action.bit.js'
 
 export class ActionModel implements Action {
-    //idx:string;
-    //actionBitList: ActionBit[] = [];
-    //actionBits: any = {};
+    idx: string = '18.action'
+    actionBitList: ActionBit[] = []
+    actionBits: Record<string, ActionBit> = {}
 }

@@ -1,12 +1,26 @@
-export const initEvents = (cpy: EventsModel, bal: EventsBit, ste: State) => {
-    debugger
+import { EventsModel } from '../events.model.js'
+import type EventsBit from '../fce/events.bit.js'
+import type State from '../../99.core/state.js'
+
+export const initEvents = (
+    cpy: EventsModel,
+    bal: EventsBit,
+    ste?: State,
+): EventsModel => {
+    cpy.idx = bal.idx || '11.events'
+    if (bal.slv) {
+        bal.slv({ evtBit: { idx: 'init-events', val: 0 } })
+    }
     return cpy
 }
 
-export const updateEvents = (cpy: EventsModel, bal: EventsBit, ste: State) => {
+export const updateEvents = (
+    cpy: EventsModel,
+    bal: EventsBit,
+    ste?: State,
+): EventsModel => {
+    if (bal.slv) {
+        bal.slv({ evtBit: { idx: 'update-events', val: 0 } })
+    }
     return cpy
 }
-
-import { EventsModel } from '../events.model'
-import EventsBit from '../fce/events.bit'
-import State from '../../99.core/state'

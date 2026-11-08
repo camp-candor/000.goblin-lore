@@ -1,7 +1,7 @@
-import TypesBit from './types.bit'
+import type TypesBit from './types.bit.js'
 
 export default interface Types {
-    // idx:string;
-    // typesBitList: TypesBit[];
-    // typesBits:any;
+    idx: string
+    typesBitList: TypesBit[]
+    typesBits: Record<string, TypesBit>
 }

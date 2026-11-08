@@ -19,9 +19,6 @@ export function reducer(
         case Act.TEST_LORE:
             return Buzz.testLore(clone(model), act.bale, state)
 
-        case Act.LIST_LORE:
-            return Buzz.listLore(clone(model), act.bale, state)
-
         default:
             return model
     }

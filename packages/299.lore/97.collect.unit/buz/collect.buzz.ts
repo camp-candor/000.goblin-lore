@@ -216,8 +216,6 @@ export const modelCollect = (
     bal: CollectBit,
     ste: State,
 ) => {
-    //debugger
-
     if (bal.slv != null) bal.slv({ clcBit: { idx: 'model-collect', dat: cpy } })
     return cpy
 }
@@ -227,7 +225,6 @@ export const deleteCollect = (
     bal: CollectBit,
     ste: State,
 ) => {
-    //debugger
     return cpy
 }
 
@@ -236,7 +233,6 @@ export const emptyCollect = (
     bal: CollectBit,
     ste: State,
 ) => {
-    //debugger
     return cpy
 }
 

@@ -1,8 +1,8 @@
-import Target from './fce/target.interface'
-import TargetBit from './fce/target.interface'
+import type Target from './fce/target.interface.js'
+import type TargetBit from './fce/target.bit.js'
 
 export class TargetModel implements Target {
-    //idx:string;
-    //targetBitList: TargetBit[] = [];
-    //targetBits: any = {};
+    idx: string = '34.target'
+    targetBitList: TargetBit[] = []
+    targetBits: Record<string, TargetBit> = {}
 }

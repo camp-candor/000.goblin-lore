@@ -1,7 +1,7 @@
-import CooldownBit from './cooldown.bit'
+import type CooldownBit from './cooldown.bit.js'
 
 export default interface Cooldown {
-    // idx:string;
-    // cooldownBitList: CooldownBit[];
-    // cooldownBits:any;
+    idx: string
+    cooldownBitList: CooldownBit[]
+    cooldownBits: Record<string, CooldownBit>
 }

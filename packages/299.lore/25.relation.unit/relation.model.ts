@@ -1,8 +1,8 @@
-import Relation from './fce/relation.interface'
-import RelationBit from './fce/relation.interface'
+import type Relation from './fce/relation.interface.js'
+import type RelationBit from './fce/relation.bit.js'
 
 export class RelationModel implements Relation {
-    //idx:string;
-    //relationBitList: RelationBit[] = [];
-    //relationBits: any = {};
+    idx: string = '25.relation'
+    relationBitList: RelationBit[] = []
+    relationBits: Record<string, RelationBit> = {}
 }

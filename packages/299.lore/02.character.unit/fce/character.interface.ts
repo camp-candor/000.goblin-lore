@@ -1,7 +1,7 @@
-import CharacterBit from './character.bit'
+import type CharacterBit from './character.bit.js'
 
 export default interface Character {
-    // idx:string;
-    // characterBitList: CharacterBit[];
-    // characterBits:any;
+    idx: string
+    characterBitList: CharacterBit[]
+    characterBits: Record<string, CharacterBit>
 }

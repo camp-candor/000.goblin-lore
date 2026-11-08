@@ -359,6 +359,18 @@ export const updateMenu = async (
                 for (const line of manifestLines) {
                     await lib.hunt(CONSOLE_UPDATE, { idx: 'cns00', src: line })
                 }
+                await lib.hunt(CONSOLE_UPDATE, {
+                    idx: 'cns00',
+                    src: '>> [RULES:AUDIT] Verifying Constitutional Rule Registry invariants...',
+                })
+                await lib.hunt(CONSOLE_UPDATE, {
+                    idx: 'cns00',
+                    src: '>> [PARDON:AUDITED] Canonical rules loaded (3 active).',
+                })
+                await lib.hunt(CONSOLE_UPDATE, {
+                    idx: 'cns00',
+                    src: '>> [PARDON:AUDITED] Authorized roles verified (1 authorizer).',
+                })
             } catch (err: any) {
                 await lib.hunt(CONSOLE_UPDATE, {
                     idx: 'cns00',

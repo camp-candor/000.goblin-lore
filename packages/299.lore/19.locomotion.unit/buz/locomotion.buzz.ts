@@ -118,16 +118,22 @@ export function evaluateMotorActionsFeasibility(
 export const initLocomotion = (
     cpy: LocomotionModel,
     bal: LocomotionBit,
-    ste: State,
-) => {
-    debugger
+    ste?: State,
+): LocomotionModel => {
+    cpy.idx = bal.idx || '19.locomotion'
+    if (bal.slv) {
+        bal.slv({ lcmBit: { idx: 'init-locomotion', val: 0 } })
+    }
     return cpy
 }
 
 export const updateLocomotion = (
     cpy: LocomotionModel,
     bal: LocomotionBit,
-    ste: State,
-) => {
+    ste?: State,
+): LocomotionModel => {
+    if (bal.slv) {
+        bal.slv({ lcmBit: { idx: 'update-locomotion', val: 0 } })
+    }
     return cpy
 }

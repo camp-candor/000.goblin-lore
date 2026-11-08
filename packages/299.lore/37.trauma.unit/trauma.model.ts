@@ -1,8 +1,8 @@
-import Trauma from './fce/trauma.interface'
-import TraumaBit from './fce/trauma.interface'
+import type Trauma from './fce/trauma.interface.js'
+import type TraumaBit from './fce/trauma.bit.js'
 
 export class TraumaModel implements Trauma {
-    //idx:string;
-    //traumaBitList: TraumaBit[] = [];
-    //traumaBits: any = {};
+    idx: string = '37.trauma'
+    traumaBitList: TraumaBit[] = []
+    traumaBits: Record<string, TraumaBit> = {}
 }

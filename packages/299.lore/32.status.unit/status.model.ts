@@ -1,8 +1,8 @@
-import Status from './fce/status.interface'
-import StatusBit from './fce/status.interface'
+import type Status from './fce/status.interface.js'
+import type StatusBit from './fce/status.bit.js'
 
 export class StatusModel implements Status {
-    //idx:string;
-    //statusBitList: StatusBit[] = [];
-    //statusBits: any = {};
+    idx: string = '32.status'
+    statusBitList: StatusBit[] = []
+    statusBits: Record<string, StatusBit> = {}
 }

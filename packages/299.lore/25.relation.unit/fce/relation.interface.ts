@@ -1,7 +1,7 @@
-import RelationBit from './relation.bit'
+import type RelationBit from './relation.bit.js'
 
 export default interface Relation {
-    // idx:string;
-    // relationBitList: RelationBit[];
-    // relationBits:any;
+    idx: string
+    relationBitList: RelationBit[]
+    relationBits: Record<string, RelationBit>
 }
