@@ -241,6 +241,7 @@ describe('Phase 10 Blessed Terminal Flight Deck Menu Integration Suite', () => {
 
     it('Task 10.7: routes lifecycle actions through pure clone-deep reducer', async () => {
         const model = new MenuModel()
+        model.activeSelection = 'INITIAL'
         let resolved: any = null
         const action = new ActMnu.OpenHealthMenu({
             idx: 'reducer-health',
@@ -255,6 +256,8 @@ describe('Phase 10 Blessed Terminal Flight Deck Menu Integration Suite', () => {
         } as any)
 
         expect(nextModel.activeSelection).toBe(CORPUS_HEALTH_LABEL)
+        expect(model.activeSelection).toBe('INITIAL')
+        expect(nextModel).not.toBe(model)
         expect(resolved?.mnuBit?.val).toBe(1)
     })
 })

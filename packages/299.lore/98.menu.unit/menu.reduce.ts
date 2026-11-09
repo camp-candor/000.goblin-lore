@@ -1,8 +1,10 @@
-import clone from 'clone-deep'
+import cloneDeep from 'clone-deep'
 import * as Act from './menu.action.js'
 import { MenuModel } from './menu.model.js'
 import * as Buzz from './menu.buzzer.js'
 import type State from '../99.core/state.js'
+
+const clone = <T>(val: T): T => cloneDeep(val, true)
 
 export function reducer(
     model: MenuModel = new MenuModel(),

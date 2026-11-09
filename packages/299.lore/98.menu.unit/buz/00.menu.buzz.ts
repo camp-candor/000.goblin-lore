@@ -59,6 +59,10 @@ import {
     runGenesisSeedsAudit,
     GENESIS_SEEDS_MENU_LABEL,
 } from './19.genesis.seeds.audit.buzz'
+import {
+    runPortalReconcileAudit,
+    PORTAL_RECONCILE_MENU_LABEL,
+} from './20.portal.reconcile.audit.buzz'
 import { getChoiceById, dispatchSomaticChoice } from './somaticMenu.buzz.js'
 
 import { runSeriesGenesisMenu } from './genesisMenu.buzz.js'
@@ -195,7 +199,7 @@ export const initMenu = (
             // Live cockpit: hold the INIT_MENU resolver, mount cns00 console,
             // render HUD banner, and cascade into the interactive choice loop.
             attachCleanExitBindings(lib)
-            rootSlv = bal.slv
+            rootSlv = bal.slv as (result: { mnuBit: MenuBit }) => void
             ;(async () => {
                 await mountConsolePane(lib)
                 const compileState = (ste as any)?.value?.compile
@@ -730,6 +734,7 @@ export const openSchemaInvariantsMenu = async (
         FOUR_TUPLE_MENU_LABEL,
         SERIES_TREE_MENU_LABEL,
         GENESIS_SEEDS_MENU_LABEL,
+        PORTAL_RECONCILE_MENU_LABEL,
         '[ BACK ]',
     ]
     const schemaDescriptions: Record<string, string> = {
@@ -747,6 +752,8 @@ export const openSchemaInvariantsMenu = async (
             'Scaffold a hermetic series workspace and verify atomic config commit.',
         '[ 7. POPULATE GENESIS SEEDS ]':
             'Seed world dossiers and the origin hub, then verify byte-0 preambles.',
+        '[ 8. RECONCILE SPATIAL PORTAL LINKS ]':
+            'Inject reverse portals with matched damping and verify symmetry.',
         '[ BACK ]': 'Return to the primary lore dashboard.',
     }
 
@@ -947,6 +954,33 @@ export const openSchemaInvariantsMenu = async (
         try {
             const seedLines = await runGenesisSeedsAudit()
             for (const line of seedLines) {
+                await lib.hunt(CONSOLE_UPDATE, { idx: 'cns00', src: line })
+            }
+        } catch (err: any) {
+            await lib.hunt(CONSOLE_UPDATE, {
+                idx: 'cns00',
+                src: `:: ${err?.message || String(err)}`,
+            })
+        }
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        if (bal?.slv) {
+            bal.slv({ mnuBit: bal })
+        }
+        return cpy
+    }
+
+    if (selection === PORTAL_RECONCILE_MENU_LABEL) {
+        await lib.hunt(CONSOLE_UPDATE, {
+            idx: 'cns00',
+            src: '>> [PORTAL:AUDIT] Reconciling hermetic spatial portal graph...',
+        })
+        try {
+            const portalLines = await runPortalReconcileAudit()
+            for (const line of portalLines) {
                 await lib.hunt(CONSOLE_UPDATE, { idx: 'cns00', src: line })
             }
         } catch (err: any) {

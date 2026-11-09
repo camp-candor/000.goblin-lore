@@ -364,7 +364,7 @@ describe('98.menu.unit: Phase 7 Somatic DSP Contracts', () => {
         expect(postBreak.receiptTag).toBe('[POST_BREAK:OK]')
     })
 
-    it('keeps reducer state isolated under clone-deep for INIT_MENU', () => {
+    it('keeps reducer state isolated under clone-deep for INIT_MENU', async () => {
         const original = new MenuModel()
         original.activeSelection = 'SENTINEL_STATE'
         const action = new Act.InitMenu({
@@ -372,10 +372,11 @@ describe('98.menu.unit: Phase 7 Somatic DSP Contracts', () => {
             slv: () => {},
         })
 
-        const result = reducer(original, action, {} as any)
+        const result = await reducer(original, action, {} as any)
 
         expect(original.activeSelection).toBe('SENTINEL_STATE')
-        expect(result).toBe(original)
+        expect(result).not.toBe(original)
+        expect(result.activeSelection).toBe('SENTINEL_STATE')
     })
 
     it('streams canonical focus tooltips and dispatch receipts for Somatic choices', async () => {
