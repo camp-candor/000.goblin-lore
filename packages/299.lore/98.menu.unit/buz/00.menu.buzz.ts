@@ -47,6 +47,10 @@ import {
     runErrataLedgerAudit,
     ERRATA_MENU_LABEL,
 } from './16.errata.ledger.buzz'
+import {
+    runFourTupleContractAudit,
+    FOUR_TUPLE_MENU_LABEL,
+} from './17.four.tuple.audit.buzz'
 import { getChoiceById, dispatchSomaticChoice } from './somaticMenu.buzz.js'
 import { SCHEMA_SOLVER_MENU_LABEL } from './05.schema.solver.audit.buzz'
 import {
@@ -677,6 +681,7 @@ export const openSchemaInvariantsMenu = async (
         '[ 2. RUN SOMATIC SAT SOLVER ]',
         REGISTRY_MENU_LABEL,
         ERRATA_MENU_LABEL,
+        FOUR_TUPLE_MENU_LABEL,
         '[ BACK ]',
     ]
     const schemaDescriptions: Record<string, string> = {
@@ -688,6 +693,8 @@ export const openSchemaInvariantsMenu = async (
             'Load canonical rules, authorizers, and sweep every series pardon ledger.',
         '[ 4. CRYPTOGRAPHIC ERRATA LEDGER ]':
             'Verify append-only errata hash-chain lineage and active Merkle heads.',
+        '[ 5. UNIVERSAL NARRATIVE FOUR-TUPLE SCHEMA ]':
+            'Validate the Universal Narrative Four-Tuple contract <S, A, I, R_m> with fail-closed probes.',
         '[ BACK ]': 'Return to the primary lore dashboard.',
     }
 
@@ -807,6 +814,33 @@ export const openSchemaInvariantsMenu = async (
         try {
             const errataLines = await runErrataLedgerAudit()
             for (const line of errataLines) {
+                await lib.hunt(CONSOLE_UPDATE, { idx: 'cns00', src: line })
+            }
+        } catch (err: any) {
+            await lib.hunt(CONSOLE_UPDATE, {
+                idx: 'cns00',
+                src: `:: ${err?.message || String(err)}`,
+            })
+        }
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        if (bal?.slv) {
+            bal.slv({ mnuBit: bal })
+        }
+        return cpy
+    }
+
+    if (selection === FOUR_TUPLE_MENU_LABEL) {
+        await lib.hunt(CONSOLE_UPDATE, {
+            idx: 'cns00',
+            src: '>> [TUPLE:AUDIT] Validating Universal Narrative Four-Tuple contract...',
+        })
+        try {
+            const tupleLines = await runFourTupleContractAudit()
+            for (const line of tupleLines) {
                 await lib.hunt(CONSOLE_UPDATE, { idx: 'cns00', src: line })
             }
         } catch (err: any) {
