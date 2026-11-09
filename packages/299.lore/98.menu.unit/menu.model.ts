@@ -14,6 +14,7 @@ export class MenuModel implements Menu {
     lastActionTimestamp: number = 0
     statusMessage: string = 'IDLE'
     lastSomaticReceipt: string | null = null
+    lastLifecycleReceipt: string | null = null
     totalInteractions: number = 0
     activeSeries?: string = '001.goblin-lore'
     lastError?: string

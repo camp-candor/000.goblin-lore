@@ -49,6 +49,32 @@ export function reducer(
             return cpy
         }
 
+        case Act.OPEN_GENESIS_MENU: {
+            const cpy = clone(model)
+            void Buzz.runSeriesGenesisMenu(cpy, act.bale, state!)
+            return cpy
+        }
+        case Act.OPEN_SCAFFOLD_MENU: {
+            const cpy = clone(model)
+            void Buzz.runEntityScaffoldMenu(cpy, act.bale, state!)
+            return cpy
+        }
+        case Act.OPEN_RETIREMENT_MENU: {
+            const cpy = clone(model)
+            void Buzz.runEntityRetirementMenu(cpy, act.bale, state!)
+            return cpy
+        }
+        case Act.OPEN_HEALTH_MENU: {
+            const cpy = clone(model)
+            void Buzz.runCorpusHealthMenu(cpy, act.bale, state!)
+            return cpy
+        }
+        case Act.OPEN_ERRATA_MENU: {
+            const cpy = clone(model)
+            void Buzz.runErrataMenu(cpy, act.bale, state!)
+            return cpy
+        }
+
         default:
             return model
     }
