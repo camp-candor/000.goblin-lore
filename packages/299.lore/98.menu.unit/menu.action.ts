@@ -62,6 +62,36 @@ export const COMPILE_MENU = OPEN_COMPILE_MENU
 export const RUN_COMPILE_MENU = TRIGGER_COMPILE_ACTION
 export const GATE0_VERIFY_MENU = '[Compile action] Gate 0 Verification Audit'
 
+export const OPEN_GENESIS_MENU = '[Menu action] Open Genesis Menu'
+export class OpenGenesisMenu implements Action {
+    readonly type = OPEN_GENESIS_MENU
+    constructor(public bale: MenuBit) {}
+}
+
+export const OPEN_SCAFFOLD_MENU = '[Menu action] Open Scaffold Menu'
+export class OpenScaffoldMenu implements Action {
+    readonly type = OPEN_SCAFFOLD_MENU
+    constructor(public bale: MenuBit) {}
+}
+
+export const OPEN_RETIREMENT_MENU = '[Menu action] Open Retirement Menu'
+export class OpenRetirementMenu implements Action {
+    readonly type = OPEN_RETIREMENT_MENU
+    constructor(public bale: MenuBit) {}
+}
+
+export const OPEN_HEALTH_MENU = '[Menu action] Open Health Menu'
+export class OpenHealthMenu implements Action {
+    readonly type = OPEN_HEALTH_MENU
+    constructor(public bale: MenuBit) {}
+}
+
+export const OPEN_ERRATA_MENU = '[Menu action] Open Errata Menu'
+export class OpenErrataMenu implements Action {
+    readonly type = OPEN_ERRATA_MENU
+    constructor(public bale: MenuBit) {}
+}
+
 export type Actions =
     | InitMenu
     | UpdateMenu
@@ -70,3 +100,8 @@ export type Actions =
     | ExecuteSomaticChoice
     | OpenCompileMenu
     | TriggerCompileAction
+    | OpenGenesisMenu
+    | OpenScaffoldMenu
+    | OpenRetirementMenu
+    | OpenHealthMenu
+    | OpenErrataMenu

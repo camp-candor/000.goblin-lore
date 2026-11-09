@@ -149,6 +149,20 @@ async function mountConsolePane(lib: any): Promise<void> {
     }
 }
 
+export const GENESIS_WIZARD_LABEL = '[G] UNIVERSAL SERIES GENESIS WIZARD'
+export const ENTITY_SCAFFOLDER_LABEL = '[S] ATOMIC ENTITY SCAFFOLDER'
+export const RETIRE_ENTITY_LABEL = '[R] RETIRE CANONICAL ENTITY'
+export const CORPUS_HEALTH_LABEL = '[H] STATIC CORPUS HEALTH TELEMETRY'
+export const RECORD_ERRATA_LABEL = '[X] RECORD CANONICAL ERRATA ENTRY'
+
+export const LIFECYCLE_MENU_OPTIONS = [
+    GENESIS_WIZARD_LABEL,
+    ENTITY_SCAFFOLDER_LABEL,
+    RETIRE_ENTITY_LABEL,
+    CORPUS_HEALTH_LABEL,
+    RECORD_ERRATA_LABEL,
+]
+
 export const initMenu = (
     cpy: MenuModel,
     bal: MenuBit,
