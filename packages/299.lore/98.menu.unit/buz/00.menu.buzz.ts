@@ -102,7 +102,7 @@ const TERMINAL_CLOSE = '[Terminal action] Close Terminal'
 // Holds the INIT_MENU resolver while the operator navigates the live lore
 // submenu. Released when ROOT MENU is chosen so run.ts can reopen the
 // master switchboard. Null in headless/test contexts.
-let rootSlv: ((result: { mnuBit: MenuBit }) => void) | null = null
+let rootSlv: Function | null = null
 let screenExitHooked = false
 
 function resolveHeadlessMenu(
