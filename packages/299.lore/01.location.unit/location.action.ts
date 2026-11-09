@@ -1,7 +1,5 @@
-import { Action } from '../99.core/interface/action.interface'
-import LocationBit from './fce/location.bit'
-
-// Location actions
+import type { Action } from '../99.core/interface/action.interface.js'
+import type LocationBit from './fce/location.bit.js'
 
 export const INIT_LOCATION = '[Location action] Init Location'
 export class InitLocation implements Action {
@@ -15,4 +13,11 @@ export class UpdateLocation implements Action {
     constructor(public bale: LocationBit) {}
 }
 
-export type Actions = InitLocation | UpdateLocation
+export const RECONCILE_RECIPROCAL_LINKS =
+    '[Location action] Reconcile Reciprocal Links'
+export class ReconcileReciprocalLinks implements Action {
+    readonly type = RECONCILE_RECIPROCAL_LINKS
+    constructor(public bale: LocationBit) {}
+}
+
+export type Actions = InitLocation | UpdateLocation | ReconcileReciprocalLinks
