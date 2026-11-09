@@ -146,6 +146,34 @@ const init = async () => {
             idx: idx,
         })
 
+        // Intercept root menu choices to hoist Genesis Wizard and Compile Gauntlet above LIBRARY MENU
+        const CHOICE_ACTION = '[Open action] Open Choice'
+        const origHunt = LIBRARY.hunt
+        const wrappedHunt = function (typ: string, obj: any) {
+            if (
+                typ === CHOICE_ACTION &&
+                Array.isArray(obj?.lst) &&
+                obj.lst.includes('LIBRARY MENU')
+            ) {
+                const topItems = [
+                    '[G] UNIVERSAL SERIES GENESIS WIZARD',
+                    '[C] COMPILE CANON & GATE 0 GAUNTLET',
+                ]
+                const remaining = obj.lst.filter(
+                    (item: string) => !topItems.includes(item),
+                )
+                const presentTop = topItems.filter((item: string) =>
+                    obj.lst.includes(item),
+                )
+                obj.lst = [...presentTop, ...remaining]
+            }
+            return origHunt.call(LIBRARY, typ, obj)
+        }
+        LIBRARY.hunt = wrappedHunt
+        if ((LIBRARY as any).state) {
+            ;(LIBRARY as any).state.hunt = wrappedHunt
+        }
+
         const identity = getRootIdentity()
         const CONSOLE_ACTION_LIBRARY = require(
             path.join(libPath, '83.console.unit/console.action'),
@@ -329,6 +357,57 @@ const init = async () => {
             }
         }
 
+        // Mount top-level quick-action routes at the top of the root switchboard stack
+        const LORE_PIVOT = (global as any).LORE
+        if (LORE_PIVOT) {
+            await LIBRARY.hunt(MENU_ACTION_LIBRARY.ROUTE_MENU, {
+                idx: '[G] UNIVERSAL SERIES GENESIS WIZARD',
+                src: 'Launch the Universal Series Genesis Wizard\nto scaffold directories, config, and seed files.',
+                fnc: async () => {
+                    await new Promise<void>((resolve) => {
+                        const targetLore = (global as any).LORE
+                        if (
+                            targetLore &&
+                            typeof targetLore.hunt === 'function'
+                        ) {
+                            targetLore.hunt('[Menu action] Open Genesis Menu', {
+                                src: 'ROOT_ROUTE',
+                                slv: resolve,
+                            })
+                        } else {
+                            resolve()
+                        }
+                    })
+                },
+            })
+
+            await LIBRARY.hunt(MENU_ACTION_LIBRARY.ROUTE_MENU, {
+                idx: '[C] COMPILE CANON & GATE 0 GAUNTLET',
+                src: 'Open 3-pass compiler flight deck,\nMerkle emission, and Gate 0 verification.',
+                fnc: async () => {
+                    await new Promise<void>((resolve) => {
+                        const targetLore = (global as any).LORE
+                        if (
+                            targetLore &&
+                            typeof targetLore.hunt === 'function'
+                        ) {
+                            targetLore.hunt('[Menu action] Open Compile Menu', {
+                                src: 'ROOT_ROUTE',
+                                slv: resolve,
+                            })
+                        } else {
+                            resolve()
+                        }
+                    })
+                },
+            })
+
+            await LIBRARY.hunt(CONSOLE_ACTION_LIBRARY.UPDATE_CONSOLE, {
+                idx: 'cns00',
+                src: '>> [OK] Mounted top-level actions: [G] GENESIS & [C] COMPILE',
+            })
+        }
+
         await LIBRARY.hunt(CONSOLE_ACTION_LIBRARY.UPDATE_CONSOLE, {
             idx: 'cns00',
             src: '>> [READY] Terminal Cockpit active',
@@ -385,6 +464,44 @@ const init = async () => {
                             },
                         },
                     )
+                    return
+                }
+            }
+
+            if (
+                idx.toLowerCase() === 'genesis' ||
+                idx.toLowerCase() === 'wizard'
+            ) {
+                const targetLore = (global as any).LORE
+                if (targetLore && typeof targetLore.hunt === 'function') {
+                    await targetLore.hunt('[Menu action] Open Genesis Menu', {
+                        src: 'ROOT_ROUTE',
+                        slv: async () => {
+                            await LIBRARY.hunt(
+                                MENU_ACTION_LIBRARY.OPEN_MENU,
+                                { src: '' },
+                            )
+                        },
+                    })
+                    return
+                }
+            }
+
+            if (
+                idx.toLowerCase() === 'compile' ||
+                idx.toLowerCase() === 'gauntlet'
+            ) {
+                const targetLore = (global as any).LORE
+                if (targetLore && typeof targetLore.hunt === 'function') {
+                    await targetLore.hunt('[Menu action] Open Compile Menu', {
+                        src: 'ROOT_ROUTE',
+                        slv: async () => {
+                            await LIBRARY.hunt(
+                                MENU_ACTION_LIBRARY.OPEN_MENU,
+                                { src: '' },
+                            )
+                        },
+                    })
                     return
                 }
             }

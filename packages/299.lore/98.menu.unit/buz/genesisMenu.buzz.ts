@@ -1,8 +1,12 @@
+import * as fs from 'node:fs'
+import * as path from 'node:path'
 import type State from '../../99.core/state.js'
 import type { MenuModel } from '../menu.model.js'
 import type MenuBit from '../fce/menu.bit.js'
 import * as ActSer from '../../29.series.unit/series.action.js'
 import * as ActSed from '../../27.seed.unit/seed.action.js'
+import { resolveRepoRoot } from '../../29.series.unit/buz/scaffoldSeriesTree.buzz.js'
+import { seedDirectoryExamples } from '../../27.seed.unit/buz/seedDirectoryExamples.buzz.js'
 
 const UPDATE_CONSOLE = '[Console action] Update Console'
 
@@ -21,11 +25,11 @@ function emitConsole(ste: State | undefined, line: string): void {
     }
 }
 
-export const runSeriesGenesisMenu = (
+export const runSeriesGenesisMenu = async (
     cpy: MenuModel,
     bal: MenuBit,
     ste?: State,
-): MenuModel => {
+): Promise<MenuModel> => {
     const dat = bal?.dat || {}
     const seriesSlug = dat.seriesSlug || 'ashfall-basin'
     const displayName = dat.displayName || 'Ashfall Basin'
@@ -75,8 +79,11 @@ export const runSeriesGenesisMenu = (
     }
 
     let scaffoldBit: any = null
+    const repoRoot = dat.repoRoot || resolveRepoRoot()
+    const seriesDir = path.join(repoRoot, 'series', seriesSlug)
+
     if (ste && typeof ste.hunt === 'function') {
-        ste.hunt(ActSer.SCAFFOLD_SERIES_TREE, {
+        const scaffoldRes = await ste.hunt(ActSer.SCAFFOLD_SERIES_TREE, {
             idx: 'menu-genesis-scaffold',
             src: seriesSlug,
             dat: {
@@ -84,21 +91,28 @@ export const runSeriesGenesisMenu = (
                 config: dat.config || defaultConfig,
                 repoRoot: dat.repoRoot,
             },
-            slv: (res: any) => {
-                scaffoldBit = res?.seriesBit || res
-            },
         })
+        scaffoldBit = scaffoldRes?.seriesBit || scaffoldRes
 
-        if (scaffoldBit?.val === 1) {
-            ste.hunt(ActSed.POPULATE_GENESIS_SEEDS, {
-                idx: 'menu-genesis-seed',
-                src: seriesSlug,
-                dat: {
-                    seriesSlug,
-                    repoRoot: dat.repoRoot,
-                },
-                slv: () => {},
-            })
+        if (scaffoldBit?.val === 1 || fs.existsSync(seriesDir)) {
+            try {
+                await ste.hunt(ActSed.POPULATE_GENESIS_SEEDS, {
+                    idx: 'menu-genesis-seed',
+                    src: seriesSlug,
+                    dat: {
+                        seriesSlug,
+                        repoRoot: dat.repoRoot,
+                    },
+                })
+            } catch {
+                // Seed population fallback handled by seedDirectoryExamples
+            }
+
+            seedDirectoryExamples(seriesDir, seriesSlug)
+        }
+    } else {
+        if (fs.existsSync(seriesDir)) {
+            seedDirectoryExamples(seriesDir, seriesSlug)
         }
     }
 
@@ -111,6 +125,9 @@ export const runSeriesGenesisMenu = (
     cpy.activeSelection = '[G] UNIVERSAL SERIES GENESIS WIZARD'
     cpy.lastLifecycleReceipt = ok ? '[GENESIS:OK]' : '[GENESIS:FAIL]'
     cpy.statusMessage = receiptLine
+    if (!Array.isArray(cpy.lastTelemetryReport)) {
+        cpy.lastTelemetryReport = []
+    }
     cpy.lastTelemetryReport.push(receiptLine)
 
     if (bal?.slv) {

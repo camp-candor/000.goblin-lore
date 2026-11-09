@@ -14,9 +14,21 @@ export function resolveRepoRoot(startDir: string = process.cwd()): string {
     let curr = path.resolve(startDir)
     for (let i = 0; i < 6; i++) {
         if (
+            fs.existsSync(path.join(curr, 'AGENTS.md')) ||
+            (fs.existsSync(path.join(curr, 'series')) &&
+                fs.existsSync(path.join(curr, 'packages')))
+        ) {
+            return curr
+        }
+        const parent = path.dirname(curr)
+        if (parent === curr) break
+        curr = parent
+    }
+    curr = path.resolve(startDir)
+    for (let i = 0; i < 6; i++) {
+        if (
             fs.existsSync(path.join(curr, 'series')) ||
-            fs.existsSync(path.join(curr, 'packages')) ||
-            fs.existsSync(path.join(curr, 'package.json'))
+            fs.existsSync(path.join(curr, 'packages'))
         ) {
             return curr
         }
@@ -27,17 +39,22 @@ export function resolveRepoRoot(startDir: string = process.cwd()): string {
     return path.resolve(startDir)
 }
 
-async function emitConsole(
-    ste: State | undefined,
-    line: string,
-): Promise<void> {
-    if (ste && typeof ste.hunt === 'function') {
-        await ste
-            .hunt('[Console action] Update Console', {
+function emitConsole(ste: State | undefined, line: string): void {
+    // eslint-disable-next-line no-control-regex
+    const clean = line.replace(/[^\x00-\x7F]/g, '')
+    const lib = (globalThis as any).LIBRARY || (global as any).LIBRARY
+    if (lib && typeof lib.hunt === 'function') {
+        lib.hunt('[Console action] Update Console', {
+            idx: 'cns00',
+            src: clean,
+        }).catch(() => {})
+    } else if (ste && typeof ste.hunt === 'function') {
+        try {
+            ste.hunt('[Console action] Update Console', {
                 idx: 'cns00',
-                src: line,
-            })
-            .catch(() => {})
+                src: clean,
+            }).catch(() => {})
+        } catch {}
     }
 }
 
@@ -54,7 +71,7 @@ export const populateGenesisSeeds = async (
 
     if (!seriesSlug) {
         const errorMsg = 'MISSING_SERIES_SLUG'
-        await emitConsole(ste, `>> [FAIL] populateGenesisSeeds: ${errorMsg}`)
+        emitConsole(ste, `>> [FAIL] populateGenesisSeeds: ${errorMsg}`)
         if (bal.slv) {
             bal.slv({
                 seedBit: {
@@ -72,7 +89,7 @@ export const populateGenesisSeeds = async (
 
     if (!fs.existsSync(seriesDir)) {
         const errorMsg = `SERIES_DIRECTORY_NOT_FOUND: ${seriesDir}`
-        await emitConsole(ste, `>> [FAIL] populateGenesisSeeds: ${errorMsg}`)
+        emitConsole(ste, `>> [FAIL] populateGenesisSeeds: ${errorMsg}`)
         if (bal.slv) {
             bal.slv({
                 seedBit: {
@@ -92,16 +109,13 @@ export const populateGenesisSeeds = async (
         const worldDocs = seedWorldDefinitions(seriesDir, seriesSlug)
         seededFiles.push(...worldDocs)
         for (const doc of worldDocs) {
-            await emitConsole(
-                ste,
-                `>> [SEED] World definition seeded: ${doc.id}`,
-            )
+            emitConsole(ste, `>> [SEED] World definition seeded: ${doc.id}`)
         }
 
         // 2. Seed locations/loc_origin_hub.md
         const hubDoc = seedOriginHub(seriesDir, seriesSlug)
         seededFiles.push(hubDoc)
-        await emitConsole(ste, `>> [SEED] Location seeded: ${hubDoc.id}`)
+        emitConsole(ste, `>> [SEED] Location seeded: ${hubDoc.id}`)
 
         const receipt: PopulateGenesisSeedsReceipt = {
             seriesSlug,
@@ -110,7 +124,7 @@ export const populateGenesisSeeds = async (
             initialized: true,
         }
 
-        await emitConsole(
+        emitConsole(
             ste,
             `>> [OK] Genesis seed dossiers populated for '${seriesSlug}'. Total: ${seededFiles.length}`,
         )
@@ -126,7 +140,7 @@ export const populateGenesisSeeds = async (
         }
     } catch (err: any) {
         const errorMsg = err?.message || String(err)
-        await emitConsole(ste, `>> [FAIL] populateGenesisSeeds: ${errorMsg}`)
+        emitConsole(ste, `>> [FAIL] populateGenesisSeeds: ${errorMsg}`)
         if (bal.slv) {
             bal.slv({
                 seedBit: {

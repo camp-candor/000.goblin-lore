@@ -7,6 +7,7 @@
 export {
     initMenu,
     updateMenu,
+    openGenesisMenu,
     openCompileMenu,
     triggerCompileAction,
     openSomaticDspHub,

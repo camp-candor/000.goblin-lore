@@ -1,0 +1,27 @@
+[
+    {
+        "topic_id": "mystery_example_unresolved_truth",
+        "description": "An exemplar unresolved mystery demonstrating Clue-Lemma Disjointness and epistemic horizons.",
+        "forbidden_propositions": [
+            "The truth was revealed by human intervention.",
+            "The sealed vault was breached from the outside."
+        ],
+        "trigger_lemma_sets": [
+            ["vault", "breach", "lock"],
+            ["origin", "founder", "archive"]
+        ],
+        "permitted_clue_tokens": [
+            "scratched keyway",
+            "faded blueprint",
+            "bent copper pin"
+        ],
+        "epistemic_horizons": {
+            "char_example_character": "PARTIAL_OBSERVATION",
+            "char_example_rival_character": "FALSE_BELIEF"
+        },
+        "distorted_beliefs": {
+            "char_example_rival_character": "Believes the key was stolen by an external scavenger clan."
+        },
+        "human_promotion_condition": "Operator confirms physical verification of the bent copper pin in two separate scenes."
+    }
+]

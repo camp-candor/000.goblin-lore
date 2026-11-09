@@ -4,6 +4,7 @@ export {
     verifyByteZeroBuffer,
 } from './buz/seedWorldDefinitions.buzz.js'
 export { seedOriginHub } from './buz/seedOriginHub.buzz.js'
+export { seedDirectoryExamples } from './buz/seedDirectoryExamples.buzz.js'
 export {
     populateGenesisSeeds,
     resolveRepoRoot,

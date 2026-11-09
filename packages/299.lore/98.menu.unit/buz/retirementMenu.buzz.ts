@@ -64,6 +64,9 @@ export const runEntityRetirementMenu = (
     cpy.activeSelection = '[R] RETIRE CANONICAL ENTITY'
     cpy.lastLifecycleReceipt = ok ? '[RETIRE:OK]' : '[RETIRE:FAIL]'
     cpy.statusMessage = receiptLine
+    if (!Array.isArray(cpy.lastTelemetryReport)) {
+        cpy.lastTelemetryReport = []
+    }
     cpy.lastTelemetryReport.push(receiptLine)
 
     if (bal?.slv) {

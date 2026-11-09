@@ -17,7 +17,9 @@ export function reducer(
         case Act.INIT_MENU:
             return Buzz.initMenu(clone(model), act.bale, state!)
         case Act.OPEN_GENESIS_MENU:
-            return Buzz.runSeriesGenesisMenu(clone(model), act.bale, state)
+            return Buzz.openGenesisMenu(clone(model), act.bale, state!)
+        case Act.OPEN_COMPILE_MENU:
+            return Buzz.openCompileMenu(clone(model), act.bale, state!)
         case Act.OPEN_SCAFFOLD_MENU:
             return Buzz.runEntityScaffoldMenu(clone(model), act.bale, state)
         case Act.OPEN_RETIREMENT_MENU:

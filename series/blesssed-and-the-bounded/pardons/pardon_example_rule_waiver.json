@@ -1,0 +1,14 @@
+{
+    "id": "pardon_example_rule_waiver",
+    "target": {
+        "episode_id": "ep001",
+        "scene_id": "sc001",
+        "shot_id": "sh001",
+        "entity_id": "char_example_character"
+    },
+    "rule_id": "rule_carrying_capacity",
+    "authorizer_id": "auth_showrunner_main",
+    "justification": "Temporary mass limit waiver granted during emergency exemplar sequence.",
+    "granted_against_canon_hash": "0000000000000000000000000000000000000000000000000000000000000000",
+    "status": "ACTIVE"
+}

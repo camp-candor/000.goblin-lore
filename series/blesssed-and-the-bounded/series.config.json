@@ -1,0 +1,38 @@
+{
+    "schema_version": "1.0.0",
+    "series_slug": "blesssed-and-the-bounded",
+    "display_name": "Blesssed And The Bounded",
+    "genre_tag": "LOW_FANTASY_FARCE",
+    "central_irony": "Scavengers hoard broken brass valves while starving above clean water.",
+    "state_space": {
+        "scarcity_index_bp": 8500,
+        "paranoia_baseline_bp": 6500,
+        "somatic_fatigue_enabled": true,
+        "epistemic_ignorance_enabled": true,
+        "gram_mass_tiers": {
+            "scrap_max_grams": 50,
+            "weight_max_grams": 5000,
+            "bulk_min_grams": 5001
+        }
+    },
+    "action_vocabulary": {
+        "permitted_kinetic_verbs": ["LIMP", "SIPHON", "CONCEAL"],
+        "forbidden_verbs_global": ["fly"],
+        "locomotion_taxonomies": ["BIPEDAL_HUNCHED"]
+    },
+    "invariant_rules": {
+        "max_farce_ratio_bp": 1500,
+        "min_grievance_depth_delta": 1,
+        "global_acoustic_floor_cdb": 1500,
+        "voiceover_ducking_db": -14,
+        "min_normalized_category_entropy_bp": 7000,
+        "thematic_categories": ["C1", "C2", "C3", "C4", "C5", "C6", "C7"]
+    },
+    "medium_projections": {
+        "target_fps": 24,
+        "audio_sample_rate_hz": 48000,
+        "tts_service_port": 8000,
+        "video_service_port": 8188,
+        "aspect_ratio": "16:9"
+    }
+}

@@ -19,6 +19,12 @@ export class OpenGenesisMenu implements Action {
     constructor(public bale: MenuBit) {}
 }
 
+export const OPEN_COMPILE_MENU = '[Menu action] Open Compile Menu'
+export class OpenCompileMenu implements Action {
+    readonly type = OPEN_COMPILE_MENU
+    constructor(public bale: MenuBit) {}
+}
+
 export const OPEN_SCAFFOLD_MENU = '[Menu action] Open Scaffold Menu'
 export class OpenScaffoldMenu implements Action {
     readonly type = OPEN_SCAFFOLD_MENU
@@ -47,6 +53,7 @@ export type Actions =
     | InitMenu
     | UpdateMenu
     | OpenGenesisMenu
+    | OpenCompileMenu
     | OpenScaffoldMenu
     | OpenRetirementMenu
     | OpenHealthMenu

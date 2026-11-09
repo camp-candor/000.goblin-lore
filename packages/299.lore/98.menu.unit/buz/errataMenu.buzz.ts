@@ -3,6 +3,7 @@ import type State from '../../99.core/state.js'
 import type { MenuModel } from '../menu.model.js'
 import type MenuBit from '../fce/menu.bit.js'
 import * as ActLaw from '../../03.laws.unit/laws.action.js'
+import { resolveRepoRoot } from '../../29.series.unit/buz/scaffoldSeriesTree.buzz.js'
 import { sanitizeAscii } from './genesisMenu.buzz.js'
 
 const UPDATE_CONSOLE = '[Console action] Update Console'
@@ -25,7 +26,7 @@ export const runErrataMenu = (
     const dat = bal?.dat || {}
     const seriesSlug =
         dat.seriesSlug || cpy.activeSeries || 'under-the-floorboards'
-    const repoRoot = dat.repoRoot || process.cwd()
+    const repoRoot = dat.repoRoot || resolveRepoRoot()
     const seriesDir = path.join(repoRoot, 'series', seriesSlug)
 
     const recordCandidate = dat.record || {
@@ -69,6 +70,9 @@ export const runErrataMenu = (
     cpy.activeSelection = '[X] RECORD CANONICAL ERRATA ENTRY'
     cpy.lastLifecycleReceipt = ok ? '[ERRATA:SEALED]' : '[ERRATA:FAIL]'
     cpy.statusMessage = receiptLine
+    if (!Array.isArray(cpy.lastTelemetryReport)) {
+        cpy.lastTelemetryReport = []
+    }
     cpy.lastTelemetryReport.push(receiptLine)
 
     if (bal?.slv) {

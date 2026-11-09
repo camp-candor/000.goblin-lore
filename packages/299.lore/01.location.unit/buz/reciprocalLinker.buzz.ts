@@ -19,9 +19,21 @@ export function resolveRepoRoot(startDir: string = process.cwd()): string {
     let curr = path.resolve(startDir)
     for (let i = 0; i < 6; i++) {
         if (
+            fs.existsSync(path.join(curr, 'AGENTS.md')) ||
+            (fs.existsSync(path.join(curr, 'series')) &&
+                fs.existsSync(path.join(curr, 'packages')))
+        ) {
+            return curr
+        }
+        const parent = path.dirname(curr)
+        if (parent === curr) break
+        curr = parent
+    }
+    curr = path.resolve(startDir)
+    for (let i = 0; i < 6; i++) {
+        if (
             fs.existsSync(path.join(curr, 'series')) ||
-            fs.existsSync(path.join(curr, 'packages')) ||
-            fs.existsSync(path.join(curr, 'package.json'))
+            fs.existsSync(path.join(curr, 'packages'))
         ) {
             return curr
         }
@@ -32,17 +44,22 @@ export function resolveRepoRoot(startDir: string = process.cwd()): string {
     return path.resolve(startDir)
 }
 
-async function emitConsole(
-    ste: State | undefined,
-    line: string,
-): Promise<void> {
-    if (ste && typeof ste.hunt === 'function') {
-        await ste
-            .hunt('[Console action] Update Console', {
+function emitConsole(ste: State | undefined, line: string): void {
+    // eslint-disable-next-line no-control-regex
+    const clean = line.replace(/[^\x00-\x7F]/g, '')
+    const lib = (globalThis as any).LIBRARY || (global as any).LIBRARY
+    if (lib && typeof lib.hunt === 'function') {
+        lib.hunt('[Console action] Update Console', {
+            idx: 'cns00',
+            src: clean,
+        }).catch(() => {})
+    } else if (ste && typeof ste.hunt === 'function') {
+        try {
+            ste.hunt('[Console action] Update Console', {
                 idx: 'cns00',
-                src: line,
-            })
-            .catch(() => {})
+                src: clean,
+            }).catch(() => {})
+        } catch {}
     }
 }
 
@@ -60,10 +77,7 @@ export const reconcileReciprocalLinks = async (
 
     if (!seriesSlug || !locationId) {
         const errorMsg = 'MISSING_SERIES_SLUG_OR_LOCATION_ID'
-        await emitConsole(
-            ste,
-            `>> [FAIL] reconcileReciprocalLinks: ${errorMsg}`,
-        )
+        emitConsole(ste, `>> [FAIL] reconcileReciprocalLinks: ${errorMsg}`)
         if (bal.slv) {
             bal.slv({
                 locationBit: {
@@ -81,10 +95,7 @@ export const reconcileReciprocalLinks = async (
 
     if (!fs.existsSync(locationsDir)) {
         const errorMsg = `LOCATIONS_DIR_NOT_FOUND: ${locationsDir}`
-        await emitConsole(
-            ste,
-            `>> [FAIL] reconcileReciprocalLinks: ${errorMsg}`,
-        )
+        emitConsole(ste, `>> [FAIL] reconcileReciprocalLinks: ${errorMsg}`)
         if (bal.slv) {
             bal.slv({
                 locationBit: {
@@ -100,10 +111,7 @@ export const reconcileReciprocalLinks = async (
     const sourceFile = path.join(locationsDir, `${locationId}.md`)
     if (!fs.existsSync(sourceFile)) {
         const errorMsg = `SOURCE_LOCATION_NOT_FOUND: ${sourceFile}`
-        await emitConsole(
-            ste,
-            `>> [FAIL] reconcileReciprocalLinks: ${errorMsg}`,
-        )
+        emitConsole(ste, `>> [FAIL] reconcileReciprocalLinks: ${errorMsg}`)
         if (bal.slv) {
             bal.slv({
                 locationBit: {
@@ -182,7 +190,7 @@ export const reconcileReciprocalLinks = async (
                     lineOfSight: injection.injectedPortal.line_of_sight,
                 })
 
-                await emitConsole(
+                emitConsole(
                     ste,
                     `>> [LINK] Reconciled reciprocal portal: ${targetId} -> ${locationId} (${injection.injectedPortal.damping_cdb} cdB)`,
                 )
@@ -199,7 +207,7 @@ export const reconcileReciprocalLinks = async (
         }
 
         const success = errors.length === 0
-        await emitConsole(
+        emitConsole(
             ste,
             success
                 ? `>> [OK] Spatial portal reciprocity verified for '${locationId}'. Mutated: ${mutatedFiles.length}`
@@ -217,10 +225,7 @@ export const reconcileReciprocalLinks = async (
         }
     } catch (err: any) {
         const errorMsg = err?.message || String(err)
-        await emitConsole(
-            ste,
-            `>> [FAIL] reconcileReciprocalLinks: ${errorMsg}`,
-        )
+        emitConsole(ste, `>> [FAIL] reconcileReciprocalLinks: ${errorMsg}`)
         if (bal.slv) {
             bal.slv({
                 locationBit: {

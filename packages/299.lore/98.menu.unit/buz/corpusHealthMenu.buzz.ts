@@ -54,6 +54,9 @@ export const runCorpusHealthMenu = (
         ':: ==============================================================================',
     ]
 
+    if (!Array.isArray(cpy.lastTelemetryReport)) {
+        cpy.lastTelemetryReport = []
+    }
     for (const line of cardLines) {
         emitConsole(ste, line)
         cpy.lastTelemetryReport.push(line)

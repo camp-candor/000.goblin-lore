@@ -4,6 +4,7 @@ import type State from '../../99.core/state.js'
 import type { MenuModel } from '../menu.model.js'
 import type MenuBit from '../fce/menu.bit.js'
 import * as ActEnt from '../../09.entity.unit/entity.action.js'
+import { resolveRepoRoot } from '../../29.series.unit/buz/scaffoldSeriesTree.buzz.js'
 import { sanitizeAscii } from './genesisMenu.buzz.js'
 
 const UPDATE_CONSOLE = '[Console action] Update Console'
@@ -21,7 +22,7 @@ function emitConsole(ste: State | undefined, line: string): void {
 export function discoverDomainForeignKeys(
     seriesSlug: string,
     domain: 'characters' | 'locations' | 'possessions' | 'grievances',
-    repoRoot: string = process.cwd(),
+    repoRoot: string = resolveRepoRoot(),
 ): string[] {
     const dir = path.join(repoRoot, 'series', seriesSlug, domain)
     if (!fs.existsSync(dir)) return []
@@ -85,6 +86,9 @@ export const runEntityScaffoldMenu = (
     cpy.activeSelection = '[S] ATOMIC ENTITY SCAFFOLDER'
     cpy.lastLifecycleReceipt = ok ? '[SCAFFOLD:OK]' : '[SCAFFOLD:FAIL]'
     cpy.statusMessage = receiptLine
+    if (!Array.isArray(cpy.lastTelemetryReport)) {
+        cpy.lastTelemetryReport = []
+    }
     cpy.lastTelemetryReport.push(receiptLine)
 
     if (bal?.slv) {

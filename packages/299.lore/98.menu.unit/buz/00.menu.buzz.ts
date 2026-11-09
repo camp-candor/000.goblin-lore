@@ -70,6 +70,7 @@ import { runEntityScaffoldMenu } from './entityScaffoldMenu.buzz.js'
 import { runEntityRetirementMenu } from './retirementMenu.buzz.js'
 import { runCorpusHealthMenu } from './corpusHealthMenu.buzz.js'
 import { runErrataMenu } from './errataMenu.buzz.js'
+import { resolveRepoRoot } from '../../29.series.unit/buz/scaffoldSeriesTree.buzz.js'
 
 import { SCHEMA_SOLVER_MENU_LABEL } from './05.schema.solver.audit.buzz'
 
@@ -338,19 +339,116 @@ export const updateMenu = async (
     cpy.totalInteractions = (cpy.totalInteractions || 0) + 1
     cpy.lastActionTimestamp = Date.now()
     if (src === GENESIS_WIZARD_LABEL) {
-        return runSeriesGenesisMenu(cpy, bal, ste)
+        return openGenesisMenu(cpy, bal, ste)
     }
     if (src === ENTITY_SCAFFOLDER_LABEL) {
-        return runEntityScaffoldMenu(cpy, bal, ste)
+        let chosenEntityId = 'char_knuckle'
+        let chosenDomain = 'characters'
+
+        if (lib && typeof lib.hunt === 'function') {
+            await lib.hunt(CONSOLE_UPDATE, {
+                idx: 'cns00',
+                src: '>> [SCAFFOLD:WIZARD] Launching interactive entity input panel...',
+            })
+            await lib.hunt(CONSOLE_UPDATE, {
+                idx: 'cns00',
+                src: ':: Enter entity ID below (e.g. char_knuckle, loc_bunker):',
+            })
+
+            const inputGrid = await lib.hunt(GRID_UPDATE, {
+                x: 0,
+                y: 4,
+                xSpan: 4,
+                ySpan: 6,
+            })
+
+            try {
+                const inputBit = await lib.hunt('[Open action] Open Input', {
+                    dat: { clr0: 0, clr1: 3 },
+                    src: 'VERTICAL',
+                    txt: 'Enter Entity ID (default: char_knuckle)',
+                    net: inputGrid?.grdBit?.dat,
+                })
+
+                if (inputBit?.putBit?.val === -1) {
+                    await lib.hunt(CONSOLE_UPDATE, {
+                        idx: 'cns00',
+                        src: ':: [SCAFFOLD:CANCEL] Entity scaffolding cancelled by operator.',
+                    })
+                    setTimeout(async () => {
+                        if (ste?.hunt) {
+                            await ste.hunt(ActMnu.UPDATE_MENU, {})
+                        }
+                    }, 333)
+                    return cpy
+                }
+
+                const rawInput = (inputBit?.putBit?.src || '').trim()
+                if (rawInput) {
+                    chosenEntityId = rawInput
+                        .toLowerCase()
+                        .replace(/[^a-z0-9_]/g, '_')
+                    if (chosenEntityId.startsWith('loc_')) {
+                        chosenDomain = 'locations'
+                    } else if (
+                        chosenEntityId.startsWith('item_') ||
+                        chosenEntityId.startsWith('pos_')
+                    ) {
+                        chosenDomain = 'possessions'
+                    } else if (chosenEntityId.startsWith('grv_')) {
+                        chosenDomain = 'grievances'
+                    } else {
+                        chosenDomain = 'characters'
+                    }
+                }
+            } catch {
+                // Headless fallback
+            }
+        }
+
+        const scaffoldBal: MenuBit = {
+            ...bal,
+            dat: {
+                ...(bal?.dat || {}),
+                entityId: chosenEntityId,
+                domain: chosenDomain,
+            },
+        } as MenuBit
+
+        await runEntityScaffoldMenu(cpy, scaffoldBal, ste)
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        return cpy
     }
     if (src === RETIRE_ENTITY_LABEL) {
-        return runEntityRetirementMenu(cpy, bal, ste)
+        await runEntityRetirementMenu(cpy, bal, ste)
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        return cpy
     }
     if (src === CORPUS_HEALTH_LABEL) {
-        return runCorpusHealthMenu(cpy, bal, ste)
+        await runCorpusHealthMenu(cpy, bal, ste)
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        return cpy
     }
     if (src === RECORD_ERRATA_LABEL) {
-        return runErrataMenu(cpy, bal, ste)
+        await runErrataMenu(cpy, bal, ste)
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        return cpy
     }
 
     const somaticItem = getChoiceById(src || '')
@@ -719,7 +817,7 @@ export const updateMenu = async (
 }
 
 /**
- * Opens the dedicated Compile Menu Flight Deck.
+ * Opens the Schema Invariants Menu.
  */
 export const openSchemaInvariantsMenu = async (
     cpy: MenuModel,
@@ -1004,6 +1102,102 @@ export const openSchemaInvariantsMenu = async (
 }
 
 /**
+ * Opens the interactive Universal Series Genesis Wizard.
+ */
+export const openGenesisMenu = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste?: State,
+): Promise<MenuModel> => {
+    let chosenSlug = bal?.dat?.seriesSlug || 'ashfall-basin'
+    let chosenDisplayName = bal?.dat?.displayName || 'Ashfall Basin'
+    const lib = (globalThis as any).LIBRARY || (global as any).LIBRARY
+
+    if (lib && typeof lib.hunt === 'function' && !bal?.dat?.seriesSlug) {
+        await lib.hunt(CONSOLE_UPDATE, {
+            idx: 'cns00',
+            src: '>> [GENESIS:WIZARD] Launching interactive series input panel...',
+        })
+        await lib.hunt(CONSOLE_UPDATE, {
+            idx: 'cns00',
+            src: ':: Enter series name / slug below (or press Enter for default):',
+        })
+
+        const inputGrid = await lib.hunt(GRID_UPDATE, {
+            x: 0,
+            y: 4,
+            xSpan: 4,
+            ySpan: 6,
+        })
+
+        try {
+            const inputBit = await lib.hunt('[Open action] Open Input', {
+                dat: { clr0: 0, clr1: 3 },
+                src: 'VERTICAL',
+                txt: 'Enter Series Name (default: ashfall-basin)',
+                net: inputGrid?.grdBit?.dat,
+            })
+
+            if (inputBit?.putBit?.val === -1) {
+                await lib.hunt(CONSOLE_UPDATE, {
+                    idx: 'cns00',
+                    src: ':: [GENESIS:CANCEL] Series provisioning cancelled by operator.',
+                })
+                if (bal?.src === 'ROOT_ROUTE') {
+                    if (bal?.slv) {
+                        bal.slv({ mnuBit: { idx: 'genesis-cancel', val: 0 } })
+                    }
+                    return cpy
+                }
+                setTimeout(async () => {
+                    if (ste?.hunt) {
+                        await ste.hunt(ActMnu.UPDATE_MENU, {})
+                    }
+                }, 333)
+                return cpy
+            }
+
+            const rawInput = (inputBit?.putBit?.src || '').trim()
+            if (rawInput) {
+                chosenSlug =
+                    rawInput
+                        .toLowerCase()
+                        .replace(/[^a-z0-9_-]/g, '-')
+                        .replace(/^-+|-+$/g, '') || 'ashfall-basin'
+                chosenDisplayName = rawInput
+                    .replace(/[-_]+/g, ' ')
+                    .replace(/\b\w/g, (c: string) => c.toUpperCase())
+            }
+        } catch {
+            // Headless fallback
+        }
+    }
+
+    const genesisBal: MenuBit = {
+        ...bal,
+        dat: {
+            ...(bal?.dat || {}),
+            seriesSlug: chosenSlug,
+            displayName: chosenDisplayName,
+        },
+    } as MenuBit
+
+    await runSeriesGenesisMenu(cpy, genesisBal, ste)
+    if (bal?.src === 'ROOT_ROUTE') {
+        if (bal?.slv) {
+            bal.slv({ mnuBit: { idx: 'genesis-complete', val: 1 } })
+        }
+        return cpy
+    }
+    setTimeout(async () => {
+        if (ste?.hunt) {
+            await ste.hunt(ActMnu.UPDATE_MENU, {})
+        }
+    }, 333)
+    return cpy
+}
+
+/**
  * Opens the dedicated Compile Menu Flight Deck.
  */
 export const openCompileMenu = async (
@@ -1011,18 +1205,118 @@ export const openCompileMenu = async (
     bal: MenuBit,
     ste: State,
 ): Promise<MenuModel> => {
-    const activeSeries =
+    let activeSeries =
         bal?.dat?.activeSeries || cpy.activeSeries || '001.goblin-lore'
-
-    await emitConsoleLine(
-        ste,
-        `>> [MENU:COMPILE] Opening Compile Flight Deck for series: ${activeSeries}`,
-    )
 
     const optionLabels = COMPILE_MENU_OPTIONS.map((opt) => opt.label)
 
     const lib = (globalThis as any).LIBRARY || (global as any).LIBRARY
     if (lib && typeof lib.hunt === 'function') {
+        const seriesList = discoverSomaticSeriesSlugs()
+
+        await lib.hunt(CONSOLE_UPDATE, {
+            idx: 'cns00',
+            src: '>> [MENU:COMPILE] Which series do you want to run these processes on?',
+        })
+        await lib.hunt(CONSOLE_UPDATE, {
+            idx: 'cns00',
+            src: ':: Select series from below or enter a custom series name:',
+        })
+
+        const gridBitSeries = await lib.hunt(GRID_UPDATE, {
+            x: 0,
+            y: 4,
+            xSpan: 4,
+            ySpan: 8,
+        })
+
+        const seriesChoices = [
+            ...seriesList.map((s) => `[S] ${s}`),
+            '[ CUSTOM SERIES SLUG ]',
+            '[<] CANCEL',
+        ]
+
+        const seriesChoiceBit = await lib.hunt(CHOICE_OPEN, {
+            dat: {
+                clr0: 0,
+                clr1: 3,
+                cb: (choice: string) => {
+                    const clean = choice.replace(/^\[S\]\s*/, '')
+                    lib.hunt(CONSOLE_UPDATE, {
+                        idx: 'cns00',
+                        src: `:: Target series: ${clean}`,
+                    })
+                },
+            },
+            src: 'VERTICAL',
+            lst: seriesChoices,
+            net: gridBitSeries?.grdBit?.dat,
+        })
+
+        const selectedSeriesChoice = seriesChoiceBit?.chcBit?.src
+        if (!selectedSeriesChoice || selectedSeriesChoice === '[<] CANCEL') {
+            await lib.hunt(CONSOLE_UPDATE, {
+                idx: 'cns00',
+                src: ':: [COMPILE:CANCEL] Series selection cancelled by operator.',
+            })
+            if (bal?.src === 'ROOT_ROUTE') {
+                if (bal?.slv) {
+                    bal.slv({ mnuBit: { idx: 'compile-cancel', val: 0 } })
+                }
+                return cpy
+            }
+            setTimeout(async () => {
+                if (ste?.hunt) {
+                    await ste.hunt(ActMnu.UPDATE_MENU, {})
+                }
+            }, 333)
+            return cpy
+        }
+
+        if (selectedSeriesChoice === '[ CUSTOM SERIES SLUG ]') {
+            await lib.hunt(CONSOLE_UPDATE, {
+                idx: 'cns00',
+                src: ':: Enter series slug below (e.g. lving-treee):',
+            })
+            const inputGrid = await lib.hunt(GRID_UPDATE, {
+                x: 0,
+                y: 4,
+                xSpan: 4,
+                ySpan: 6,
+            })
+            try {
+                const inputBit = await lib.hunt('[Open action] Open Input', {
+                    dat: { clr0: 0, clr1: 3 },
+                    src: 'VERTICAL',
+                    txt: 'Enter Series Slug',
+                    net: inputGrid?.grdBit?.dat,
+                })
+                const rawSlug = (inputBit?.putBit?.src || '')
+                    .trim()
+                    .toLowerCase()
+                    .replace(/[^a-z0-9_-]/g, '-')
+                    .replace(/^-+|-+$/g, '')
+                if (rawSlug) {
+                    activeSeries = rawSlug
+                }
+            } catch {
+                // Keep activeSeries
+            }
+        } else {
+            activeSeries = selectedSeriesChoice.replace(/^\[S\]\s*/, '')
+        }
+
+        cpy.activeSeries = activeSeries
+
+        await emitConsoleLine(
+            ste,
+            `>> [MENU:COMPILE] Target series selected: ${activeSeries}`,
+        )
+        await emitConsoleLine(
+            ste,
+            `>> [MENU:COMPILE] Opening Compile Flight Deck for series: ${activeSeries}`,
+        )
+
         const gridBit = await lib.hunt(GRID_UPDATE, {
             x: 0,
             y: 4,
@@ -1057,10 +1351,19 @@ export const openCompileMenu = async (
         if (chosenIndex >= 0) {
             await triggerCompileAction(
                 cpy,
-                { ...bal, val: chosenIndex } as MenuBit,
+                {
+                    ...bal,
+                    val: chosenIndex,
+                    dat: { ...(bal?.dat || {}), activeSeries },
+                } as MenuBit,
                 ste,
             )
         }
+    } else {
+        await emitConsoleLine(
+            ste,
+            `>> [MENU:COMPILE] Opening Compile Flight Deck for series: ${activeSeries}`,
+        )
     }
 
     if (bal?.slv) {
@@ -1109,6 +1412,12 @@ export const triggerCompileAction = async (
             ste,
             '>> [MENU:COMPILE] Returning to Lore Menu...',
         )
+        if (bal?.src === 'ROOT_ROUTE') {
+            if (bal?.slv) {
+                bal.slv({ mnuBit: { idx: 'compile-return', val: 0 } })
+            }
+            return cpy
+        }
         return updateMenu(cpy, bal, ste)
     }
 
@@ -1209,11 +1518,16 @@ export const triggerCompileAction = async (
 }
 
 function findSeriesBaseDir(): string | null {
+    const root = resolveRepoRoot()
+    const candidate = path.join(root, 'series')
+    if (fs.existsSync(candidate) && fs.statSync(candidate).isDirectory()) {
+        return candidate
+    }
     let curr = process.cwd()
     while (curr && curr !== path.dirname(curr)) {
-        const candidate = path.join(curr, 'series')
-        if (fs.existsSync(candidate) && fs.statSync(candidate).isDirectory()) {
-            return candidate
+        const fallback = path.join(curr, 'series')
+        if (fs.existsSync(fallback) && fs.statSync(fallback).isDirectory()) {
+            return fallback
         }
         curr = path.dirname(curr)
     }
@@ -1229,13 +1543,7 @@ export function discoverSomaticSeriesSlugs(): string[] {
         .readdirSync(baseDir, { withFileTypes: true })
         .filter((e) => e.isDirectory())
         .map((e) => e.name)
-    entries.sort((a, b) =>
-        a === 'under-the-floorboards'
-            ? -1
-            : b === 'under-the-floorboards'
-              ? 1
-              : a.localeCompare(b),
-    )
+    entries.sort((a, b) => a.localeCompare(b))
     return entries.length > 0
         ? entries
         : ['under-the-floorboards', 'wiregrass-basin']

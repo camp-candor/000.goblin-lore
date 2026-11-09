@@ -14,9 +14,21 @@ export function resolveRepoRoot(startDir: string = process.cwd()): string {
     let curr = path.resolve(startDir)
     for (let i = 0; i < 6; i++) {
         if (
+            fs.existsSync(path.join(curr, 'AGENTS.md')) ||
+            (fs.existsSync(path.join(curr, 'series')) &&
+                fs.existsSync(path.join(curr, 'packages')))
+        ) {
+            return curr
+        }
+        const parent = path.dirname(curr)
+        if (parent === curr) break
+        curr = parent
+    }
+    curr = path.resolve(startDir)
+    for (let i = 0; i < 6; i++) {
+        if (
             fs.existsSync(path.join(curr, 'series')) ||
-            fs.existsSync(path.join(curr, 'packages')) ||
-            fs.existsSync(path.join(curr, 'package.json'))
+            fs.existsSync(path.join(curr, 'packages'))
         ) {
             return curr
         }
@@ -28,19 +40,24 @@ export function resolveRepoRoot(startDir: string = process.cwd()): string {
 }
 
 /**
- * Emits 7-bit clean ASCII console telemetry to cns00.
+ * Emits 7-bit clean ASCII console telemetry to cns00 without blocking.
  */
-async function emitConsole(
-    ste: State | undefined,
-    line: string,
-): Promise<void> {
-    if (ste && typeof ste.hunt === 'function') {
-        await ste
-            .hunt('[Console action] Update Console', {
+function emitConsole(ste: State | undefined, line: string): void {
+    // eslint-disable-next-line no-control-regex
+    const clean = line.replace(/[^\x00-\x7F]/g, '')
+    const lib = (globalThis as any).LIBRARY || (global as any).LIBRARY
+    if (lib && typeof lib.hunt === 'function') {
+        lib.hunt('[Console action] Update Console', {
+            idx: 'cns00',
+            src: clean,
+        }).catch(() => {})
+    } else if (ste && typeof ste.hunt === 'function') {
+        try {
+            ste.hunt('[Console action] Update Console', {
                 idx: 'cns00',
-                src: line,
-            })
-            .catch(() => {})
+                src: clean,
+            }).catch(() => {})
+        } catch {}
     }
 }
 
@@ -58,7 +75,7 @@ export const scaffoldSeriesTree = async (
 
     if (!rawSlug) {
         const errorMsg = 'MISSING_SERIES_SLUG'
-        await emitConsole(ste, `>> [FAIL] scaffoldSeriesTree: ${errorMsg}`)
+        emitConsole(ste, `>> [FAIL] scaffoldSeriesTree: ${errorMsg}`)
         if (bal.slv) {
             bal.slv({
                 seriesBit: {
@@ -77,7 +94,7 @@ export const scaffoldSeriesTree = async (
         validatedConfig = SeriesConfigSchema.parse(rawConfig)
     } catch (err: any) {
         const parseError = `SCHEMA_VALIDATION_FAILED: ${err.message}`
-        await emitConsole(ste, `>> [FAIL] scaffoldSeriesTree: ${parseError}`)
+        emitConsole(ste, `>> [FAIL] scaffoldSeriesTree: ${parseError}`)
         if (bal.slv) {
             bal.slv({
                 seriesBit: {
@@ -98,10 +115,7 @@ export const scaffoldSeriesTree = async (
     // 2. Existing Series Namespace Collision Guard
     if (fs.existsSync(seriesDir) || fs.existsSync(compiledDir)) {
         const collisionError = `CONFLICT_BLOCKED: Namespace '${seriesSlug}' already exists on disk.`
-        await emitConsole(
-            ste,
-            `>> [FAIL] scaffoldSeriesTree: ${collisionError}`,
-        )
+        emitConsole(ste, `>> [FAIL] scaffoldSeriesTree: ${collisionError}`)
         if (bal.slv) {
             bal.slv({
                 seriesBit: {
@@ -166,7 +180,7 @@ export const scaffoldSeriesTree = async (
         fs.writeFileSync(tmpConfigPath, serializedConfig, { encoding: 'utf-8' })
         fs.renameSync(tmpConfigPath, configPath)
 
-        await emitConsole(
+        emitConsole(
             ste,
             `>> [TREE] Provisioned hermetic directory hierarchy for '${seriesSlug}'`,
         )
@@ -196,7 +210,7 @@ export const scaffoldSeriesTree = async (
         }
     } catch (err: any) {
         const errorMsg = err?.message || String(err)
-        await emitConsole(ste, `>> [FAIL] scaffoldSeriesTree: ${errorMsg}`)
+        emitConsole(ste, `>> [FAIL] scaffoldSeriesTree: ${errorMsg}`)
         if (bal.slv) {
             bal.slv({
                 seriesBit: {
