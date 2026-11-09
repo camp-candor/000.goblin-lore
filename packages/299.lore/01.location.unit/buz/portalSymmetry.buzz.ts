@@ -1,5 +1,12 @@
 import yaml from 'yaml'
-import type { Portal } from '../fce/spatial.schema.js'
+
+export interface Portal {
+    portal_slug?: string
+    target_location_id: string
+    damping_cdb?: number
+    line_of_sight?: boolean
+    [key: string]: any
+}
 
 export interface ParsedLocationDossier {
     frontmatter: Record<string, any>
