@@ -229,7 +229,12 @@ function discoverSeriesFiles(seriesDir: string): string[] {
             .sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0))
         for (const entry of entries) {
             const fullPath = path.join(dir, entry.name)
-            if (entry.isDirectory()) {
+            if (
+                entry.name === 'series.config.json' ||
+                entry.name === 'unresolved.json'
+            ) {
+                continue
+            } else if (entry.isDirectory()) {
                 walk(fullPath)
             } else if (
                 entry.isFile() &&

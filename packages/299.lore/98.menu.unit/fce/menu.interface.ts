@@ -7,7 +7,7 @@ export interface MenuChoiceItem {
     readonly tooltip: string
 }
 
-import type { Model } from '../../99.core/interface/model.interface.js'
+import type Model from '../../99.core/interface/model.interface.js'
 
 export default interface Menu extends Model {
     idx: string
