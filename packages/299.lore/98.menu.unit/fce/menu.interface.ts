@@ -1,4 +1,3 @@
-import type Model from '../../99.core/interface/model.interface.js'
 import type MenuBit from './menu.bit.js'
 
 export interface MenuChoiceItem {
@@ -8,15 +7,18 @@ export interface MenuChoiceItem {
     readonly tooltip: string
 }
 
+import type { Model } from '../../99.core/interface/model.interface.js'
+
 export default interface Menu extends Model {
     idx: string
+    menuBits: Record<string, MenuBit>
     activeSelection: string
     lastActionTimestamp: number
     statusMessage: string
     lastSomaticReceipt: string | null
+    lastLifecycleReceipt: string | null
     totalInteractions: number
-    menuBits?: Record<string, MenuBit>
     activeSeries?: string
     lastError?: string
-    lastTelemetryReport?: string[]
+    lastTelemetryReport: string[]
 }

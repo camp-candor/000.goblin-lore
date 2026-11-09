@@ -48,7 +48,29 @@ import {
     ERRATA_MENU_LABEL,
 } from './16.errata.ledger.buzz'
 import { getChoiceById, dispatchSomaticChoice } from './somaticMenu.buzz.js'
+
+import { runSeriesGenesisMenu } from './genesisMenu.buzz.js'
+import { runEntityScaffoldMenu } from './entityScaffoldMenu.buzz.js'
+import { runEntityRetirementMenu } from './retirementMenu.buzz.js'
+import { runCorpusHealthMenu } from './corpusHealthMenu.buzz.js'
+import { runErrataMenu } from './errataMenu.buzz.js'
+
 import { SCHEMA_SOLVER_MENU_LABEL } from './05.schema.solver.audit.buzz'
+
+export const GENESIS_WIZARD_LABEL = '[G] UNIVERSAL SERIES GENESIS WIZARD'
+export const ENTITY_SCAFFOLDER_LABEL = '[S] ATOMIC ENTITY SCAFFOLDER'
+export const RETIRE_ENTITY_LABEL = '[R] RETIRE CANONICAL ENTITY'
+export const CORPUS_HEALTH_LABEL = '[H] STATIC CORPUS HEALTH TELEMETRY'
+export const RECORD_ERRATA_LABEL = '[X] RECORD CANONICAL ERRATA ENTRY'
+
+export const LIFECYCLE_MENU_OPTIONS: readonly string[] = Object.freeze([
+    GENESIS_WIZARD_LABEL,
+    ENTITY_SCAFFOLDER_LABEL,
+    RETIRE_ENTITY_LABEL,
+    CORPUS_HEALTH_LABEL,
+    RECORD_ERRATA_LABEL,
+])
+
 import {
     COMPILE_MENU_OPTIONS,
     emitConsoleLine,
@@ -216,6 +238,7 @@ export const updateMenu = async (
         '[S] STYLOMETRIC & VOICE-BLEED LINTER',
         '[H] HERMETIC OFFLINE DELETION PARITY',
         '[C] COMPILE CANON & GATE 0 GAUNTLET',
+        ...LIFECYCLE_MENU_OPTIONS,
         'ROOT MENU',
     ]
 
@@ -298,6 +321,21 @@ export const updateMenu = async (
     cpy.activeSelection = src || 'ROOT'
     cpy.totalInteractions = (cpy.totalInteractions || 0) + 1
     cpy.lastActionTimestamp = Date.now()
+    if (src === GENESIS_WIZARD_LABEL) {
+        return runSeriesGenesisMenu(cpy, bal, ste)
+    }
+    if (src === ENTITY_SCAFFOLDER_LABEL) {
+        return runEntityScaffoldMenu(cpy, bal, ste)
+    }
+    if (src === RETIRE_ENTITY_LABEL) {
+        return runEntityRetirementMenu(cpy, bal, ste)
+    }
+    if (src === CORPUS_HEALTH_LABEL) {
+        return runCorpusHealthMenu(cpy, bal, ste)
+    }
+    if (src === RECORD_ERRATA_LABEL) {
+        return runErrataMenu(cpy, bal, ste)
+    }
 
     const somaticItem = getChoiceById(src || '')
     if (somaticItem && somaticItem.id !== 'CHOICE_ROOT_RETURN') {
