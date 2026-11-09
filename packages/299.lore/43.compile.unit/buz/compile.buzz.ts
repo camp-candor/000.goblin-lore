@@ -235,6 +235,12 @@ function discoverSeriesFiles(seriesDir: string): string[] {
                 entry.isFile() &&
                 (entry.name.endsWith('.md') || entry.name.endsWith('.json'))
             ) {
+                if (
+                    entry.name === 'series.config.json' ||
+                    entry.name === 'unresolved.json'
+                ) {
+                    continue
+                }
                 results.push(fullPath)
             }
         }
