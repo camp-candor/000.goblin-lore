@@ -55,6 +55,10 @@ import {
     runSeriesTreeScaffoldAudit,
     SERIES_TREE_MENU_LABEL,
 } from './18.series.tree.audit.buzz'
+import {
+    runGenesisSeedsAudit,
+    GENESIS_SEEDS_MENU_LABEL,
+} from './19.genesis.seeds.audit.buzz'
 import { getChoiceById, dispatchSomaticChoice } from './somaticMenu.buzz.js'
 
 import { runSeriesGenesisMenu } from './genesisMenu.buzz.js'
@@ -725,6 +729,7 @@ export const openSchemaInvariantsMenu = async (
         ERRATA_MENU_LABEL,
         FOUR_TUPLE_MENU_LABEL,
         SERIES_TREE_MENU_LABEL,
+        GENESIS_SEEDS_MENU_LABEL,
         '[ BACK ]',
     ]
     const schemaDescriptions: Record<string, string> = {
@@ -740,6 +745,8 @@ export const openSchemaInvariantsMenu = async (
             'Validate the Universal Narrative Four-Tuple contract <S, A, I, R_m> with fail-closed probes.',
         '[ 6. SERIES TREE SCAFFOLDING ]':
             'Scaffold a hermetic series workspace and verify atomic config commit.',
+        '[ 7. POPULATE GENESIS SEEDS ]':
+            'Seed world dossiers and the origin hub, then verify byte-0 preambles.',
         '[ BACK ]': 'Return to the primary lore dashboard.',
     }
 
@@ -913,6 +920,33 @@ export const openSchemaInvariantsMenu = async (
         try {
             const treeLines = await runSeriesTreeScaffoldAudit()
             for (const line of treeLines) {
+                await lib.hunt(CONSOLE_UPDATE, { idx: 'cns00', src: line })
+            }
+        } catch (err: any) {
+            await lib.hunt(CONSOLE_UPDATE, {
+                idx: 'cns00',
+                src: `:: ${err?.message || String(err)}`,
+            })
+        }
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        if (bal?.slv) {
+            bal.slv({ mnuBit: bal })
+        }
+        return cpy
+    }
+
+    if (selection === GENESIS_SEEDS_MENU_LABEL) {
+        await lib.hunt(CONSOLE_UPDATE, {
+            idx: 'cns00',
+            src: '>> [SEED:AUDIT] Populating hermetic genesis seed dossiers...',
+        })
+        try {
+            const seedLines = await runGenesisSeedsAudit()
+            for (const line of seedLines) {
                 await lib.hunt(CONSOLE_UPDATE, { idx: 'cns00', src: line })
             }
         } catch (err: any) {

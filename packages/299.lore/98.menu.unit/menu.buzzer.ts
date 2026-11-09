@@ -43,6 +43,11 @@ export {
     auditSeriesTreeScaffold,
     SERIES_TREE_MENU_LABEL,
 } from './buz/18.series.tree.audit.buzz.js'
+export {
+    runGenesisSeedsAudit,
+    auditGenesisSeeds,
+    GENESIS_SEEDS_MENU_LABEL,
+} from './buz/19.genesis.seeds.audit.buzz.js'
 export { runPressureMeterSimulatorMenu } from './buz/06.pressure.simulator.buzz.js'
 export { runAcousticParanoiaInspectorMenu } from './buz/07.acoustic.inspector.buzz.js'
 export { runSynthesisPayloadValidatorMenu } from './buz/10.payload.validator.buzz.js'
