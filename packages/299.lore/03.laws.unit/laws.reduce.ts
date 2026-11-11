@@ -16,6 +16,9 @@ export function reducer(
         case Act.INIT_LAWS:
             return Buzz.initLaws(clone(model), act.bale, state)
 
+        case Act.EVALUATE_PARDON_WAIVERS:
+            return Buzz.evaluatePardonWaivers(clone(model), act.bale, state)
+
         default:
             return model
     }
