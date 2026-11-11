@@ -70,6 +70,12 @@ import { runEntityScaffoldMenu } from './entityScaffoldMenu.buzz.js'
 import { runEntityRetirementMenu } from './retirementMenu.buzz.js'
 import { runCorpusHealthMenu } from './corpusHealthMenu.buzz.js'
 import { runErrataMenu } from './errataMenu.buzz.js'
+import {
+    HYGIENE_LABEL,
+    HYGIENE_SWEEP_LABEL,
+    HYGIENE_BACK_LABEL,
+    runHygieneMenu,
+} from './hygieneMenu.buzz.js'
 import { resolveRepoRoot } from '../../29.series.unit/buz/scaffoldSeriesTree.buzz.js'
 
 import { SCHEMA_SOLVER_MENU_LABEL } from './05.schema.solver.audit.buzz'
@@ -79,6 +85,7 @@ export const ENTITY_SCAFFOLDER_LABEL = '[S] ATOMIC ENTITY SCAFFOLDER'
 export const RETIRE_ENTITY_LABEL = '[R] RETIRE CANONICAL ENTITY'
 export const CORPUS_HEALTH_LABEL = '[H] STATIC CORPUS HEALTH TELEMETRY'
 export const RECORD_ERRATA_LABEL = '[X] RECORD CANONICAL ERRATA ENTRY'
+export const HYGIENE_MENU_LABEL = HYGIENE_LABEL
 
 export const LIFECYCLE_MENU_OPTIONS: readonly string[] = Object.freeze([
     GENESIS_WIZARD_LABEL,
@@ -254,6 +261,7 @@ export const updateMenu = async (
         '8. INTERACTIVE SOMATIC MOTOR LAB',
         '[S] STYLOMETRIC & VOICE-BLEED LINTER',
         '[H] HERMETIC OFFLINE DELETION PARITY',
+        '[HYGIENE]',
         '[C] COMPILE CANON & GATE 0 GAUNTLET',
         ...LIFECYCLE_MENU_OPTIONS,
         'ROOT MENU',
@@ -295,6 +303,8 @@ export const updateMenu = async (
             'Audit prose lexical diversity, corporate slop bans, and callback collisions.',
         '[H] HERMETIC OFFLINE DELETION PARITY':
             'Purge compiled/ artifacts and verify bit-for-bit offline H_root rebuild.',
+        '[HYGIENE]':
+            'Open the hygiene flight deck to ping every mounted unit buzzer.',
         '[C] COMPILE CANON & GATE 0 GAUNTLET':
             'Open 3-pass compiler flight deck, Merkle emission, and Gate 0 verification.',
         'ROOT MENU': 'Return to master flight deck switchboard.',
@@ -439,6 +449,10 @@ export const updateMenu = async (
                 await ste.hunt(ActMnu.UPDATE_MENU, {})
             }
         }, 333)
+        return cpy
+    }
+    if (src === HYGIENE_LABEL) {
+        await openHygieneMenu(cpy, bal, ste)
         return cpy
     }
     if (src === RECORD_ERRATA_LABEL) {
@@ -1087,6 +1101,81 @@ export const openSchemaInvariantsMenu = async (
                 src: `:: ${err?.message || String(err)}`,
             })
         }
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        if (bal?.slv) {
+            bal.slv({ mnuBit: bal })
+        }
+        return cpy
+    }
+
+    return updateMenu(cpy, bal, ste)
+}
+
+/**
+ * Opens the [HYGIENE] submenu flight deck with the unit buzzer ping sweep.
+ */
+export const openHygieneMenu = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste: State,
+): Promise<MenuModel> => {
+    const hygieneOptions = [HYGIENE_SWEEP_LABEL, HYGIENE_BACK_LABEL]
+    const hygieneDescriptions: Record<string, string> = {
+        [HYGIENE_SWEEP_LABEL]:
+            'Ping every mounted 299.lore unit buzzer synchronously and verify 7-bit ASCII hygiene.',
+        [HYGIENE_BACK_LABEL]: 'Return to the primary lore dashboard.',
+    }
+
+    const lib = (globalThis as any).LIBRARY || (global as any).LIBRARY
+    if (!lib || typeof lib.hunt !== 'function') {
+        if (bal?.slv) {
+            bal.slv({
+                mnuBit: {
+                    idx: 'open-hygiene-menu',
+                    lst: hygieneOptions,
+                    val: 0,
+                },
+            })
+        }
+        return cpy
+    }
+
+    const gridBit = await lib.hunt(GRID_UPDATE, {
+        x: 0,
+        y: 4,
+        xSpan: 4,
+        ySpan: 8,
+    })
+
+    const hygieneChoiceBit = await lib.hunt(CHOICE_OPEN, {
+        dat: {
+            clr0: 0,
+            clr1: 3,
+            cb: async (choice: string) => {
+                const text = hygieneDescriptions[choice]
+                await lib.hunt(CONSOLE_UPDATE, {
+                    idx: 'cns00',
+                    src: `:: ${text || 'No description available.'}`,
+                })
+            },
+        },
+        src: 'VERTICAL',
+        lst: hygieneOptions,
+        net: gridBit?.grdBit?.dat,
+    })
+
+    const selection = hygieneChoiceBit?.chcBit?.src
+
+    if (selection === HYGIENE_SWEEP_LABEL) {
+        await lib.hunt(CONSOLE_UPDATE, {
+            idx: 'cns00',
+            src: '>> [HYGIENE:DISPATCH] Launching unit buzzer ping sweep...',
+        })
+        runHygieneMenu(cpy, bal, ste)
         setTimeout(async () => {
             if (ste?.hunt) {
                 await ste.hunt(ActMnu.UPDATE_MENU, {})

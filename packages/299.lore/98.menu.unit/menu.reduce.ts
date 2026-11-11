@@ -26,6 +26,8 @@ export function reducer(
             return Buzz.runEntityRetirementMenu(clone(model), act.bale, state)
         case Act.OPEN_HEALTH_MENU:
             return Buzz.runCorpusHealthMenu(clone(model), act.bale, state)
+        case Act.OPEN_HYGIENE_MENU:
+            return Buzz.runHygieneMenu(clone(model), act.bale, state)
         case Act.OPEN_ERRATA_MENU:
             return Buzz.runErrataMenu(clone(model), act.bale, state)
         default:

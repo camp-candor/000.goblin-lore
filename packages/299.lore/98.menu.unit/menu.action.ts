@@ -43,6 +43,12 @@ export class OpenHealthMenu implements Action {
     constructor(public bale: MenuBit) {}
 }
 
+export const OPEN_HYGIENE_MENU = '[Menu action] Open Hygiene Menu'
+export class OpenHygieneMenu implements Action {
+    readonly type = OPEN_HYGIENE_MENU
+    constructor(public bale: MenuBit) {}
+}
+
 export const OPEN_ERRATA_MENU = '[Menu action] Open Errata Menu'
 export class OpenErrataMenu implements Action {
     readonly type = OPEN_ERRATA_MENU
@@ -57,4 +63,5 @@ export type Actions =
     | OpenScaffoldMenu
     | OpenRetirementMenu
     | OpenHealthMenu
+    | OpenHygieneMenu
     | OpenErrataMenu

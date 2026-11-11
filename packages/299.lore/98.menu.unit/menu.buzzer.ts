@@ -19,6 +19,8 @@ export {
     CORPUS_HEALTH_LABEL,
     RECORD_ERRATA_LABEL,
     LIFECYCLE_MENU_OPTIONS,
+    HYGIENE_MENU_LABEL,
+    openHygieneMenu,
 } from './buz/00.menu.buzz.js'
 export { runSeriesGenesisMenu, sanitizeAscii } from './buz/genesisMenu.buzz.js'
 export {
@@ -28,6 +30,16 @@ export {
 export { runEntityRetirementMenu } from './buz/retirementMenu.buzz.js'
 export { runCorpusHealthMenu } from './buz/corpusHealthMenu.buzz.js'
 export { runErrataMenu } from './buz/errataMenu.buzz.js'
+export {
+    runHygieneMenu,
+    sweepMountedUnits,
+    discoverMountedUnits,
+    pingUnit,
+    resolveLorePackageRoot,
+    HYGIENE_LABEL,
+    HYGIENE_SWEEP_LABEL,
+    HYGIENE_BACK_LABEL,
+} from './buz/hygieneMenu.buzz.js'
 export {
     dispatchSomaticChoice,
     getChoiceById,
