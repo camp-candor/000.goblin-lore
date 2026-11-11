@@ -1,5 +1,6 @@
 import type { Action } from '../99.core/interface/action.interface.js'
 import type LawsBit from './fce/laws.bit.js'
+import type PardonEvaluatorBit from './fce/pardonValidation.bit.js'
 
 export const INIT_LAWS = '[Laws action] Init Laws'
 export class InitLaws implements Action {
@@ -25,4 +26,11 @@ export class VerifyErrata implements Action {
     constructor(public bale: LawsBit) {}
 }
 
-export type Actions = InitLaws | UpdateLaws | AppendErrata | VerifyErrata
+export const EVALUATE_PARDON_WAIVERS = '[Laws action] Evaluate Pardon Waivers'
+export class EvaluatePardonWaivers implements Action {
+    readonly type = EVALUATE_PARDON_WAIVERS
+    constructor(public bale: PardonEvaluatorBit) {}
+}
+
+export type Actions =
+    InitLaws | UpdateLaws | AppendErrata | VerifyErrata | EvaluatePardonWaivers
