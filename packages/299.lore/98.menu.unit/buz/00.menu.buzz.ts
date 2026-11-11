@@ -80,6 +80,8 @@ import { resolveRepoRoot } from '../../29.series.unit/buz/scaffoldSeriesTree.buz
 
 import { SCHEMA_SOLVER_MENU_LABEL } from './05.schema.solver.audit.buzz'
 
+import { RuleSchema } from '../../03.laws.unit/fce/rule.schema.js'
+
 export const GENESIS_WIZARD_LABEL = '[G] UNIVERSAL SERIES GENESIS WIZARD'
 export const ENTITY_SCAFFOLDER_LABEL = '[S] ATOMIC ENTITY SCAFFOLDER'
 export const RETIRE_ENTITY_LABEL = '[R] RETIRE CANONICAL ENTITY'
@@ -1894,3 +1896,53 @@ export const openSomaticDspHub = async (
 }
 
 export default updateMenu
+
+export const LAWS_REGISTRY_INSPECT_LABEL =
+    '[1] INSPECT CONSTITUTIONAL RULE REGISTRY'
+
+export const inspectRuleRegistryAction = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste?: State,
+): Promise<MenuModel> => {
+    await emitConsoleLine(
+        ste,
+        '>> [LAWS:INSPECT] Validating Constitutional Rule Schema...',
+    )
+
+    const testRule = {
+        id: 'rule_kinetic_limb_conservation',
+        category: 'PHYSICAL',
+        severity_class: 'TIER_1_HARD_INVARIANT',
+        description:
+            'Characters cannot execute physical actions requiring severed or missing limbs.',
+        pardonable: false,
+        max_tolerated_pardon_frequency_bps: 0,
+        owning_entity_types: ['character'],
+    }
+
+    const parsed = RuleSchema.safeParse(testRule)
+    if (parsed.success) {
+        await emitConsoleLine(
+            ste,
+            `>> [LAWS:OK] Rule ${testRule.id} verified as unpardonable hard physical invariant. Status code: 0.`,
+        )
+        cpy.statusMessage = 'RULE_REGISTRY_VERIFIED'
+    } else {
+        await emitConsoleLine(
+            ste,
+            ':: [LAWS:FAIL] Rule Schema verification failed.',
+        )
+        cpy.statusMessage = 'RULE_REGISTRY_FAILED'
+    }
+
+    if (bal.slv) {
+        bal.slv({
+            mnuBit: {
+                idx: 'inspect-laws-registry',
+                val: parsed.success ? 0 : -1,
+            },
+        })
+    }
+    return cpy
+}

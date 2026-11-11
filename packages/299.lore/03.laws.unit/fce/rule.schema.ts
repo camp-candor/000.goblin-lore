@@ -24,13 +24,16 @@ export const RuleSchema = z
         }),
         category: RuleCategoryEnum,
         severity_class: RuleSeverityClassEnum,
-        description: z.string().min(1),
+        description: z.string().min(10, {
+            message:
+                '[RULE_SCHEMA_BREACH] description must be at least 10 characters',
+        }),
         pardonable: z.boolean().default(false),
-        max_tolerated_pardon_frequency: z
+        max_tolerated_pardon_frequency_bps: z
             .number()
             .int({
                 message:
-                    '[FLOAT_PROHIBITED] max_tolerated_pardon_frequency must be integer',
+                    '[FLOAT_PROHIBITED] max_tolerated_pardon_frequency_bps must be an integer',
             })
             .min(0, { message: '[OUT_OF_BOUNDS] frequency cannot be negative' })
             .max(10000, {
@@ -38,9 +41,40 @@ export const RuleSchema = z
                     '[OUT_OF_BOUNDS] frequency cannot exceed 10000 basis points',
             })
             .default(0),
-        owning_entity_types: z.array(z.string()).default([]),
+        owning_entity_types: z
+            .array(
+                z.enum([
+                    'character',
+                    'location',
+                    'possession',
+                    'grievance',
+                    'scene',
+                ]),
+            )
+            .min(1, {
+                message:
+                    '[RULE_SCHEMA_BREACH] owning_entity_types must not be empty',
+            }),
     })
     .strict()
+    .refine(
+        (rule) => {
+            const isHardInvariant = [
+                'PHYSICAL',
+                'SOMATIC',
+                'EPISTEMIC',
+            ].includes(rule.category)
+            if (isHardInvariant && rule.pardonable === true) {
+                return false
+            }
+            return true
+        },
+        {
+            message:
+                '[UNPARDONABLE_INVARIANT_BREACH] PHYSICAL, SOMATIC, and EPISTEMIC rules must declare pardonable: false',
+            path: ['pardonable'],
+        },
+    )
 
 export type Rule = z.infer<typeof RuleSchema>
 
@@ -58,9 +92,14 @@ export const AuthorizerSchema = z
             message:
                 '[AUTH_SCHEMA_BREACH] id must match pattern ^auth_[a-z0-9_]+$',
         }),
-        name: z.string().min(1),
+        name: z
+            .string()
+            .min(1, { message: '[AUTH_SCHEMA_BREACH] name is required' }),
         role: AuthorizerRoleEnum,
-        permitted_severity_classes: z.array(RuleSeverityClassEnum),
+        permitted_categories: z.array(RuleCategoryEnum).min(1, {
+            message:
+                '[AUTH_SCHEMA_BREACH] permitted_categories must not be empty',
+        }),
     })
     .strict()
 
