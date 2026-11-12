@@ -10,6 +10,24 @@ import path from 'node:path'
 import type { MenuModel } from '../menu.model'
 import type MenuBit from '../fce/menu.bit'
 import type State from '../../99.core/state'
+import { RuleSchema } from '../../03.laws.unit/fce/rule.schema.js'
+import { ErrataRecordSchema } from '../../03.laws.unit/fce/errata.schema.js'
+import {
+    CanonFactStandingSchema,
+    getStandingMetadata,
+} from '../../41.canon.unit/fce/standing.schema.js'
+import {
+    rankReconsiderationQueue,
+    affirmStillGood,
+} from '../../41.canon.unit/buz/standing.buzz.js'
+import type { CanonFactStanding } from '../../41.canon.unit/fce/standing.schema.js'
+import { TrieClueDisjointnessSolver } from '../../41.canon.unit/buz/trieDisjointness.buzz.js'
+import type { MysteryTrieIngress } from '../../41.canon.unit/fce/trieDisjointness.bit.js'
+import { pass2Traverse } from '../../43.compile.unit/buz/compile.buzz.js'
+import { CompileModel } from '../../43.compile.unit/compile.model.js'
+import type { Rule, Authorizer } from '../../03.laws.unit/fce/rule.schema.js'
+import type { PardonRecord } from '../../03.laws.unit/fce/pardon.schema.js'
+import { validatePass2Pardons } from '../../03.laws.unit/buz/pardon.buzz.js'
 import * as ActMnu from '../menu.action'
 import * as ActSch from '../../26.schema.unit/schema.action'
 import * as ActCmp from '../../43.compile.unit/compile.action'
@@ -86,6 +104,9 @@ export const RETIRE_ENTITY_LABEL = '[R] RETIRE CANONICAL ENTITY'
 export const CORPUS_HEALTH_LABEL = '[H] STATIC CORPUS HEALTH TELEMETRY'
 export const RECORD_ERRATA_LABEL = '[X] RECORD CANONICAL ERRATA ENTRY'
 export const HYGIENE_MENU_LABEL = HYGIENE_LABEL
+export const LAWS_MENU_LABEL = '[LAWS MENU]'
+export const ERRATA_DECK_MENU_LABEL = '[ERRATA MENU]'
+export const CANON_MENU_LABEL = '[CANON MENU]'
 
 export const LIFECYCLE_MENU_OPTIONS: readonly string[] = Object.freeze([
     GENESIS_WIZARD_LABEL,
@@ -251,6 +272,9 @@ export const updateMenu = async (
     const lst = [
         '1. VALIDATE SCHEMA INVARIANTS',
         SCHEMA_SOLVER_MENU_LABEL,
+        '[LAWS MENU]',
+        '[ERRATA MENU]',
+        '[CANON MENU]',
         '[Somatic DSP Modulation Hub]',
         '2. RUN SOMATIC SAT SOLVER',
         '3. AUDIT KINETIC MOTOR MASKS',
@@ -283,6 +307,12 @@ export const updateMenu = async (
             'Validate frontmatter entities, basis-point bounds, and Banker rounding.',
         '[ 26. SCHEMA & INVARIANTS ]':
             'Open entity manifests, somatic SAT, and constitutional rule registry audits.',
+        '[LAWS MENU]':
+            'Open constitutional rule registry laws deck and inspect hard invariants.',
+        '[ERRATA MENU]':
+            'Open append-only errata ledger deck and validate record contracts.',
+        '[CANON MENU]':
+            'Open epistemic standing registry deck and inspect canon fact standings.',
         '[Somatic DSP Modulation Hub]':
             'Extract disk-backed Somatic Ledger dossiers, trauma floors, and SQLite records.',
         '2. RUN SOMATIC SAT SOLVER':
@@ -307,6 +337,8 @@ export const updateMenu = async (
             'Open the hygiene flight deck to ping every mounted unit buzzer.',
         '[C] COMPILE CANON & GATE 0 GAUNTLET':
             'Open 3-pass compiler flight deck, Merkle emission, and Gate 0 verification.',
+        '[X] RECORD CANONICAL ERRATA ENTRY':
+            'Inspect errata hash-chain lineage and seal new retcon records.',
         'ROOT MENU': 'Return to master flight deck switchboard.',
     }
 
@@ -453,6 +485,14 @@ export const updateMenu = async (
     }
     if (src === HYGIENE_LABEL) {
         await openHygieneMenu(cpy, bal, ste)
+        return cpy
+    }
+    if (src === ERRATA_DECK_MENU_LABEL) {
+        await openErrataMenu(cpy, bal, ste)
+        return cpy
+    }
+    if (src === CANON_MENU_LABEL) {
+        await openCanonMenu(cpy, bal, ste)
         return cpy
     }
     if (src === RECORD_ERRATA_LABEL) {
@@ -787,6 +827,11 @@ export const updateMenu = async (
 
         case '[Somatic DSP Modulation Hub]': {
             await openSomaticDspHub(cpy, bal, ste)
+            break
+        }
+
+        case '[LAWS MENU]': {
+            await openLawsMenu(cpy, bal, ste)
             break
         }
 
@@ -1890,6 +1935,805 @@ export const openSomaticDspHub = async (
         }
     }
 
+    return cpy
+}
+
+export const LAWS_REGISTRY_INSPECT_LABEL =
+    '[1] INSPECT CONSTITUTIONAL RULE REGISTRY'
+export const LAWS_MENU_BACK_LABEL = '[<] BACK TO LORE MENU'
+
+/**
+ * Opens the [LAWS MENU] laws deck. Preserves the blessed 12x12 dual-pane
+ * topology: left 4-column choice pane with net mesh binding, right 8-column
+ * cns00 telemetry pane. Headless fallback resolves the option list via slv.
+ */
+export const openLawsMenu = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste?: State,
+): Promise<MenuModel> => {
+    const lawsOptions = [
+        LAWS_REGISTRY_INSPECT_LABEL,
+        AUDIT_PARDONS_MENU_LABEL,
+        SIMULATE_UNPARDONABLE_WAIVER_LABEL,
+        LAWS_MENU_BACK_LABEL,
+    ]
+    const lawsDescriptions: Record<string, string> = {
+        [LAWS_REGISTRY_INSPECT_LABEL]:
+            'Validate constitutional rule schema and verify unpardonable hard invariant.',
+        [AUDIT_PARDONS_MENU_LABEL]:
+            'Run Pass 2 relational waiver audit over active pardon ledgers.',
+        [SIMULATE_UNPARDONABLE_WAIVER_LABEL]:
+            'Simulate an unpardonable physical waiver trap in Pass 2.',
+        [LAWS_MENU_BACK_LABEL]: 'Return to the primary lore dashboard.',
+    }
+
+    const lib = (globalThis as any).LIBRARY || (global as any).LIBRARY
+    if (!lib || typeof lib.hunt !== 'function') {
+        if (bal?.slv) {
+            bal.slv({
+                mnuBit: {
+                    idx: 'open-laws-menu',
+                    lst: lawsOptions,
+                    val: 0,
+                },
+            })
+        }
+        return cpy
+    }
+
+    const gridBit = await lib.hunt(GRID_UPDATE, {
+        x: 0,
+        y: 4,
+        xSpan: 4,
+        ySpan: 8,
+    })
+
+    const lawsChoiceBit = await lib.hunt(CHOICE_OPEN, {
+        dat: {
+            clr0: 0,
+            clr1: 3,
+            cb: async (choice: string) => {
+                const text = lawsDescriptions[choice]
+                await lib.hunt(CONSOLE_UPDATE, {
+                    idx: 'cns00',
+                    src: `:: ${text || 'No description available.'}`,
+                })
+            },
+        },
+        src: 'VERTICAL',
+        lst: lawsOptions,
+        net: gridBit?.grdBit?.dat,
+    })
+
+    const selection = lawsChoiceBit?.chcBit?.src
+
+    if (selection === LAWS_REGISTRY_INSPECT_LABEL) {
+        await inspectRuleRegistryAction(cpy, bal, ste)
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        if (bal?.slv) {
+            bal.slv({ mnuBit: bal })
+        }
+        return cpy
+    }
+
+    if (selection === AUDIT_PARDONS_MENU_LABEL) {
+        await auditPardonWaiversAction(cpy, bal, ste)
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        if (bal?.slv) {
+            bal.slv({ mnuBit: bal })
+        }
+        return cpy
+    }
+
+    if (selection === SIMULATE_UNPARDONABLE_WAIVER_LABEL) {
+        await simulateUnpardonableWaiverAction(cpy, bal, ste)
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        if (bal?.slv) {
+            bal.slv({ mnuBit: bal })
+        }
+        return cpy
+    }
+
+    return updateMenu(cpy, bal, ste as State)
+}
+
+export const inspectRuleRegistryAction = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste?: State,
+): Promise<MenuModel> => {
+    await emitConsoleLine(
+        ste,
+        '>> [LAWS:INSPECT] Validating Constitutional Rule Schema...',
+    )
+
+    const testRule = {
+        id: 'rule_kinetic_limb_conservation',
+        category: 'PHYSICAL',
+        severity_class: 'TIER_1_HARD_INVARIANT',
+        description:
+            'Characters cannot execute physical actions requiring severed or missing limbs.',
+        pardonable: false,
+        max_tolerated_pardon_frequency_bps: 0,
+        owning_entity_types: ['character'],
+    }
+
+    const parsed = RuleSchema.safeParse(testRule)
+    if (parsed.success) {
+        await emitConsoleLine(
+            ste,
+            `>> [LAWS:OK] Rule ${testRule.id} verified as unpardonable hard physical invariant. Status code: 0.`,
+        )
+        cpy.statusMessage = 'RULE_REGISTRY_VERIFIED'
+    } else {
+        await emitConsoleLine(
+            ste,
+            ':: [LAWS:FAIL] Rule Schema verification failed.',
+        )
+        cpy.statusMessage = 'RULE_REGISTRY_FAILED'
+    }
+
+    if (bal.slv) {
+        bal.slv({
+            mnuBit: {
+                idx: 'inspect-laws-registry',
+                val: parsed.success ? 0 : -1,
+            },
+        })
+    }
+    return cpy
+}
+
+export const AUDIT_PARDONS_MENU_LABEL = '[2] AUDIT ACTIVE PARDON WAIVERS'
+
+export const auditPardonWaiversAction = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste?: State,
+): Promise<MenuModel> => {
+    await emitConsoleLine(
+        ste,
+        '>> [PARDON:AUDIT] Initiating Pass 2 Relational Waiver Audit...',
+    )
+
+    const mockRules = new Map<string, Rule>([
+        [
+            'rule_bimanual_lift',
+            {
+                id: 'rule_bimanual_lift',
+                category: 'PHYSICAL',
+                severity_class: 'TIER_1_HARD_INVARIANT',
+                description:
+                    'Two-handed tasks require two functioning arm limbs',
+                pardonable: false,
+                max_tolerated_pardon_frequency_bps: 0,
+                owning_entity_types: ['character'],
+            },
+        ],
+        [
+            'rule_carrying_capacity',
+            {
+                id: 'rule_carrying_capacity',
+                category: 'LOGISTICAL',
+                severity_class: 'TIER_2_AUDITED_ONTOLOGY',
+                description: 'Carrying mass limits under extreme exertion',
+                pardonable: true,
+                max_tolerated_pardon_frequency_bps: 5,
+                owning_entity_types: ['character', 'possession'],
+            },
+        ],
+    ])
+
+    const mockAuthorizers = new Map<string, Authorizer>([
+        [
+            'auth_showrunner',
+            {
+                id: 'auth_showrunner',
+                name: 'Lead Showrunner',
+                role: 'SHOWRUNNER',
+                permitted_categories: ['LOGISTICAL', 'SOCIAL'],
+            },
+        ],
+    ])
+
+    const mockPardons = new Map<string, PardonRecord>([
+        [
+            'pardon_tallow_01',
+            {
+                pardon_id: 'pardon_tallow_01',
+                target: {
+                    series_slug: 'under-the-floorboards',
+                    episode_id: 'ep01',
+                    scene_id: 'sc01',
+                    entity_id: 'char_wart',
+                },
+                rule_id: 'rule_carrying_capacity',
+                authorizer_id: 'auth_showrunner',
+                justification:
+                    'Carrying extra tallow through culvert siphon safely.',
+                granted_against_canon_hash: 'a'.repeat(64),
+                granted_at_epoch: 0,
+            },
+        ],
+    ])
+
+    const entities = {
+        characters: { char_wart: { id: 'char_wart' } },
+    }
+
+    const result = validatePass2Pardons(
+        mockPardons,
+        mockRules,
+        mockAuthorizers,
+        entities,
+        'a'.repeat(64),
+        false,
+    )
+
+    if (result.valid) {
+        await emitConsoleLine(
+            ste,
+            `>> [PARDON:AUDITED] Evaluated ${result.appliedPardons.length} waiver(s). Zero fatal breaches. Status code: 0.`,
+        )
+        cpy.statusMessage = 'PARDONS_VERIFIED'
+    } else {
+        for (const err of result.errors) {
+            await emitConsoleLine(ste, `:: [PARDON:FATAL] ${err}`)
+        }
+        cpy.statusMessage = 'PARDONS_BREACH'
+    }
+
+    if (bal.slv) {
+        bal.slv({
+            mnuBit: {
+                idx: 'audit-pardons',
+                val: result.valid ? 0 : -1,
+                dat: result,
+            },
+        })
+    }
+    return cpy
+}
+
+export const SIMULATE_UNPARDONABLE_WAIVER_LABEL =
+    '[3] SIMULATE UNPARDONABLE WAIVER TRAP'
+
+export const simulateUnpardonableWaiverAction = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste?: State,
+): Promise<MenuModel> => {
+    await emitConsoleLine(
+        ste,
+        '>> [LAWS:TRAP] Simulating illegal physical rule waiver in Pass 2...',
+    )
+
+    const compileModel = new CompileModel()
+    compileModel.activeSeries = 'under-the-floorboards'
+    compileModel.entityCatalog = {
+        characters: {
+            char_wart: {
+                id: 'char_wart',
+                somatic: { total_arms: 1 },
+            },
+        },
+    }
+
+    // Stage an illegal physical waiver on disk so Pass 2 can intercept it
+    const os = await import('node:os')
+    const fsMod = await import('node:fs')
+    const pathMod = await import('node:path')
+    const tmpRoot = fsMod.mkdtempSync(
+        pathMod.join(os.tmpdir(), 'lore-sim-trap-'),
+    )
+    const seriesDir = pathMod.join(tmpRoot, 'series', 'under-the-floorboards')
+    const worldDir = pathMod.join(seriesDir, 'world')
+    fsMod.mkdirSync(worldDir, { recursive: true })
+    const illegalPardon = {
+        pardon_id: 'pardon_illegal_amputee_lift',
+        target: {
+            series_slug: 'under-the-floorboards',
+            episode_id: 'ep01',
+            scene_id: 'sc01',
+            entity_id: 'char_wart',
+        },
+        rule_id: 'rule_bimanual_lift',
+        authorizer_id: 'auth_showrunner_main',
+        justification:
+            'Allowing one-armed character to lift two-handed pipe valve.',
+        granted_against_canon_hash: '0'.repeat(64),
+        granted_at_epoch: 0,
+    }
+    fsMod.writeFileSync(
+        pathMod.join(worldDir, 'pardons.json'),
+        JSON.stringify({ records: [illegalPardon] }),
+        'utf8',
+    )
+
+    let intercepted = false
+    let fatalError = ''
+
+    pass2Traverse(compileModel, {
+        idx: 'sim-trap',
+        src: tmpRoot,
+        seriesSlug: 'under-the-floorboards',
+        slv: (res: any) => {
+            const errors = res?.cmpBit?.dat?.validationReport?.errors || []
+            const fatal = errors.find((e: string) =>
+                e.includes('[PASS 2 PARDON FATAL]'),
+            )
+            if (fatal) {
+                intercepted = true
+                fatalError = fatal
+            }
+        },
+    })
+
+    try {
+        fsMod.rmSync(tmpRoot, { recursive: true, force: true })
+    } catch {
+        // ignore cleanup errors
+    }
+
+    if (intercepted) {
+        await emitConsoleLine(ste, `:: [PARDON:FATAL] ${fatalError}`)
+        await emitConsoleLine(
+            ste,
+            '>> [LAWS:OK] Pass 2 Compiler successfully halted on unpardonable rule breach. Status code: 0.',
+        )
+        cpy.statusMessage = 'UNPARDONABLE_WAIVER_HALTED'
+    } else {
+        await emitConsoleLine(
+            ste,
+            ':: [LAWS:FAIL] Pass 2 failed to intercept unpardonable waiver!',
+        )
+        cpy.statusMessage = 'WAIVER_TRAP_FAILED'
+    }
+
+    if (bal.slv) {
+        bal.slv({
+            mnuBit: { idx: 'sim-unpardonable-trap', val: intercepted ? 0 : -1 },
+        })
+    }
+    return cpy
+}
+
+export const ERRATA_SCHEMA_VALIDATE_LABEL = '[1] VALIDATE ERRATA RECORD SCHEMA'
+export const ERRATA_MENU_BACK_LABEL = '[<] BACK TO LORE MENU'
+
+/**
+ * Opens the [ERRATA MENU] ledger deck. Preserves the blessed 12x12 dual-pane
+ * topology: left 4-column choice pane with net mesh binding, right 8-column
+ * cns00 telemetry pane. Headless fallback resolves the option list via slv.
+ */
+export const openErrataMenu = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste?: State,
+): Promise<MenuModel> => {
+    const errataOptions = [ERRATA_SCHEMA_VALIDATE_LABEL, ERRATA_MENU_BACK_LABEL]
+    const errataDescriptions: Record<string, string> = {
+        [ERRATA_SCHEMA_VALIDATE_LABEL]:
+            'Validate errata record contract and strict field enforcement.',
+        [ERRATA_MENU_BACK_LABEL]: 'Return to the primary lore dashboard.',
+    }
+
+    const lib = (globalThis as any).LIBRARY || (global as any).LIBRARY
+    if (!lib || typeof lib.hunt !== 'function') {
+        if (bal?.slv) {
+            bal.slv({
+                mnuBit: {
+                    idx: 'open-errata-menu',
+                    lst: errataOptions,
+                    val: 0,
+                },
+            })
+        }
+        return cpy
+    }
+
+    const gridBit = await lib.hunt(GRID_UPDATE, {
+        x: 0,
+        y: 4,
+        xSpan: 4,
+        ySpan: 8,
+    })
+
+    const errataChoiceBit = await lib.hunt(CHOICE_OPEN, {
+        dat: {
+            clr0: 0,
+            clr1: 3,
+            cb: async (choice: string) => {
+                const text = errataDescriptions[choice]
+                await lib.hunt(CONSOLE_UPDATE, {
+                    idx: 'cns00',
+                    src: `:: ${text || 'No description available.'}`,
+                })
+            },
+        },
+        src: 'VERTICAL',
+        lst: errataOptions,
+        net: gridBit?.grdBit?.dat,
+    })
+
+    const selection = errataChoiceBit?.chcBit?.src
+
+    if (selection === ERRATA_SCHEMA_VALIDATE_LABEL) {
+        await validateErrataSchemaAction(cpy, bal, ste)
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        if (bal?.slv) {
+            bal.slv({ mnuBit: bal })
+        }
+        return cpy
+    }
+
+    return updateMenu(cpy, bal, ste as State)
+}
+
+export const validateErrataSchemaAction = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste?: State,
+): Promise<MenuModel> => {
+    await emitConsoleLine(
+        ste,
+        '>> [ERRATA:SCHEMA] Validating Errata Record Contract...',
+    )
+
+    const candidate = {
+        errata_id: 'err_culvert_aperture_01',
+        sequence_number: 1,
+        classification: 'FACTUAL_CONTRADICTION',
+        superseded_merkle_hash: '0'.repeat(64),
+        active_merkle_hash: '1'.repeat(64),
+        superseded_commit_sha: 'a'.repeat(40),
+        active_commit_sha: 'b'.repeat(40),
+        affected_entity_ids: ['loc_culvert_siphon'],
+        historical_episodes: ['ep001'],
+        rationale:
+            'Canonicalized culvert siphon aperture to eight inches across series blueprints.',
+        recorded_at_epoch: 100,
+    }
+
+    const parsed = ErrataRecordSchema.safeParse(candidate)
+    if (parsed.success) {
+        await emitConsoleLine(
+            ste,
+            `>> [ERRATA:SCHEMA_OK] ErrataRecord ${candidate.errata_id} validated. Status code: 0.`,
+        )
+        cpy.statusMessage = 'ERRATA_SCHEMA_VERIFIED'
+    } else {
+        await emitConsoleLine(
+            ste,
+            ':: [ERRATA:SCHEMA_FAIL] Errata Record verification failed.',
+        )
+        cpy.statusMessage = 'ERRATA_SCHEMA_FAILED'
+    }
+
+    if (bal.slv) {
+        bal.slv({
+            mnuBit: {
+                idx: 'validate-errata-schema',
+                val: parsed.success ? 0 : -1,
+            },
+        })
+    }
+    return cpy
+}
+
+export const INSPECT_STANDING_REGISTRY_LABEL =
+    '[1] INSPECT EPISTEMIC STANDING REGISTRY'
+export const CANON_MENU_BACK_LABEL = '[<] BACK TO LORE MENU'
+
+/**
+ * Opens the [CANON MENU] standing deck. Preserves the blessed 12x12 dual-pane
+ * topology: left 4-column choice pane with net mesh binding, right 8-column
+ * cns00 telemetry pane. Headless fallback resolves the option list via slv.
+ */
+export const openCanonMenu = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste?: State,
+): Promise<MenuModel> => {
+    const canonOptions = [
+        INSPECT_STANDING_REGISTRY_LABEL,
+        RUN_STILL_GOOD_AUDIT_LABEL,
+        EXECUTE_TRIE_DISJOINTNESS_SCAN_LABEL,
+        CANON_MENU_BACK_LABEL,
+    ]
+    const canonDescriptions: Record<string, string> = {
+        [INSPECT_STANDING_REGISTRY_LABEL]:
+            'Validate epistemic standing registry and tri-state badge metadata.',
+        [RUN_STILL_GOOD_AUDIT_LABEL]:
+            'Rank reconsideration queue by blast-radius priority and affirm top fact.',
+        [EXECUTE_TRIE_DISJOINTNESS_SCAN_LABEL]:
+            'Scan clue tokens against forbidden mystery lemmas in linear O(L) time.',
+        [CANON_MENU_BACK_LABEL]: 'Return to the primary lore dashboard.',
+    }
+
+    const lib = (globalThis as any).LIBRARY || (global as any).LIBRARY
+    if (!lib || typeof lib.hunt !== 'function') {
+        if (bal?.slv) {
+            bal.slv({
+                mnuBit: {
+                    idx: 'open-canon-menu',
+                    lst: canonOptions,
+                    val: 0,
+                },
+            })
+        }
+        return cpy
+    }
+
+    const gridBit = await lib.hunt(GRID_UPDATE, {
+        x: 0,
+        y: 4,
+        xSpan: 4,
+        ySpan: 8,
+    })
+
+    const canonChoiceBit = await lib.hunt(CHOICE_OPEN, {
+        dat: {
+            clr0: 0,
+            clr1: 3,
+            cb: async (choice: string) => {
+                const text = canonDescriptions[choice]
+                await lib.hunt(CONSOLE_UPDATE, {
+                    idx: 'cns00',
+                    src: `:: ${text || 'No description available.'}`,
+                })
+            },
+        },
+        src: 'VERTICAL',
+        lst: canonOptions,
+        net: gridBit?.grdBit?.dat,
+    })
+
+    const selection = canonChoiceBit?.chcBit?.src
+
+    if (selection === INSPECT_STANDING_REGISTRY_LABEL) {
+        await inspectEpistemicStandingRegistryAction(cpy, bal, ste)
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        if (bal?.slv) {
+            bal.slv({ mnuBit: bal })
+        }
+        return cpy
+    }
+
+    if (selection === RUN_STILL_GOOD_AUDIT_LABEL) {
+        await runStillGoodAuditAction(cpy, bal, ste)
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        if (bal?.slv) {
+            bal.slv({ mnuBit: bal })
+        }
+        return cpy
+    }
+
+    if (selection === EXECUTE_TRIE_DISJOINTNESS_SCAN_LABEL) {
+        await executeTrieDisjointnessScanAction(cpy, bal, ste)
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        if (bal?.slv) {
+            bal.slv({ mnuBit: bal })
+        }
+        return cpy
+    }
+
+    return updateMenu(cpy, bal, ste as State)
+}
+
+export const inspectEpistemicStandingRegistryAction = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste?: State,
+): Promise<MenuModel> => {
+    await emitConsoleLine(
+        ste,
+        '>> [STANDING:INSPECT] Validating Epistemic Standing Registry...',
+    )
+
+    const sampleFactCandidate = {
+        fact_id: 'fact_wart_arm_amputation',
+        entity_id: 'char_wart',
+        standing: 'FLAGGED_FOR_REVIEW',
+        in_degree_count: 14,
+        days_since_reconsideration: 45,
+        last_reviewed_epoch: 100,
+        review_note:
+            'Writer raised question on bimanual brace in culvert siphon.',
+    }
+
+    const result = CanonFactStandingSchema.safeParse(sampleFactCandidate)
+
+    if (result.success) {
+        const meta = getStandingMetadata(result.data.standing)
+        await emitConsoleLine(
+            ste,
+            `>> [STANDING:SCHEMA_OK] ${result.data.fact_id} validated | Badge: ${meta.badge} | CascadeOnEnter: ${meta.cascadeOnEnter}`,
+        )
+        cpy.statusMessage = 'STANDING_SCHEMA_VERIFIED'
+    } else {
+        for (const issue of result.error.issues) {
+            await emitConsoleLine(
+                ste,
+                `:: [STANDING:SCHEMA_FAIL] ${issue.message}`,
+            )
+        }
+        cpy.statusMessage = 'STANDING_SCHEMA_BREACH'
+    }
+
+    if (bal.slv) {
+        bal.slv({
+            mnuBit: {
+                idx: 'inspect-standing-registry',
+                val: result.success ? 0 : -1,
+                dat: result,
+            },
+        })
+    }
+    return cpy
+}
+
+export const RUN_STILL_GOOD_AUDIT_LABEL =
+    '[2] RUN STILL-GOOD RECONSIDERATION AUDIT'
+
+export const runStillGoodAuditAction = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste?: State,
+): Promise<MenuModel> => {
+    await emitConsoleLine(
+        ste,
+        '>> [AUDIT:PRIORITY] Running Topological Blast-Radius Reconsideration Queue...',
+    )
+
+    const mockFactCatalog = new Map<string, CanonFactStanding>([
+        [
+            'fact_wart_arm',
+            {
+                fact_id: 'fact_wart_arm',
+                entity_id: 'char_wart',
+                standing: 'ACTIVE_ENDORSED',
+                in_degree_count: 42,
+                days_since_reconsideration: 90,
+                last_reviewed_epoch: 0,
+            },
+        ],
+        [
+            'fact_culvert_grate',
+            {
+                fact_id: 'fact_culvert_grate',
+                entity_id: 'loc_culvert_siphon',
+                standing: 'FLAGGED_FOR_REVIEW',
+                in_degree_count: 14,
+                days_since_reconsideration: 65,
+                last_reviewed_epoch: 0,
+            },
+        ],
+    ])
+
+    const queue = rankReconsiderationQueue(mockFactCatalog, 0, 0)
+
+    for (const item of queue) {
+        const spineFlag = item.is_monolithic_spine ? ' [MONOLITHIC SPINE]' : ''
+        await emitConsoleLine(
+            ste,
+            `>> [AUDIT:ITEM] ${item.fact_id} | Score: ${item.priority_score_bps} bps | InDegree: ${item.in_degree_count} | DaysStale: ${item.days_since_reconsideration}${spineFlag}`,
+        )
+    }
+
+    // Demonstrate 5-second "Still Good" cognitive affirmation on top candidate
+    const topFactId = queue[0].fact_id
+    const affirmation = affirmStillGood(mockFactCatalog, topFactId, 1000)
+
+    await emitConsoleLine(
+        ste,
+        `>> [STILL_GOOD:OK] Fact ${topFactId} affirmed | VersionBumped: ${affirmation.version_bumped} | CascadeTriggered: ${affirmation.cascade_triggered} | Compute: $0.00`,
+    )
+
+    cpy.statusMessage = 'STILL_GOOD_AUDIT_COMPLETE'
+
+    if (bal.slv) {
+        bal.slv({
+            mnuBit: {
+                idx: 'run-still-good-audit',
+                val: 0,
+                dat: { queue, affirmation },
+            },
+        })
+    }
+    return cpy
+}
+
+export const EXECUTE_TRIE_DISJOINTNESS_SCAN_LABEL =
+    '[3] EXECUTE TRIE CLUE-LEMMA DISJOINTNESS SCAN'
+
+export const executeTrieDisjointnessScanAction = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste?: State,
+): Promise<MenuModel> => {
+    await emitConsoleLine(
+        ste,
+        '>> [TRIE:SCAN] Populating O(L) Prefix-Tree with forbidden mystery lemmas...',
+    )
+
+    const sampleMysteries: MysteryTrieIngress[] = [
+        {
+            topic_id: 'mystery_famine_well',
+            forbidden_propositions: [
+                {
+                    id: 'prop_arsenic_taint',
+                    trigger_lemmas: [
+                        'arsenic',
+                        'poison',
+                        'taint',
+                        'well water',
+                    ],
+                },
+            ],
+            permitted_clue_tokens: ['rusted_bucket', 'cut_rope', 'iron_grate'],
+        },
+    ]
+
+    const report = TrieClueDisjointnessSolver.verifyDisjointnessAcrossCorpus(
+        sampleMysteries,
+        'char_wart',
+    )
+
+    if (report.valid) {
+        await emitConsoleLine(
+            ste,
+            `>> [TRIE:DISJOINT_OK] Evaluated ${report.totalCluesEvaluated} clue(s) against ${report.totalLemmasIndexed} lemma(s). Zero collisions at T0 = $0.00.`,
+        )
+        cpy.statusMessage = 'TRIE_DISJOINTNESS_VERIFIED'
+    } else {
+        for (const col of report.collisions) {
+            await emitConsoleLine(
+                ste,
+                `:: [TRIE:COLLISION] Clue '${col.collidingToken}' collided with forbidden lemma '${col.lemma}' in topic '${col.topicId}'!`,
+            )
+        }
+        cpy.statusMessage = 'TRIE_COLLISION_DETECTED'
+    }
+
+    if (bal.slv) {
+        bal.slv({
+            mnuBit: {
+                idx: 'execute-trie-disjointness-scan',
+                val: report.valid ? 0 : -1,
+                dat: report,
+            },
+        })
+    }
     return cpy
 }
 

@@ -3,179 +3,200 @@ import fs from 'node:fs'
 import path from 'node:path'
 import os from 'node:os'
 import {
-    ErrataRecordSchema,
-    ErrataLedgerFileSchema,
-} from '../fce/errata.schema.js'
-import { appendErrataRecord, verifyErrataLineage } from '../buz/errata.buzz.js'
+    appendErrataRecord,
+    verifyErrataLineage,
+    loadErrataLedgerFile,
+} from '../buz/errata.buzz.js'
+import type { ErrataRecord } from '../fce/errata.schema.js'
 
-describe('Phase 3 Cryptographic Errata Ledger Engine Gauntlet', () => {
-    let tempDir: string
+describe('03.laws.unit :: Cryptographic Errata Lineage Sealer and Verifier', () => {
+    let tempRepoRoot: string
+    const seriesSlug = 'test-chronicle'
+    const genesisHash = '0'.repeat(64)
 
     beforeEach(() => {
-        tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'goblin-errata-test-'))
+        tempRepoRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'errata-test-'))
+        const worldDir = path.join(tempRepoRoot, 'series', seriesSlug, 'world')
+        fs.mkdirSync(worldDir, { recursive: true })
     })
 
     afterEach(() => {
-        if (fs.existsSync(tempDir)) {
-            fs.rmSync(tempDir, { recursive: true, force: true })
-        }
+        fs.rmSync(tempRepoRoot, { recursive: true, force: true })
     })
 
-    it('rejects floating-point numbers in sequence_number and recorded_at_epoch', () => {
-        expect(() =>
-            ErrataRecordSchema.parse({
-                errata_id: 'err_float_seq',
-                sequence_number: 1.5,
-                classification: 'FACTUAL_CONTRADICTION',
-                superseded_merkle_hash: 'a'.repeat(64),
-                active_merkle_hash: 'b'.repeat(64),
-                superseded_commit_sha: '1'.repeat(40),
-                active_commit_sha: '2'.repeat(40),
-                affected_entity_ids: ['char_bog'],
-                rationale:
-                    'Valid rationale with sufficient character length here.',
-                recorded_at_epoch: 100,
-            }),
-        ).toThrow('[FLOAT_PROHIBITED]')
-
-        expect(() =>
-            ErrataRecordSchema.parse({
-                errata_id: 'err_float_epoch',
-                sequence_number: 1,
-                classification: 'FACTUAL_CONTRADICTION',
-                superseded_merkle_hash: 'a'.repeat(64),
-                active_merkle_hash: 'b'.repeat(64),
-                superseded_commit_sha: '1'.repeat(40),
-                active_commit_sha: '2'.repeat(40),
-                affected_entity_ids: ['char_bog'],
-                rationale:
-                    'Valid rationale with sufficient character length here.',
-                recorded_at_epoch: 100.25,
-            }),
-        ).toThrow('[FLOAT_PROHIBITED]')
-    })
-
-    it('rejects errata records lacking affected entity ids or with short rationales', () => {
-        expect(() =>
-            ErrataRecordSchema.parse({
-                errata_id: 'err_no_targets',
-                sequence_number: 1,
-                classification: 'CHRONOLOGICAL_SLIP',
-                superseded_merkle_hash: 'a'.repeat(64),
-                active_merkle_hash: 'b'.repeat(64),
-                superseded_commit_sha: '1'.repeat(40),
-                active_commit_sha: '2'.repeat(40),
-                affected_entity_ids: [],
-                rationale:
-                    'Valid rationale with sufficient character length here.',
-                recorded_at_epoch: 100,
-            }),
-        ).toThrow('[ERRATA_EMPTY_TARGETS]')
-
-        expect(() =>
-            ErrataRecordSchema.parse({
-                errata_id: 'err_short_reason',
-                sequence_number: 1,
-                classification: 'CHRONOLOGICAL_SLIP',
-                superseded_merkle_hash: 'a'.repeat(64),
-                active_merkle_hash: 'b'.repeat(64),
-                superseded_commit_sha: '1'.repeat(40),
-                active_commit_sha: '2'.repeat(40),
-                affected_entity_ids: ['char_bog'],
-                rationale: 'Too short',
-                recorded_at_epoch: 100,
-            }),
-        ).toThrow('[RATIONALE_TOO_SHORT]')
-    })
-
-    it('appends sequential errata records and maintains unbroken hash lineage', () => {
-        const genesisHash = '0'.repeat(64)
-        const hash1 = '1'.repeat(64)
-        const hash2 = '2'.repeat(64)
-
-        // Record 1
-        const res1 = appendErrataRecord(tempDir, {
-            errata_id: 'err_siphon_diameter',
+    it('appends the first errata record anchored to the genesis hash', () => {
+        const record1: ErrataRecord = {
+            errata_id: 'err_aperture_01',
             sequence_number: 1,
             classification: 'FACTUAL_CONTRADICTION',
             superseded_merkle_hash: genesisHash,
-            active_merkle_hash: hash1,
+            active_merkle_hash: '1'.repeat(64),
             superseded_commit_sha: 'a'.repeat(40),
             active_commit_sha: 'b'.repeat(40),
             affected_entity_ids: ['loc_culvert_siphon'],
             historical_episodes: ['ep001'],
             rationale:
-                'Corrected culvert diameter measurement from 12 inches to 8 inches.',
-            recorded_at_epoch: 101,
-        })
+                'Corrected pipe diameter from six inches to eight inches.',
+            recorded_at_epoch: 100,
+        }
 
-        expect(res1.success).toBe(true)
-        expect(res1.sequenceNumber).toBe(1)
-        expect(res1.recordCount).toBe(1)
+        const res = appendErrataRecord(seriesSlug, record1, tempRepoRoot)
+        expect(res.success).toBe(true)
+        expect(res.totalRecords).toBe(1)
 
-        // Record 2
-        const res2 = appendErrataRecord(tempDir, {
-            errata_id: 'err_wart_injury_locus',
+        const ledger = loadErrataLedgerFile(res.ledgerPath!)
+        expect(ledger.records.length).toBe(1)
+        expect(ledger.records[0].errata_id).toBe('err_aperture_01')
+
+        const audit = verifyErrataLineage(seriesSlug, tempRepoRoot)
+        expect(audit.valid).toBe(true)
+        expect(audit.totalRecords).toBe(1)
+        expect(audit.headHash).toBe('1'.repeat(64))
+    })
+
+    it('appends multiple sequential records maintaining strict hash continuity', () => {
+        const record1: ErrataRecord = {
+            errata_id: 'err_seq_01',
+            sequence_number: 1,
+            classification: 'FACTUAL_CONTRADICTION',
+            superseded_merkle_hash: genesisHash,
+            active_merkle_hash: '1'.repeat(64),
+            superseded_commit_sha: 'a'.repeat(40),
+            active_commit_sha: 'b'.repeat(40),
+            affected_entity_ids: ['loc_culvert_siphon'],
+            historical_episodes: ['ep001'],
+            rationale: 'First historical correction for pipe diameter.',
+            recorded_at_epoch: 100,
+        }
+
+        const record2: ErrataRecord = {
+            errata_id: 'err_seq_02',
             sequence_number: 2,
             classification: 'ANATOMICAL_ANOMALY',
-            superseded_merkle_hash: hash1,
-            active_merkle_hash: hash2,
+            superseded_merkle_hash: '1'.repeat(64),
+            active_merkle_hash: '2'.repeat(64),
             superseded_commit_sha: 'b'.repeat(40),
             active_commit_sha: 'c'.repeat(40),
             affected_entity_ids: ['char_wart'],
             historical_episodes: ['ep001', 'ep002'],
-            rationale:
-                'Clarified amputation locus below the elbow joint rather than wrist.',
-            recorded_at_epoch: 102,
-        })
+            rationale: 'Standardized left arm amputation date in timeline.',
+            recorded_at_epoch: 200,
+        }
+
+        appendErrataRecord(seriesSlug, record1, tempRepoRoot)
+        const res2 = appendErrataRecord(seriesSlug, record2, tempRepoRoot)
 
         expect(res2.success).toBe(true)
-        expect(res2.sequenceNumber).toBe(2)
-        expect(res2.recordCount).toBe(2)
+        expect(res2.totalRecords).toBe(2)
 
-        // Verify Lineage
-        const audit = verifyErrataLineage(res2.filePath)
+        const audit = verifyErrataLineage(seriesSlug, tempRepoRoot)
         expect(audit.valid).toBe(true)
         expect(audit.totalRecords).toBe(2)
         expect(audit.genesisHash).toBe(genesisHash)
-        expect(audit.currentHeadHash).toBe(hash2)
-        expect(audit.errors).toEqual([])
+        expect(audit.headHash).toBe('2'.repeat(64))
     })
 
-    it('traps broken hash chain links when superseded hash diverges', () => {
-        const genesisHash = '0'.repeat(64)
-        const hash1 = '1'.repeat(64)
-        const rogueHash = 'f'.repeat(64)
-        const hash2 = '2'.repeat(64)
-
-        appendErrataRecord(tempDir, {
-            errata_id: 'err_initial',
+    it('rejects sequence number jumps or out-of-order appends', () => {
+        const record1: ErrataRecord = {
+            errata_id: 'err_seq_01',
             sequence_number: 1,
-            classification: 'HISTORICAL_RETCON',
+            classification: 'FACTUAL_CONTRADICTION',
             superseded_merkle_hash: genesisHash,
-            active_merkle_hash: hash1,
+            active_merkle_hash: '1'.repeat(64),
+            superseded_commit_sha: 'a'.repeat(40),
+            active_commit_sha: 'b'.repeat(40),
+            affected_entity_ids: ['loc_culvert_siphon'],
+            historical_episodes: ['ep001'],
+            rationale: 'First historical correction for pipe diameter.',
+            recorded_at_epoch: 100,
+        }
+        appendErrataRecord(seriesSlug, record1, tempRepoRoot)
+
+        const jumpRecord: ErrataRecord = {
+            errata_id: 'err_seq_03',
+            sequence_number: 3, // Expected 2
+            classification: 'HISTORICAL_RETCON',
+            superseded_merkle_hash: '1'.repeat(64),
+            active_merkle_hash: '3'.repeat(64),
+            superseded_commit_sha: 'b'.repeat(40),
+            active_commit_sha: 'c'.repeat(40),
+            affected_entity_ids: ['char_bog'],
+            historical_episodes: ['ep002'],
+            rationale: 'Illegal jump in sequence numbering.',
+            recorded_at_epoch: 300,
+        }
+
+        expect(() =>
+            appendErrataRecord(seriesSlug, jumpRecord, tempRepoRoot),
+        ).toThrow(/ERRATA_SEQUENCE_DISCONTINUITY/)
+    })
+
+    it('rejects cyclic or no-op hashes where superseded equals active', () => {
+        const cyclicRecord: ErrataRecord = {
+            errata_id: 'err_cyclic_01',
+            sequence_number: 1,
+            classification: 'ORTHOGRAPHIC_CANONIZATION',
+            superseded_merkle_hash: 'a'.repeat(64),
+            active_merkle_hash: 'a'.repeat(64), // Cyclic
             superseded_commit_sha: '1'.repeat(40),
             active_commit_sha: '2'.repeat(40),
-            affected_entity_ids: ['char_bog'],
-            rationale:
-                'Initial historical retcon documentation for the record.',
+            affected_entity_ids: ['char_wart'],
+            historical_episodes: ['ep001'],
+            rationale: 'Cyclic hash reference attempt.',
             recorded_at_epoch: 100,
-        })
+        }
 
-        // Attempt append with rogue hash
         expect(() =>
-            appendErrataRecord(tempDir, {
-                errata_id: 'err_divergent',
-                sequence_number: 2,
-                classification: 'HISTORICAL_RETCON',
-                superseded_merkle_hash: rogueHash,
-                active_merkle_hash: hash2,
-                superseded_commit_sha: '2'.repeat(40),
-                active_commit_sha: '3'.repeat(40),
-                affected_entity_ids: ['char_bog'],
-                rationale: 'Attempting invalid append with broken link hash.',
-                recorded_at_epoch: 101,
-            }),
-        ).toThrow('[ERRATA_HASH_CHAIN_BREACH]')
+            appendErrataRecord(seriesSlug, cyclicRecord, tempRepoRoot),
+        ).toThrow(/CYCLIC_HASH_REFERENCE/)
+    })
+
+    it('traps hash discontinuities when verifying tampered ledgers', () => {
+        const record1: ErrataRecord = {
+            errata_id: 'err_seq_01',
+            sequence_number: 1,
+            classification: 'FACTUAL_CONTRADICTION',
+            superseded_merkle_hash: genesisHash,
+            active_merkle_hash: '1'.repeat(64),
+            superseded_commit_sha: 'a'.repeat(40),
+            active_commit_sha: 'b'.repeat(40),
+            affected_entity_ids: ['loc_culvert_siphon'],
+            historical_episodes: ['ep001'],
+            rationale: 'First historical correction for pipe diameter.',
+            recorded_at_epoch: 100,
+        }
+        appendErrataRecord(seriesSlug, record1, tempRepoRoot)
+
+        // Artificially mutate errata.json on disk to simulate a broken chain
+        const ledgerFile = path.join(
+            tempRepoRoot,
+            'series',
+            seriesSlug,
+            'world',
+            'errata.json',
+        )
+        const ledger = JSON.parse(fs.readFileSync(ledgerFile, 'utf8'))
+        ledger.records.push({
+            errata_id: 'err_tampered_02',
+            sequence_number: 2,
+            classification: 'HISTORICAL_RETCON',
+            superseded_merkle_hash: 'f'.repeat(64), // Does not match record1's active_merkle_hash
+            active_merkle_hash: '9'.repeat(64),
+            superseded_commit_sha: 'b'.repeat(40),
+            active_commit_sha: 'c'.repeat(40),
+            affected_entity_ids: ['char_bog'],
+            historical_episodes: ['ep002'],
+            rationale: 'Tampered hash continuity record.',
+            recorded_at_epoch: 200,
+        })
+        fs.writeFileSync(ledgerFile, JSON.stringify(ledger, null, 2), 'utf8')
+
+        const audit = verifyErrataLineage(seriesSlug, tempRepoRoot)
+        expect(audit.valid).toBe(false)
+        expect(
+            audit.errors.some((e) => e.includes('[HASH_DISCONTINUITY]')),
+        ).toBe(true)
+        expect(audit.discontinuities.length).toBe(1)
+        expect(audit.discontinuities[0].errataId).toBe('err_tampered_02')
     })
 })

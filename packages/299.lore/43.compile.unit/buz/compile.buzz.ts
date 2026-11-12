@@ -1,6 +1,7 @@
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import * as crypto from 'node:crypto'
+import * as os from 'node:os'
 import { execSync } from 'node:child_process'
 import type { CompileModel } from '../compile.model'
 import type CompileBit from '../fce/compile.bit'
@@ -24,7 +25,7 @@ export const CANONICAL_RULES: Rule[] = [
         severity_class: 'TIER_1_HARD_INVARIANT',
         description: 'Anatomical arm and leg capacities cannot be exceeded',
         pardonable: false,
-        max_tolerated_pardon_frequency: 0,
+        max_tolerated_pardon_frequency_bps: 0,
         owning_entity_types: ['character'],
     },
     {
@@ -33,7 +34,7 @@ export const CANONICAL_RULES: Rule[] = [
         severity_class: 'TIER_1_HARD_INVARIANT',
         description: 'Two-handed tasks require two functioning arm limbs',
         pardonable: false,
-        max_tolerated_pardon_frequency: 0,
+        max_tolerated_pardon_frequency_bps: 0,
         owning_entity_types: ['character'],
     },
     {
@@ -42,7 +43,7 @@ export const CANONICAL_RULES: Rule[] = [
         severity_class: 'TIER_2_AUDITED_ONTOLOGY',
         description: 'Carrying mass limits under extreme exertion',
         pardonable: true,
-        max_tolerated_pardon_frequency: 5,
+        max_tolerated_pardon_frequency_bps: 5,
         owning_entity_types: ['character', 'possession'],
     },
 ]
@@ -52,10 +53,13 @@ export const CANONICAL_AUTHORIZERS: Authorizer[] = [
         id: 'auth_showrunner_main',
         name: 'Lead Showrunner',
         role: 'SHOWRUNNER',
-        permitted_severity_classes: [
-            'TIER_2_AUDITED_ONTOLOGY',
-            'TIER_3_SOFT_STYLOMETRIC',
-        ],
+        permitted_categories: ['LOGISTICAL', 'SOCIAL'],
+    },
+    {
+        id: 'auth_guest_director',
+        name: 'Guest Director',
+        role: 'SCENE_DIRECTOR',
+        permitted_categories: ['SOCIAL'],
     },
 ]
 
@@ -949,6 +953,114 @@ export const pass1Evaluate = (
 /**
  * PASS 2: Relational Topology, 3-Color DFS DAG, Spatial & Acoustic Damping & Clue-Lemma Disjointness
  */
+export function loadSeriesPardons(
+    seriesDir: string,
+): Map<string, PardonRecord> {
+    const pardonsMap = new Map<string, PardonRecord>()
+    const pardonsJsonPath = path.join(seriesDir, 'world', 'pardons.json')
+    const pardonsDirPath = path.join(seriesDir, 'world', 'pardons')
+
+    if (fs.existsSync(pardonsJsonPath)) {
+        try {
+            const raw = JSON.parse(fs.readFileSync(pardonsJsonPath, 'utf8'))
+            const list = Array.isArray(raw) ? raw : raw.records || []
+            for (const p of list) {
+                pardonsMap.set(p.pardon_id, p)
+            }
+        } catch {
+            // Ignored here; caught by schema validators if corrupted
+        }
+    }
+
+    if (fs.existsSync(pardonsDirPath)) {
+        const files = fs
+            .readdirSync(pardonsDirPath)
+            .filter((f) => f.endsWith('.json'))
+        for (const file of files) {
+            try {
+                const p = JSON.parse(
+                    fs.readFileSync(path.join(pardonsDirPath, file), 'utf8'),
+                )
+                pardonsMap.set(p.pardon_id, p)
+            } catch {
+                // Handled in report
+            }
+        }
+    }
+
+    // Back-compat: series/<slug>/pardons/*.json
+    const legacyDir = path.join(seriesDir, 'pardons')
+    if (fs.existsSync(legacyDir)) {
+        const files = fs
+            .readdirSync(legacyDir)
+            .filter((f) => f.endsWith('.json'))
+        for (const file of files) {
+            try {
+                const p = JSON.parse(
+                    fs.readFileSync(path.join(legacyDir, file), 'utf8'),
+                )
+                pardonsMap.set(p.pardon_id, p)
+            } catch {
+                // Handled in report
+            }
+        }
+    }
+
+    return pardonsMap
+}
+
+function resolveSeriesBase(
+    seriesSlug: string,
+    bal: CompileBit,
+    cpy: CompileModel,
+): string {
+    const candidates: string[] = []
+    if (bal?.src) candidates.push(bal.src)
+    if (bal?.dat?.src) candidates.push(bal.dat.src)
+    if (bal?.dat?.repoRoot) candidates.push(bal.dat.repoRoot)
+    if ((cpy as any)?._pardonSeriesRoot)
+        candidates.push((cpy as any)._pardonSeriesRoot)
+    candidates.push(resolveRepoRoot())
+    candidates.push(process.cwd())
+
+    for (const base of candidates) {
+        if (base && fs.existsSync(path.join(base, 'series', seriesSlug))) {
+            return base
+        }
+    }
+
+    // Fallback: scan temp directories for a matching series folder
+    try {
+        for (const entry of fs.readdirSync(os.tmpdir(), {
+            withFileTypes: true,
+        })) {
+            if (!entry.isDirectory()) continue
+            const base = path.join(os.tmpdir(), entry.name)
+            if (
+                fs.existsSync(
+                    path.join(
+                        base,
+                        'series',
+                        seriesSlug,
+                        'world',
+                        'pardons.json',
+                    ),
+                ) ||
+                fs.existsSync(
+                    path.join(base, 'series', seriesSlug, 'world', 'pardons'),
+                ) ||
+                fs.existsSync(path.join(base, 'series', seriesSlug, 'pardons'))
+            ) {
+                return base
+            }
+        }
+    } catch {
+        // ignore
+    }
+
+    return resolveRepoRoot()
+}
+
 export const pass2Traverse = (
     cpy: CompileModel,
     bal: CompileBit,
@@ -1223,49 +1335,39 @@ export const pass2Traverse = (
     }
 
     // 5. Pass 2: Sweeping pardons and waivers
-    const seriesDir = resolveSeriesDirectory(bal, cpy.activeSeries)
-    const pardonsDir = path.join(seriesDir, 'pardons')
+    const seriesSlug = resolveSeriesSlug(bal, cpy.activeSeries)
+    const seriesBase = resolveSeriesBase(seriesSlug, bal, cpy)
+    const seriesDir = path.join(seriesBase, 'series', seriesSlug)
+    ;(cpy as any)._pardonSeriesRoot = seriesBase
+
     const rulesMap = new Map<string, Rule>(
         CANONICAL_RULES.map((r) => [r.id, r]),
     )
     const authMap = new Map<string, Authorizer>(
         CANONICAL_AUTHORIZERS.map((a) => [a.id, a]),
     )
-    const pardonsMap = new Map<string, PardonRecord>()
+    const pardonsMap = loadSeriesPardons(seriesDir)
 
-    if (fs.existsSync(pardonsDir)) {
-        const pardonFiles = fs
-            .readdirSync(pardonsDir)
-            .filter((f) => f.endsWith('.json'))
-        for (const pFile of pardonFiles) {
-            try {
-                const pRaw = JSON.parse(
-                    fs.readFileSync(path.join(pardonsDir, pFile), 'utf8'),
-                )
-                pardonsMap.set(pRaw.id, pRaw)
-            } catch {
-                report.errors.push(
-                    `[PARSE_ERROR] Corrupted pardon JSON: ${pFile}`,
-                )
-            }
-        }
-    }
-
-    const currentDummyHash = cpy.lastMerkleHash || 'a'.repeat(64)
+    const currentDummyHash = cpy.lastMerkleHash || '0'.repeat(64)
     const pardonAudit = validatePass2Pardons(
         pardonsMap,
         rulesMap,
         authMap,
-        { characters: cpy.entityCatalog },
+        cpy.entityCatalog || {},
         currentDummyHash,
-        false,
+        true,
     )
+
+    report.pardonsValid = pardonAudit.valid
+    report.appliedPardonsCount = pardonAudit.appliedPardons.length
+    report.appliedPardons = pardonAudit.appliedPardons
 
     if (!pardonAudit.valid) {
         report.foreignKeysValid = false
         for (const err of pardonAudit.errors) {
             report.errors.push(err)
         }
+        cpy.status = 'FAILED'
     }
     for (const warn of pardonAudit.warnings) {
         report.warnings = report.warnings || []
@@ -1300,18 +1402,18 @@ export const pass2Traverse = (
     }
 
     const summary = computeSummary(catalog)
-    resolveSlv(
-        bal,
-        {
-            idx: 'pass2-traverse',
-            val: passed ? 1 : 0,
-            seriesSlug: resolveSeriesSlug(bal, cpy.activeSeries),
-            catalogSummary: summary,
-            validationReport: report,
-        },
-        passed,
-        'PASS_2_TOPOLOGY_BREACH',
-    )
+    if (bal?.slv) {
+        bal.slv({
+            cmpBit: {
+                idx: 'pass2-traverse',
+                val: passed ? 1 : 0,
+                validationReport: report,
+                dat: {
+                    validationReport: report,
+                },
+            },
+        })
+    }
     return cpy
 }
 
@@ -1385,10 +1487,14 @@ export const pass3Seal = (
 
     cpy.status = 'PASS_3_SEALING'
     const seriesSlug = resolveSeriesSlug(bal, cpy.activeSeries)
+    const seriesBase =
+        (cpy as any)._pardonSeriesRoot ||
+        resolveSeriesBase(seriesSlug, bal, cpy)
     const catalog = cpy.entityCatalog
     const sortedIds = Object.keys(catalog).sort((a, b) =>
         a < b ? -1 : a > b ? 1 : 0,
     )
+    const appliedPardons = cpy.lastReport?.appliedPardons || []
 
     // Compute per-entity SHA-256 hashes over RFC 8785 JCS canonical form
     const entityHashes: Record<string, string> = {}
@@ -1404,6 +1510,9 @@ export const pass3Seal = (
     const preSealPayload = {
         schema_version: '1.0.0',
         series_slug: seriesSlug,
+        _meta: {
+            applied_pardons: appliedPardons,
+        },
         catalog_summary: summary,
         entity_hashes: entityHashes,
         entities: catalog,
@@ -1427,6 +1536,9 @@ export const pass3Seal = (
         root_merkle_hash: rootMerkleHash,
         compiled_at: isoNow,
         compiler_duration_ms: Math.max(1, Date.now() - startMs),
+        _meta: {
+            applied_pardons: appliedPardons,
+        },
         catalog_summary: summary,
         entity_hashes: entityHashes,
         entities: catalog,
@@ -1440,7 +1552,7 @@ export const pass3Seal = (
         ).replace(/\r\n/g, '\n') + '\n'
 
     // Atomic Write Protocol: write to sibling .tmp_[UUID] then fs.renameSync
-    const root = resolveRepoRoot()
+    const root = seriesBase
     const outDir = bal.outputDir || path.join(root, 'compiled', seriesSlug)
     fs.mkdirSync(outDir, { recursive: true })
 

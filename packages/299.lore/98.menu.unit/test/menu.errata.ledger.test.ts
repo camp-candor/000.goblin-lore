@@ -94,7 +94,7 @@ describe('299.lore - Cryptographic Errata Ledger Menu Wiring Suite', () => {
         process.chdir(tempDir)
         try {
             appendErrataRecord(
-                path.join(tempDir, 'series', 'under-the-floorboards'),
+                'under-the-floorboards',
                 {
                     errata_id: 'err_first',
                     sequence_number: 1,
@@ -108,6 +108,7 @@ describe('299.lore - Cryptographic Errata Ledger Menu Wiring Suite', () => {
                         'Valid rationale documentation for ledger audit.',
                     recorded_at_epoch: 100,
                 },
+                tempDir,
             )
 
             const lines = await runErrataLedgerAudit()
@@ -142,7 +143,7 @@ describe('299.lore - Cryptographic Errata Ledger Menu Wiring Suite', () => {
         process.chdir(tempDir)
         try {
             appendErrataRecord(
-                path.join(tempDir, 'series', 'wiregrass-basin'),
+                'wiregrass-basin',
                 {
                     errata_id: 'err_01',
                     sequence_number: 1,
@@ -156,10 +157,11 @@ describe('299.lore - Cryptographic Errata Ledger Menu Wiring Suite', () => {
                         'Valid rationale documentation for first record.',
                     recorded_at_epoch: 100,
                 },
+                tempDir,
             )
 
             appendErrataRecord(
-                path.join(tempDir, 'series', 'wiregrass-basin'),
+                'wiregrass-basin',
                 {
                     errata_id: 'err_02',
                     sequence_number: 2,
@@ -173,6 +175,7 @@ describe('299.lore - Cryptographic Errata Ledger Menu Wiring Suite', () => {
                         'Valid rationale documentation for second record.',
                     recorded_at_epoch: 101,
                 },
+                tempDir,
             )
 
             // Forge a rogue superseded link directly into the ledger to sever

@@ -125,7 +125,7 @@ export function discoverPardonLedgers(): PardonLedger {
                                 ),
                             ),
                         )
-                        pardons.set(parsed.id, parsed)
+                        pardons.set(parsed.pardon_id, parsed)
                     } catch {
                         corruptedFiles.push(`${slug}/pardons/${f}`)
                     }
@@ -193,7 +193,7 @@ export const runConstitutionalRegistryAudit = async (): Promise<string[]> => {
     for (const authorizer of CANONICAL_AUTHORIZERS) {
         const parsed = AuthorizerSchema.parse(authorizer)
         lines.push(
-            `>> [AUTHORIZER:LOADED] ${parsed.id} (${parsed.role}) | waivable: ${parsed.permitted_severity_classes.join(', ')}`,
+            `>> [AUTHORIZER:LOADED] ${parsed.id} (${parsed.role}) | waivable: ${parsed.permitted_categories.join(', ')}`,
         )
     }
 

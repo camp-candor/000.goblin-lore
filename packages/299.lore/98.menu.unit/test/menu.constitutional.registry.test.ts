@@ -128,8 +128,9 @@ describe('299.lore - Constitutional Rule Registry Negative Controls', () => {
     it('auditPardonLedger -- traps Tier 1 physical waivers with FATAL errors', async () => {
         const ledger = discoverPardonLedgers()
         const illegalPardon = {
-            id: 'pardon_illegal_lift',
+            pardon_id: 'pardon_illegal_lift',
             target: {
+                series_slug: 'under-the-floorboards',
                 episode_id: 'ep001',
                 scene_id: 'sc02',
                 shot_id: 'sh03',
@@ -145,7 +146,7 @@ describe('299.lore - Constitutional Rule Registry Negative Controls', () => {
         const mixedLedger = {
             ...ledger,
             pardons: new Map<string, PardonRecord>([
-                [illegalPardon.id, illegalPardon],
+                [illegalPardon.pardon_id, illegalPardon],
             ]),
         }
         const audit = auditPardonLedger(mixedLedger)
@@ -162,8 +163,9 @@ describe('299.lore - Constitutional Rule Registry Negative Controls', () => {
     it('auditPardonLedger -- admits authorized audited-ontology waivers cleanly', async () => {
         const ledger = discoverPardonLedgers()
         const legalPardon = {
-            id: 'pardon_legal_capacity',
+            pardon_id: 'pardon_legal_capacity',
             target: {
+                series_slug: 'under-the-floorboards',
                 episode_id: 'ep001',
                 scene_id: 'sc01',
                 shot_id: 'sh01',
@@ -179,7 +181,7 @@ describe('299.lore - Constitutional Rule Registry Negative Controls', () => {
         const mixedLedger = {
             ...ledger,
             pardons: new Map<string, PardonRecord>([
-                [legalPardon.id, legalPardon],
+                [legalPardon.pardon_id, legalPardon],
             ]),
         }
         const audit = auditPardonLedger(mixedLedger)

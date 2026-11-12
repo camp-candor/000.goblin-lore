@@ -21,6 +21,8 @@ export interface CompileCatalogSummary {
     mysteryCount?: number
 }
 
+import type { PardonRecord } from '../../03.laws.unit/fce/pardon.schema.js'
+
 export interface CompileValidationReport {
     byte0Compliant: boolean
     ascii7BitCompliant: boolean
@@ -31,6 +33,9 @@ export interface CompileValidationReport {
     spatialPortalsReciprocal: boolean
     acousticAttenuationValid?: boolean
     clueLemmaDisjoint: boolean
+    pardonsValid?: boolean
+    appliedPardonsCount?: number
+    appliedPardons?: PardonRecord[]
     atomicWriteVerified: boolean
     deepFreezeVerified: boolean
     errors: string[]

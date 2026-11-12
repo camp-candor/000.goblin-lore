@@ -99,7 +99,7 @@ export function auditErrataLedgers(): ErrataLedgerAudit {
         }
 
         auditedLedgers += 1
-        const report = verifyErrataLineage(ledgerPath)
+        const report = verifyErrataLineage(slug, path.dirname(baseDir))
         if (!report.valid) {
             headHash = ''
             for (const err of report.errors) {
@@ -108,7 +108,7 @@ export function auditErrataLedgers(): ErrataLedgerAudit {
         } else {
             totalRecords += report.totalRecords
             if (report.totalRecords > 0) {
-                headHash = report.currentHeadHash
+                headHash = report.headHash
             }
         }
     }
@@ -141,7 +141,7 @@ export const runErrataLedgerAudit = async (): Promise<string[]> => {
                 )
                 continue
             }
-            const report = verifyErrataLineage(ledgerPath)
+            const report = verifyErrataLineage(slug, path.dirname(baseDir))
             if (!report.valid) {
                 for (const err of report.errors) {
                     lines.push(`:: [${slug}] ${err}`)

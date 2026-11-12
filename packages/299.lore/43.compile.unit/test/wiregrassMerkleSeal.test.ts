@@ -48,6 +48,7 @@ describe('43.compile.unit :: Wiregrass Basin Merkle Seal & Hermetic Parity', () 
         const preSealPayload = {
             schema_version: onDisk.schema_version,
             series_slug: onDisk.series_slug,
+            _meta: onDisk._meta,
             catalog_summary: onDisk.catalog_summary,
             entity_hashes: onDisk.entity_hashes,
             entities: onDisk.entities,

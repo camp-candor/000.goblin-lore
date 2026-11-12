@@ -105,6 +105,7 @@ export function verifyWiregrassCanonSealForTts(
     const preSealPayload = {
         schema_version: parsed.schema_version,
         series_slug: parsed.series_slug,
+        _meta: parsed._meta,
         catalog_summary: parsed.catalog_summary,
         entity_hashes: entityHashes,
         entities,
