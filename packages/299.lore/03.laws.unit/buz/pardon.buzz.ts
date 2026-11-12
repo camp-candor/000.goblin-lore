@@ -142,11 +142,16 @@ export const evaluatePardonWaivers = (
         return cpy
     }
 
+    let entities = {}
+    if (ste && ste.value && ste.value.lore && ste.value.lore.entities) {
+        entities = ste.value.lore.entities
+    }
+
     const result = validatePass2Pardons(
         dat.pardons,
         cpy.rules,
         cpy.authorizers,
-        {},
+        entities,
         dat.currentCanonHash,
         dat.strictFrequencyAudit ?? false,
     )

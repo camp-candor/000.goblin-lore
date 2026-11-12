@@ -1,0 +1,22 @@
+cat << 'DIFF' > patch5.diff
+--- packages/299.lore/03.laws.unit/laws.action.ts
++++ packages/299.lore/03.laws.unit/laws.action.ts
+@@ -1,5 +1,6 @@
+ import type { Action } from '../99.core/interface/action.interface.js'
+ import type LawsBit from './fce/laws.bit.js'
++import type PardonEvaluatorBit from './fce/pardonValidation.bit.js'
+
+ export const INIT_LAWS = '[Laws action] Init Laws'
+ export class InitLaws implements Action {
+@@ -27,7 +28,7 @@
+
+ export const EVALUATE_PARDON_WAIVERS = '[Laws action] Evaluate Pardon Waivers'
+ export class EvaluatePardonWaivers implements Action {
+     readonly type = EVALUATE_PARDON_WAIVERS
+-    constructor(public bale: LawsBit) {}
++    constructor(public bale: PardonEvaluatorBit) {}
+ }
+
+ export type Actions =
+DIFF
+patch -p0 < patch5.diff

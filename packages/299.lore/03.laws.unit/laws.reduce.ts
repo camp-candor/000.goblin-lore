@@ -16,14 +16,14 @@ export function reducer(
         case Act.UPDATE_LAWS:
             return Buzz.updateLaws(clone(model), act.bale, state)
 
-        case Act.EVALUATE_PARDON_WAIVERS:
-            return Buzz.evaluatePardonWaivers(clone(model), act.bale, state)
-
         case Act.APPEND_ERRATA:
             return Buzz.appendErrataAction(clone(model), act.bale, state)
 
         case Act.VERIFY_ERRATA:
             return Buzz.verifyErrataAction(clone(model), act.bale, state)
+
+        case Act.EVALUATE_PARDON_WAIVERS:
+            return Buzz.evaluatePardonWaivers(clone(model), act.bale, state)
 
         default:
             return model
