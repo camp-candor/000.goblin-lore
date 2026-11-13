@@ -6,8 +6,8 @@ export type GenreClassification =
     | 'HARD_SCIFI_VACUUM'
 
 export interface GenesisWizardStateSpace {
-    readonly scarcity_index_bps: number
-    readonly paranoia_baseline_bps: number
+    readonly scarcity_index_bp: number
+    readonly paranoia_baseline_bp: number
     readonly somatic_fatigue_enabled: boolean
     readonly epistemic_ignorance_enabled: boolean
     readonly gram_mass_tiers: {
@@ -24,11 +24,11 @@ export interface GenesisWizardActionVocabulary {
 }
 
 export interface GenesisWizardInvariantRules {
-    readonly max_farce_ratio_bps: number
+    readonly max_farce_ratio_bp: number
     readonly min_grievance_depth_delta: number
     readonly global_acoustic_floor_cdb: number
     readonly voiceover_ducking_db: number
-    readonly min_normalized_category_entropy_bps: number
+    readonly min_normalized_category_entropy_bp: number
     readonly thematic_categories: readonly string[]
 }
 

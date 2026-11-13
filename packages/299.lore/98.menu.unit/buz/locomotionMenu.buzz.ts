@@ -42,6 +42,7 @@ export const promptLocomotionChoice = async (
     )
 
     let selectedLabel = choices[0]
+    let cancelled = false
     if (lib && typeof lib.hunt === 'function') {
         const gridBit: any = await lib.hunt(UPDATE_GRID, {
             x: 0,
@@ -55,10 +56,16 @@ export const promptLocomotionChoice = async (
             lst: [...choices, 'CANCEL'],
             net: gridBit?.grdBit?.dat,
         })
-        selectedLabel = choiceBit?.chcBit?.src || choices[0]
+        const exitVal = choiceBit?.chcBit?.val ?? 0
+        const rawSrc = choiceBit?.chcBit?.src ?? ''
+        if (exitVal === -1 || rawSrc === 'CANCEL' || rawSrc === '') {
+            cancelled = true
+        } else {
+            selectedLabel = rawSrc
+        }
     }
 
-    if (selectedLabel === 'CANCEL' || !selectedLabel) {
+    if (cancelled) {
         emitConsole(
             ste,
             '>> [LOCOMOTION:CANCELLED] Baseline selection aborted.',
@@ -80,7 +87,7 @@ export const promptLocomotionChoice = async (
     )
     emitConsole(
         ste,
-        `>> [VELOCITY CAP] Max velocity: ${profile.max_velocity_bps} bps`,
+        `>> [VELOCITY CAP] Max velocity: ${profile.max_velocity_bps.toLocaleString('en-US')} bps`,
     )
     emitConsole(
         ste,

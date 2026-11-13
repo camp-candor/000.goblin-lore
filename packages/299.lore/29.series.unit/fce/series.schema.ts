@@ -1,4 +1,8 @@
 import { z } from 'zod'
+import {
+    GenreClassificationEnum,
+    type GenreClassification,
+} from '../../38.types.unit/val/genre.val.js'
 
 /**
  * 7-bit ASCII Slug Regular Expression for Series Identifiers.
@@ -6,14 +10,10 @@ import { z } from 'zod'
 export const SeriesSlugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 
 /**
- * Closed Genre Modality Taxonomy.
+ * Closed Genre Modality Taxonomy (sourced from 38.types.unit/val/genre.val.ts).
  */
-export const GenreModalityEnum = z.enum([
-    'LOW_FANTASY_FARCE',
-    'SOUTHERN_GOTHIC_INDUSTRIAL',
-    'HARD_SCIFI_VACUUM',
-])
-export type GenreModality = z.infer<typeof GenreModalityEnum>
+export const GenreModalityEnum = GenreClassificationEnum
+export type GenreModality = GenreClassification
 
 /**
  * Part 1: Universal State Space (S)

@@ -237,7 +237,19 @@ const init = async () => {
                 process.exit(0)
             }
 
-            initialScreen.key(['q', 'C-c'], performCleanShutdown)
+            initialScreen.key(['C-c'], performCleanShutdown)
+            initialScreen.key(['q'], () => {
+                const focused = initialScreen.focused
+                if (
+                    focused &&
+                    (focused.type === 'textbox' ||
+                        focused.type === 'textarea' ||
+                        focused.name === 'input-body')
+                ) {
+                    return
+                }
+                performCleanShutdown()
+            })
             initialScreen.key(['escape'], () => {
                 escapeCount += 1
                 if (escapeResetTimer) clearTimeout(escapeResetTimer)

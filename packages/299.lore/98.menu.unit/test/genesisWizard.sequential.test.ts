@@ -4,6 +4,7 @@ import path from 'node:path'
 import os from 'node:os'
 import { MenuModel } from '../menu.model.js'
 import { runSeriesGenesisMenu } from '../buz/genesisMenu.buzz.js'
+import { SeriesConfigSchema } from '../../29.series.unit/fce/series.schema.js'
 import {
     promptBlessedChoice,
     promptBlessedInput,
@@ -165,7 +166,7 @@ describe('299.lore - [Feature 1.1] Sequential Four-Tuple Parameterization Wizard
             'SUPERHERO_URBAN_VIGILANTE',
         )
         expect(
-            scaffoldCall?.bale?.dat?.config?.state_space?.scarcity_index_bps,
+            scaffoldCall?.bale?.dat?.config?.state_space?.scarcity_index_bp,
         ).toBe(6000)
         expect(
             scaffoldCall?.bale?.dat?.config?.action_vocabulary
@@ -175,6 +176,10 @@ describe('299.lore - [Feature 1.1] Sequential Four-Tuple Parameterization Wizard
             scaffoldCall?.bale?.dat?.config?.invariant_rules
                 ?.global_acoustic_floor_cdb,
         ).toBe(2200)
+        expect(
+            SeriesConfigSchema.safeParse(scaffoldCall?.bale?.dat?.config)
+                .success,
+        ).toBe(true)
 
         fs.rmSync(tempRoot, { recursive: true, force: true })
     })
@@ -205,5 +210,120 @@ describe('299.lore - [Feature 1.1] Sequential Four-Tuple Parameterization Wizard
         expect(resolved?.mnuBit?.val).toBe(0)
         expect(resolved?.mnuBit?.dat?.cancelled).toBe(true)
         expect(model.lastLifecycleReceipt).toBe('[GENESIS:CANCELLED]')
+    })
+
+    it('[Level 2 Trap] mid-wizard [CANCEL] at Step 4 emits [GENESIS:CANCELLED] and dispatches zero writes', async () => {
+        const consoleMessages: string[] = []
+        const dispatchedActions: string[] = []
+        let choiceStep = 0
+        ;(globalThis as any).LIBRARY = {
+            hunt: async (action: string, payload: any) => {
+                if (action === '[Console action] Update Console') {
+                    consoleMessages.push(payload?.src || '')
+                    return {}
+                }
+                if (action === '[Grid action] Update Grid') {
+                    return {
+                        grdBit: {
+                            dat: {
+                                left: '0%',
+                                top: '33%',
+                                width: '33%',
+                                height: '66%',
+                            },
+                        },
+                    }
+                }
+                if (action === '[Open action] Open Input') {
+                    return { putBit: { src: 'gotham-trinity-crisis', val: 0 } }
+                }
+                if (action === '[Open action] Open Choice') {
+                    choiceStep += 1
+                    if (choiceStep === 1) {
+                        return {
+                            chcBit: {
+                                src: '[3] SUPERHERO URBAN VIGILANTE',
+                                val: 2,
+                            },
+                        }
+                    }
+                    if (choiceStep === 2) {
+                        return {
+                            chcBit: {
+                                src: '[2] URBAN CRISIS (6000 bp / Paranoia 8000 bp)',
+                                val: 1,
+                            },
+                        }
+                    }
+                    return { chcBit: { src: '[CANCEL]', val: 3 } }
+                }
+                return {}
+            },
+        }
+
+        const mockSte: any = {
+            hunt: async (type: string) => {
+                dispatchedActions.push(type)
+                return {}
+            },
+        }
+
+        const model = new MenuModel()
+        let resolved: any = null
+        await runSeriesGenesisMenu(
+            model,
+            {
+                idx: 'test-mid-cancel',
+                slv: (res: any) => {
+                    resolved = res
+                },
+            },
+            mockSte,
+        )
+
+        expect(resolved?.mnuBit?.val).toBe(0)
+        expect(resolved?.mnuBit?.dat?.cancelled).toBe(true)
+        expect(model.lastLifecycleReceipt).toBe('[GENESIS:CANCELLED]')
+        expect(
+            consoleMessages.some((m) => m.includes('>> [GENESIS:CANCELLED]')),
+        ).toBe(true)
+        expect(dispatchedActions).toHaveLength(0)
+    })
+
+    it('[Level 2 Trap] headless fallback with LIBRARY undefined resolves cleanly without ReferenceError', async () => {
+        delete (globalThis as any).LIBRARY
+        delete (global as any).LIBRARY
+
+        const tempRoot = fs.mkdtempSync(
+            path.join(os.tmpdir(), 'genesis-headless-'),
+        )
+        const dispatchedActions: string[] = []
+        const mockSte: any = {
+            hunt: async (type: string) => {
+                dispatchedActions.push(type)
+                return { seriesBit: { val: 1 } }
+            },
+        }
+
+        const model = new MenuModel()
+        let resolved: any = null
+        await runSeriesGenesisMenu(
+            model,
+            {
+                idx: 'test-headless',
+                dat: { repoRoot: tempRoot },
+                slv: (res: any) => {
+                    resolved = res
+                },
+            },
+            mockSte,
+        )
+
+        expect(resolved?.mnuBit?.val).toBe(1)
+        expect(resolved?.mnuBit?.src).toBe('ashfall-basin')
+        expect(dispatchedActions).toContain(
+            '[Series action] Scaffold Series Tree',
+        )
+        fs.rmSync(tempRoot, { recursive: true, force: true })
     })
 })

@@ -68,19 +68,19 @@ export const GENRE_CHOICE_MAP: Readonly<Record<string, GenreClassification>> =
 
 const STATE_SPACE_PRESETS: Record<
     string,
-    { scarcity_index_bps: number; paranoia_baseline_bps: number }
+    { scarcity_index_bp: number; paranoia_baseline_bp: number }
 > = {
     '[1] HIGH SCARCITY (8500 bp / Paranoia 6500 bp)': {
-        scarcity_index_bps: 8500,
-        paranoia_baseline_bps: 6500,
+        scarcity_index_bp: 8500,
+        paranoia_baseline_bp: 6500,
     },
     '[2] URBAN CRISIS (6000 bp / Paranoia 8000 bp)': {
-        scarcity_index_bps: 6000,
-        paranoia_baseline_bps: 8000,
+        scarcity_index_bp: 6000,
+        paranoia_baseline_bp: 8000,
     },
     '[3] BALANCED BASELINE (5000 bp / Paranoia 5000 bp)': {
-        scarcity_index_bps: 5000,
-        paranoia_baseline_bps: 5000,
+        scarcity_index_bp: 5000,
+        paranoia_baseline_bp: 5000,
     },
 }
 
@@ -118,18 +118,18 @@ const ACTION_VOCAB_PRESETS: Record<
 
 const INVARIANT_PRESETS: Record<
     string,
-    { max_farce_ratio_bps: number; global_acoustic_floor_cdb: number }
+    { max_farce_ratio_bp: number; global_acoustic_floor_cdb: number }
 > = {
     '[1] STRICT DRAMA (Farce <= 1500 bp / Floor 1500 cdB)': {
-        max_farce_ratio_bps: 1500,
+        max_farce_ratio_bp: 1500,
         global_acoustic_floor_cdb: 1500,
     },
     '[2] NOIR ACOUSTIC (Farce <= 1000 bp / Floor 2200 cdB)': {
-        max_farce_ratio_bps: 1000,
+        max_farce_ratio_bp: 1000,
         global_acoustic_floor_cdb: 2200,
     },
-    '[3] ELEVATED SATIRE (Farce <= 2500 bp / Floor 1200 cdB)': {
-        max_farce_ratio_bps: 2500,
+    '[3] MODERATE SATIRE (Farce <= 1500 bp / Floor 1200 cdB)': {
+        max_farce_ratio_bp: 1500,
         global_acoustic_floor_cdb: 1200,
     },
 }
@@ -186,16 +186,15 @@ export const runSeriesGenesisMenu = async (
 
     let genreTag: GenreClassification = dat.genreTag || 'LOW_FANTASY_FARCE'
     if (!dat.genreTag && !dat.config) {
-        const genreOptions = Object.keys(GENRE_CHOICE_MAP)
-        const genreRes = await promptBlessedChoice({
-            promptHeader: 'Step 2/6: Select Genre Classification',
-            choices: genreOptions,
-            defaultValue: genreOptions[0],
-        })
+        const genreRes = await promptGenreModality(genreTag)
         if (genreRes.cancelled) {
             return abortWizard('Aborted at Step 2 (Genre Classification).')
         }
-        genreTag = GENRE_CHOICE_MAP[genreRes.value] || 'LOW_FANTASY_FARCE'
+        genreTag = genreRes.value.id
+        emitConsole(
+            ste,
+            `>> [GENESIS:GENRE] Selected ${genreRes.value.id} (Modal: ${genreRes.value.primary_modal_chamber}/${genreRes.value.secondary_modal_chamber})`,
+        )
     }
 
     let stateSpaceSelection =
@@ -273,8 +272,8 @@ export const runSeriesGenesisMenu = async (
             centralIrony ||
             'Scavengers hoard broken brass valves while starving above clean water.',
         state_space: {
-            scarcity_index_bps: stateSpaceSelection.scarcity_index_bps,
-            paranoia_baseline_bps: stateSpaceSelection.paranoia_baseline_bps,
+            scarcity_index_bp: stateSpaceSelection.scarcity_index_bp,
+            paranoia_baseline_bp: stateSpaceSelection.paranoia_baseline_bp,
             somatic_fatigue_enabled: true,
             epistemic_ignorance_enabled: true,
             gram_mass_tiers: {
@@ -295,12 +294,12 @@ export const runSeriesGenesisMenu = async (
             ],
         },
         invariant_rules: {
-            max_farce_ratio_bps: invariantSelection.max_farce_ratio_bps,
+            max_farce_ratio_bp: invariantSelection.max_farce_ratio_bp,
             min_grievance_depth_delta: 1,
             global_acoustic_floor_cdb:
                 invariantSelection.global_acoustic_floor_cdb,
             voiceover_ducking_db: -14,
-            min_normalized_category_entropy_bps: 7000,
+            min_normalized_category_entropy_bp: 7000,
             thematic_categories: ['C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7'],
         },
         medium_projections: {

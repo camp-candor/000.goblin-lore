@@ -4,4 +4,8 @@ export interface LocomotionValidationBit {
 }
 export default interface LocomotionBit {
     idx: string
+    src?: string
+    val?: number
+    dat?: Record<string, any>
+    slv?: (res: any) => void
 }

@@ -126,18 +126,44 @@ export function validateLocomotionBaselineProfile(
     return resolveLocomotionProfile(baseline)
 }
 
+export const validateLocomotion = (
+    cpy: LocomotionModel,
+    bal: LocomotionBit,
+    _ste?: State,
+) => {
+    const rawBaseline = bal?.src ?? bal?.dat?.baseline
+    const profile = validateLocomotionBaselineProfile(rawBaseline)
+    if (bal?.slv) {
+        bal.slv({
+            lcmBit: {
+                idx: bal?.idx || 'validate-locomotion',
+                val: 1,
+                src: profile.baseline,
+                dat: { profile },
+            },
+        })
+    }
+    return cpy
+}
+
 export const initLocomotion = (
     cpy: LocomotionModel,
     bal: LocomotionBit,
-    ste: State,
+    _ste?: State,
 ) => {
+    if (bal?.slv) {
+        bal.slv({ lcmBit: { idx: bal?.idx || 'init-locomotion', val: 1 } })
+    }
     return cpy
 }
 
 export const updateLocomotion = (
     cpy: LocomotionModel,
     bal: LocomotionBit,
-    ste: State,
+    _ste?: State,
 ) => {
+    if (bal?.slv) {
+        bal.slv({ lcmBit: { idx: bal?.idx || 'update-locomotion', val: 1 } })
+    }
     return cpy
 }

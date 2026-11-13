@@ -84,6 +84,7 @@ import {
 import { getChoiceById, dispatchSomaticChoice } from './somaticMenu.buzz.js'
 
 import { runSeriesGenesisMenu } from './genesisMenu.buzz.js'
+import { promptLocomotionChoice } from './locomotionMenu.buzz.js'
 import { runEntityScaffoldMenu } from './entityScaffoldMenu.buzz.js'
 import { runEntityRetirementMenu } from './retirementMenu.buzz.js'
 import { runCorpusHealthMenu } from './corpusHealthMenu.buzz.js'
@@ -111,6 +112,7 @@ export const HYGIENE_MENU_LABEL = HYGIENE_LABEL
 export const LAWS_MENU_LABEL = '[LAWS MENU]'
 export const ERRATA_DECK_MENU_LABEL = '[ERRATA MENU]'
 export const CANON_MENU_LABEL = '[CANON MENU]'
+export const LOCOMOTION_MENU_LABEL = '[LOCOMOTION BASELINE]'
 
 export const LIFECYCLE_MENU_OPTIONS: readonly string[] = Object.freeze([
     GENESIS_WIZARD_LABEL,
@@ -233,7 +235,19 @@ function attachCleanExitBindings(lib: any): void {
         process.exit(0)
     }
 
-    screen.key(['q', 'C-c'], performCleanShutdown)
+    screen.key(['C-c'], performCleanShutdown)
+    screen.key(['q'], () => {
+        const focused = screen.focused
+        if (
+            focused &&
+            (focused.type === 'textbox' ||
+                focused.type === 'textarea' ||
+                focused.name === 'input-body')
+        ) {
+            return
+        }
+        performCleanShutdown()
+    })
     screen.key(['escape'], () => {
         escapeCount += 1
         if (escapeResetTimer) clearTimeout(escapeResetTimer)
@@ -335,6 +349,7 @@ export const updateMenu = async (
         '[ERRATA MENU]',
         '[CANON MENU]',
         '[Somatic DSP Modulation Hub]',
+        LOCOMOTION_MENU_LABEL,
         '2. RUN SOMATIC SAT SOLVER',
         '3. AUDIT KINETIC MOTOR MASKS',
         '4. VERIFY HEAP IMMUTABILITY',
@@ -375,6 +390,8 @@ export const updateMenu = async (
             'Open epistemic standing registry deck and inspect canon fact standings.',
         '[Somatic DSP Modulation Hub]':
             'Extract disk-backed Somatic Ledger dossiers, trauma floors, and SQLite records.',
+        [LOCOMOTION_MENU_LABEL]:
+            'Select canonical somatic locomotion baseline, integer velocity cap, and verb masks.',
         '2. RUN SOMATIC SAT SOLVER':
             'Evaluate upper-limb capacity and anatomical hand saturation.',
         '3. AUDIT KINETIC MOTOR MASKS':
@@ -444,6 +461,15 @@ export const updateMenu = async (
     cpy.lastActionTimestamp = Date.now()
     if (src === GENESIS_WIZARD_LABEL) {
         return openGenesisMenu(cpy, bal, ste)
+    }
+    if (src === LOCOMOTION_MENU_LABEL) {
+        await promptLocomotionChoice(cpy, { idx: 'menu-locomotion' }, ste)
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 120)
+        return cpy
     }
     if (src === ENTITY_SCAFFOLDER_LABEL) {
         let chosenEntityId = 'char_knuckle'
