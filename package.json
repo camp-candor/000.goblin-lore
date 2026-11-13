@@ -20,6 +20,7 @@
         "dev": "npm run dev --workspace=@camp_candor/dashboard",
         "start": "HOST=0.0.0.0 PORT=3000 node apps/dashboard/dist/server/entry.mjs",
         "tui": "npx tsx apps/995.library/run.ts -t lore",
+        "lib": "npx tsx apps/995.library/run.ts",
         "worker:dev": "npm run dev --workspace=@camp_candor/agent",
         "dashboard:dev": "npm run dev --workspace=@camp_candor/dashboard",
         "dashboard:build": "npm run build --workspace=@camp_candor/dashboard",
