@@ -1,0 +1,159 @@
+---
+/**
+ * apps/dashboard/src/layouts/ShowrunnerLayout.astro
+ *
+ * Master Proscenium Layout Hull (goblin-lore).
+ * Enforces strict CSS Viewport Box Lock (100vw x 100dvh, overflow: hidden).
+ * Server-renders SupervisoryChrome, NavigationSpine, and TelemetryFooter with 0 KB client JS.
+ * Mounts the Full-Viewport sandboxed iframe container (<iframe id="flight-deck">).
+ */
+import SupervisoryChrome from '../components/chrome/SupervisoryChrome.astro';
+import NavigationSpine from '../components/chrome/NavigationSpine.astro';
+import TelemetryFooter from '../components/chrome/TelemetryFooter.astro';
+import ViewportStage from '../components/viewport/ViewportStage.astro';
+import '../styles/global.css';
+
+interface Props {
+  readonly title?: string;
+  readonly spaUrl: string;
+  readonly seriesSlug?: string;
+  readonly rigIdentity?: string;
+  readonly merkleRootHash?: string;
+  readonly targetMode?: 'LOCAL' | 'LIVE';
+}
+
+const {
+  title = 'Showrunner Control Deck // Goblin Lore',
+  spaUrl,
+  seriesSlug = '[UNBOUND]',
+  rigIdentity = 'LORE_1_KEEPER',
+  merkleRootHash = '0000000000000000000000000000000000000000000000000000000000000000',
+  targetMode = 'LOCAL',
+} = Astro.props;
+
+const currentPath = Astro.url.pathname;
+const isUnboundSeries = seriesSlug === '[UNBOUND]' || seriesSlug === '[NONE]';
+---
+
+<!DOCTYPE html>
+<html lang="en" class="h-full w-full m-0 p-0 overflow-hidden bg-neutral-950 select-none">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+    <title>{title}</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;700;900&family=Space+Grotesk:wght@300;400;500;600;700&family=Courier+Prime:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <style is:global>
+      html, body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background-color: #0a0a0a;
+      }
+      iframe#flight-deck {
+        width: 100%;
+        height: 100%;
+        border: none;
+        display: block;
+      }
+    </style>
+  </head>
+  <body class="h-full w-full m-0 p-0 flex flex-col overflow-hidden text-neutral-100 font-mono">
+    <!-- Top Static Hull: Zero-JS Supervisory Chrome -->
+    <SupervisoryChrome
+      seriesSlug={seriesSlug}
+      rigIdentity={rigIdentity}
+      merkleRootHash={merkleRootHash}
+      targetMode={targetMode}
+    />
+
+    <!-- Top Static Hull: Macro-Navigation Router Spine -->
+    <NavigationSpine
+      activePath={currentPath}
+      isUnboundSeries={isUnboundSeries}
+    />
+
+    <!-- Central Proscenium Canvas: Sandboxed Full-Viewport Container Frame -->
+    <main class="flex-1 w-full relative overflow-hidden bg-black">
+      <!--
+        Full-Viewport Sandboxed Frame Enclosure:
+        Renders <iframe id="flight-deck" data-iframe-url={spaUrl}> via ViewportStage.astro
+      -->
+      <ViewportStage
+        spaUrl={spaUrl}
+        title="Flight Deck Dynamic Viewport"
+      />
+      <!-- Proscenium Stage Slot: renders page children above the frame when provided -->
+      {Astro.slots.has('default') && (
+        <div class="absolute inset-0 overflow-y-auto z-10 bg-neutral-950 text-neutral-100">
+          <slot />
+        </div>
+      )}
+    </main>
+
+    <!-- Bottom Static Hull: Diagnostic Telemetry Footer -->
+    <TelemetryFooter />
+
+    <!-- Pure Ingress Handshake Script: Clerk Token URL & PostMessage Delivery -->
+    <script>
+      import { $clerkStore } from '@clerk/astro/client';
+
+      const iframe = document.getElementById('flight-deck') as HTMLIFrameElement | null;
+      let baseUrl = 'https://goblin-lore-frontend.pages.dev/';
+
+      if (iframe && iframe.dataset.iframeUrl && iframe.dataset.iframeUrl !== 'none') {
+        baseUrl = iframe.dataset.iframeUrl;
+      }
+
+      let clerkRetries = 0;
+      const initIframeHandshake = async () => {
+        const clerk = ($clerkStore as any).get();
+
+        if (!clerk || !clerk.loaded) {
+          clerkRetries++;
+          if (clerkRetries < 30) {
+            setTimeout(initIframeHandshake, 100);
+            return;
+          }
+        }
+
+        let token: string | null = null;
+        try {
+          if (clerk && clerk.session) {
+            token = await clerk.session.getToken();
+          }
+        } catch {
+          // Token extraction degraded gracefully
+        }
+
+        let finalUrl = baseUrl;
+        if (token) {
+          finalUrl += (finalUrl.indexOf('?') === -1 ? '?' : '&') + 'token=' + encodeURIComponent(token);
+        }
+
+        if (iframe) {
+          iframe.src = finalUrl;
+
+          if (token) {
+            iframe.onload = () => {
+              if (iframe.contentWindow) {
+                iframe.contentWindow.postMessage(
+                  { type: 'CLERK_AUTH_TOKEN', payload: { token } },
+                  '*'
+                );
+              }
+            };
+          }
+        }
+      };
+
+      initIframeHandshake();
+    </script>
+  </body>
+</html>

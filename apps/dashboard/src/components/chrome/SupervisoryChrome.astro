@@ -1,0 +1,98 @@
+---
+/**
+ * apps/dashboard/src/components/chrome/SupervisoryChrome.astro
+ *
+ * Supervisory Top Chrome Header (goblin-lore).
+ * Pure server-side Astro component (Zero Client JS / 0 KB Bundle Overhead).
+ * Displays Axis B cluster status, Merkle root hash, Dispatch Lockout, and financial runway.
+ * Pure 7-bit clean ASCII compliance strictly enforced.
+ */
+
+interface Props {
+  readonly seriesSlug?: string;
+  readonly rigIdentity?: string;
+  readonly merkleRootHash?: string;
+  readonly targetMode?: 'LOCAL' | 'LIVE';
+}
+
+const {
+  seriesSlug = '[UNBOUND]',
+  rigIdentity = 'LORE_1_KEEPER',
+  merkleRootHash = '0000000000000000000000000000000000000000000000000000000000000000',
+  targetMode = 'LOCAL',
+} = Astro.props;
+
+const isUnbound = seriesSlug === '[UNBOUND]' || seriesSlug === '[NONE]';
+---
+
+<header class="w-full bg-[#0d0f14] border-b border-[#2a2e39] px-4 py-2.5 flex flex-wrap items-center justify-between text-xs font-mono text-[#d1d5db]">
+  <!-- Left Telemetry Cluster -->
+  <div class="flex items-center space-x-3">
+    <div class="flex items-center space-x-2">
+      <span class="text-[#00fc40] font-bold tracking-wider">SHOWRUNNER COCKPIT</span>
+      <span class="text-[#4b5563]">::</span>
+      <span class="text-[#9ca3af]">05.DELIVERY (AXIS B)</span>
+    </div>
+
+    <span class="text-[#374151]">|</span>
+
+    <div class="flex items-center space-x-1.5">
+      <span class="text-[#7e8494]">SERIES:</span>
+      <span class={`font-bold ${isUnbound ? 'text-[#fbbf24]' : 'text-[#38bdf8]'}`}>
+        ACTIVE: {isUnbound ? '[NONE (UNBOUND)]' : seriesSlug}
+      </span>
+    </div>
+
+    <span class="text-[#374151]">|</span>
+
+    <div class="flex items-center space-x-1.5">
+      <span class="text-[#7e8494]">RIG:</span>
+      <span class={`font-bold ${isUnbound ? 'text-[#fbbf24]' : 'text-[#38bdf8]'}`}>
+        ACTIVE: {isUnbound ? '[NONE (UNBOUND)]' : rigIdentity}
+      </span>
+    </div>
+  </div>
+
+  <!-- Central Security Gate / Lockout HUD -->
+  <div class="flex items-center space-x-3 my-1 sm:my-0">
+    {isUnbound ? (
+      <div class="flex items-center space-x-1.5 bg-[#ef4444]/10 border border-[#ef4444]/40 px-2.5 py-1 rounded text-[#ef4444]">
+        <span class="w-2 h-2 rounded-full bg-[#ef4444] animate-pulse"></span>
+        <span class="font-bold tracking-wide">[ DISPATCH_LOCKOUT ENGAGED ]</span>
+      </div>
+    ) : (
+      <div class="flex items-center space-x-1.5 bg-[#00fc40]/10 border border-[#00fc40]/40 px-2.5 py-1 rounded text-[#00fc40]">
+        <span class="w-2 h-2 rounded-full bg-[#00fc40]"></span>
+        <span class="font-bold tracking-wide">[ DISPATCH ARMED ]</span>
+      </div>
+    )}
+
+    <div class="hidden lg:flex items-center space-x-1.5 text-[11px] bg-[#161922] px-2 py-1 rounded border border-[#2a2e39]">
+      <span class="text-[#7e8494]">H_ROOT:</span>
+      <span class="text-[#9ca3af] font-mono">{merkleRootHash.slice(0, 16)}...</span>
+      {isUnbound && <span class="text-[#ef4444] font-bold text-[9px]">[UNSEALED]</span>}
+    </div>
+  </div>
+
+  <!-- Right Telemetry Metrics & Burn Rate -->
+  <div class="flex items-center space-x-3 text-[11px]">
+    <div class="flex items-center space-x-1">
+      <span class="text-[#7e8494]">RUNWAY:</span>
+      <span class="text-[#00fc40] font-bold">$0.0000/SEC</span>
+    </div>
+
+    <span class="text-[#374151]">|</span>
+
+    <div class="flex items-center space-x-1">
+      <span class="text-[#7e8494]">TARGET:</span>
+      <span class="text-white font-bold">{targetMode}</span>
+    </div>
+
+    <span class="text-[#374151]">|</span>
+
+    <div class="flex items-center space-x-1">
+      <span class="text-[#7e8494]">GATE:</span>
+      <span class="text-[#fbbf24] font-bold">FAIL_CLOSED</span>
+    </div>
+  </div>
+</header>

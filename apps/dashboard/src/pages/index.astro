@@ -1,0 +1,91 @@
+---
+/**
+ * apps/dashboard/src/pages/index.astro
+ * Lore Status Landing (goblin-lore domain).
+ * Single-page dashboard: pure server-side Astro component (Zero Client JS).
+ * Reports rig binding, T0 zero-spend posture, and dispatch lockout state.
+ * Pure 7-bit clean ASCII compliance strictly enforced.
+ */
+import SupervisoryChrome from '../components/chrome/SupervisoryChrome.astro';
+import TelemetryFooter from '../components/chrome/TelemetryFooter.astro';
+
+export const prerender = false;
+
+// Resolve active lore rig binding from environment or session state
+const activeRig =
+  import.meta.env.PUBLIC_LORE_RIG ||
+  import.meta.env.PUBLIC_SERIES_SLUG ||
+  '[UNBOUND]';
+const isUnboundRig =
+  activeRig === '[UNBOUND]' || activeRig === '[NONE]' || !activeRig;
+const nullMerkleRoot =
+  '0000000000000000000000000000000000000000000000000000000000000000';
+---
+
+<!DOCTYPE html>
+<html lang="en" class="h-full w-full m-0 p-0 bg-neutral-950 select-none">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="generator" content={Astro.generator} />
+    <title>Lore Status // Goblin Lore</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Epilogue:wght@400;700;900&family=Space+Grotesk:wght@300;400;500;600;700&family=Courier+Prime:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="h-full w-full m-0 p-0 flex flex-col text-neutral-100 font-mono">
+    <SupervisoryChrome
+      seriesSlug={activeRig}
+      rigIdentity="LORE_1_KEEPER"
+      merkleRootHash={nullMerkleRoot}
+      targetMode="LOCAL"
+    />
+
+    <main class="flex-1 w-full max-w-5xl mx-auto px-6 py-10">
+      <h1 class="text-2xl font-bold tracking-wider text-[#00fc40]">
+        LORE STATUS // GOBLIN LORE
+      </h1>
+      <p class="mt-2 text-sm text-[#9ca3af]">
+        Single-page edge cockpit. All telemetry below is server-rendered at
+        request time. Zero client JavaScript is delivered to the browser.
+      </p>
+
+      <dl class="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-px bg-[#2a2e39] border border-[#2a2e39] text-sm">
+        <div class="bg-[#0d0f14] px-4 py-3">
+          <dt class="text-[#7e8494] text-[11px] tracking-wider">RIG IDENTITY</dt>
+          <dd class="mt-1 font-bold text-white">
+            {isUnboundRig ? '[UNBOUND]' : 'LORE_1_KEEPER'}
+          </dd>
+        </div>
+        <div class="bg-[#0d0f14] px-4 py-3">
+          <dt class="text-[#7e8494] text-[11px] tracking-wider">RIG BINDING</dt>
+          <dd class="mt-1 font-bold text-white">{activeRig}</dd>
+        </div>
+        <div class="bg-[#0d0f14] px-4 py-3">
+          <dt class="text-[#7e8494] text-[11px] tracking-wider">COMPUTE TIER</dt>
+          <dd class="mt-1 font-bold text-[#00fc40]">T0_ZERO_SPEND</dd>
+        </div>
+        <div class="bg-[#0d0f14] px-4 py-3">
+          <dt class="text-[#7e8494] text-[11px] tracking-wider">CLUSTER</dt>
+          <dd class="mt-1 font-bold text-white">05.DELIVERY</dd>
+        </div>
+        <div class="bg-[#0d0f14] px-4 py-3">
+          <dt class="text-[#7e8494] text-[11px] tracking-wider">DISPATCH POSTURE</dt>
+          <dd class="mt-1 font-bold text-[#ef4444]">
+            {isUnboundRig ? '[ DISPATCH_LOCKOUT ENGAGED ]' : '[ DISPATCH ARMED ]'}
+          </dd>
+        </div>
+        <div class="bg-[#0d0f14] px-4 py-3">
+          <dt class="text-[#7e8494] text-[11px] tracking-wider">CANON MERKLE ROOT</dt>
+          <dd class="mt-1 font-mono text-[11px] text-[#9ca3af] break-all">
+            {nullMerkleRoot}
+          </dd>
+        </div>
+      </dl>
+    </main>
+
+    <TelemetryFooter />
+  </body>
+</html>

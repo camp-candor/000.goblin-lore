@@ -1,0 +1,59 @@
+---
+/**
+ * apps/dashboard/src/components/chrome/TelemetryFooter.astro
+ *
+ * Persistent Diagnostic Telemetry Footer (goblin-lore).
+ * Pure server-side Astro component (Zero Client JS / 0 KB Bundle Overhead).
+ * Displays operational circuit breaker state, edge connection status, and 7-bit ASCII stamps.
+ */
+
+interface Props {
+  readonly clientLatencyMs?: string;
+}
+
+const { clientLatencyMs = '0.00' } = Astro.props;
+---
+
+<footer class="w-full h-8 bg-neutral-950 border-t border-neutral-800 text-neutral-500 px-4 flex items-center justify-between font-mono text-[11px] select-none">
+  <!-- Left Side: Edge Connection Status -->
+  <div class="flex items-center gap-3">
+    <div class="flex items-center gap-1.5">
+      <span class="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+      <span class="text-neutral-400">EDGE PERIMETER:</span>
+      <span class="text-emerald-400 font-semibold">[SECURE_T0]</span>
+    </div>
+
+    <span class="text-neutral-700">|</span>
+
+    <div class="flex items-center gap-1.5">
+      <span class="text-neutral-400">VRAM BURDEN:</span>
+      <span class="text-neutral-300 font-semibold">0 MB (CPU ONLY)</span>
+    </div>
+
+    <span class="text-neutral-700">|</span>
+
+    <div class="flex items-center gap-1.5">
+      <span class="text-neutral-400">ISOLATION:</span>
+      <span class="text-neutral-300 font-semibold">FULL_VIEWPORT_IFRAME</span>
+    </div>
+  </div>
+
+  <!-- Right Side: Frame Diagnostics & Pure ASCII Identity -->
+  <div class="flex items-center gap-3">
+    <div class="flex items-center gap-1.5">
+      <span class="text-neutral-500">LATENCY:</span>
+      <span class="text-neutral-300">{clientLatencyMs}ms</span>
+    </div>
+
+    <span class="text-neutral-700">|</span>
+
+    <div class="text-neutral-400">
+      <span>PERIMETER GATE:</span>
+      <span class="text-amber-400 font-bold">FAIL_CLOSED</span>
+    </div>
+
+    <span class="text-neutral-700">|</span>
+
+    <span class="text-neutral-600 font-bold">:: GOBLIN_LORE_STUDIO_DECK ::</span>
+  </div>
+</footer>

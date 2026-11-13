@@ -12,11 +12,16 @@
         "node": ">=22.0.0",
         "npm": ">=10.0.0"
     },
+    "overrides": {
+        "unifont": "0.7.4"
+    },
     "scripts": {
         "//__ DEV & RUNNER _________________________": "",
         "dev": "npm run dev --workspace=@camp_candor/995.library",
         "tui": "npx tsx apps/995.library/run.ts -t lore",
         "worker:dev": "npm run dev --workspace=@camp_candor/agent",
+        "dashboard:dev": "npm run dev --workspace=@camp_candor/dashboard",
+        "dashboard:build": "npm run build --workspace=@camp_candor/dashboard",
         "//__ BUILD & TYPES ________________________": "",
         "build": "npm run build --workspaces --if-present",
         "check": "npm run check:all",
@@ -28,6 +33,7 @@
         "test:worker": "npm run test --workspace=@camp_candor/agent",
         "test:agent": "npm run test --workspace=@camp_candor/100.agent",
         "test:library": "npm run test --workspace=@camp_candor/995.library",
+        "test:dashboard": "npm run test --workspace=@camp_candor/dashboard",
         "//__ AUDIT & VERIFICATION _________________": "",
         "check:env": "node scripts/audit-environment.mjs",
         "check:ingress": "node scripts/audit-ingress.mjs",

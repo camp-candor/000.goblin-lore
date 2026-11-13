@@ -1,0 +1,135 @@
+---
+/**
+ * apps/dashboard/src/components/chrome/NavigationSpine.astro
+ *
+ * Macro-Navigational Router Spine (goblin-lore).
+ * Pure server-side Astro component (Zero Client JS / 0 KB Bundle Overhead).
+ * Routes between Genesis, Lore Intake, Directorial Suites, Telemetry, Review Gates, and Fleet CI.
+ * Enforces Day-Zero Route Guards when lore state is [UNBOUND].
+ * Pure 7-bit clean ASCII compliance strictly enforced.
+ */
+
+interface Props {
+  readonly activePath?: string;
+  readonly isUnboundSeries?: boolean;
+}
+
+const {
+  activePath = '/lore/new',
+  isUnboundSeries = true,
+} = Astro.props;
+
+interface NavigationItem {
+  readonly id: string;
+  readonly label: string;
+  readonly href: string;
+  readonly disabledInZeroSeries: boolean;
+  readonly badge?: string;
+}
+
+const navItems: readonly NavigationItem[] = [
+  {
+    id: 'genesis',
+    label: 'GENESIS AIRLOCK',
+    href: '/lore/new',
+    disabledInZeroSeries: false,
+    badge: isUnboundSeries ? '[ACTIVE !]' : undefined,
+  },
+  {
+    id: 'lore',
+    label: 'LORE INTAKE',
+    href: '/lore/new',
+    disabledInZeroSeries: false,
+    badge: isUnboundSeries ? '[ACTIVE !]' : undefined,
+  },
+  {
+    id: 'episodes',
+    label: 'EPISODE DECK',
+    href: '/episodes/ep01',
+    disabledInZeroSeries: true,
+    badge: isUnboundSeries ? '[LOCKED // UNBOUND]' : undefined,
+  },
+  {
+    id: 'director',
+    label: 'DIRECTORIAL CONTROL',
+    href: '/director/tuning',
+    disabledInZeroSeries: true,
+    badge: isUnboundSeries ? '[LOCKED // UNBOUND]' : undefined,
+  },
+  {
+    id: 'telemetry',
+    label: 'SIMULATION TELEMETRY',
+    href: '/telemetry/spatial',
+    disabledInZeroSeries: true,
+    badge: isUnboundSeries ? '[LOCKED // UNBOUND]' : undefined,
+  },
+  {
+    id: 'review',
+    label: 'EDITORIAL REVIEW GATES',
+    href: '/review/animatic',
+    disabledInZeroSeries: true,
+    badge: isUnboundSeries ? '[LOCKED // UNBOUND]' : undefined,
+  },
+  {
+    id: 'fleet',
+    label: 'FLEET CI & PIN-DRIFT',
+    href: '/telemetry/fleet',
+    disabledInZeroSeries: true,
+    badge: isUnboundSeries ? '[LOCKED // UNBOUND]' : undefined,
+  },
+  {
+    id: 'finance',
+    label: 'MACRO BURN & ASSETS',
+    href: '/finance/burn',
+    disabledInZeroSeries: true,
+    badge: isUnboundSeries ? '[LOCKED // UNBOUND]' : undefined,
+  },
+  {
+    id: 'overrides',
+    label: 'GM OVERRIDES (SAFE GOD MODE)',
+    href: '/director/overrides',
+    disabledInZeroSeries: true,
+    badge: isUnboundSeries ? '[LOCKED // UNBOUND]' : undefined,
+  },
+];
+---
+
+<nav aria-label="Master Navigation Spine" class="w-full bg-[#0a0c10] border-b border-[#2a2e39] px-4 py-2 flex items-center justify-between text-xs font-mono select-none">
+  <div class="flex items-center space-x-1 sm:space-x-2 overflow-x-auto py-1">
+    {navItems.map((item) => {
+      const isLocked = isUnboundSeries && item.disabledInZeroSeries;
+      const isActive = activePath.startsWith(item.href);
+
+      if (isLocked) {
+        return (
+          <div
+            class="flex items-center space-x-1 px-2.5 py-1.5 rounded bg-[#12151d] border border-[#1f2430] text-[#525866] cursor-not-allowed opacity-40 pointer-events-none"
+            title="Route locked: Lore must be sealed before accessing suite"
+          >
+            <span>{item.label}</span>
+            {item.badge && <span class="text-[9px] text-[#ef4444] font-bold">{item.badge}</span>}
+          </div>
+        );
+      }
+
+      return (
+        <a
+          href={item.href}
+          class={`flex items-center space-x-1.5 px-2.5 py-1.5 rounded border transition-colors ${
+            isActive
+              ? 'bg-[#1c2230] border-[#00fc40] text-[#00fc40] font-bold'
+              : 'bg-[#12151d] border-[#2a2e39] text-[#9ca3af] hover:text-white hover:border-[#4b5563]'
+          }`}
+        >
+          <span>{item.label}</span>
+          {item.badge && <span class="text-[9px] text-[#00fc40] font-bold">{item.badge}</span>}
+        </a>
+      );
+    })}
+  </div>
+
+  <div class="hidden md:flex items-center space-x-2 text-[10px] text-[#7e8494]">
+    <span>ROUTER_POSTURE:</span>
+    <span class="text-[#00fc40] font-bold">FAIL_CLOSED</span>
+  </div>
+</nav>

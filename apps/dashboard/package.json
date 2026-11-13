@@ -1,0 +1,40 @@
+{
+    "name": "@camp_candor/dashboard",
+    "version": "0.1.0",
+    "private": true,
+    "type": "module",
+    "description": "Goblin Lore web dashboard (Astro + Cloudflare SSR)",
+    "scripts": {
+        "dev": "astro dev --host 0.0.0.0 --port 3000",
+        "build": "astro build",
+        "preview": "npm run build && wrangler dev",
+        "astro": "astro",
+        "deploy": "npm run build && wrangler deploy",
+        "cf-typegen": "wrangler types",
+        "check:ascii": "node scripts/verify-ascii.mjs",
+        "verify:bundle": "node src/test/verify-bundle.mjs",
+        "verify:middleware": "node src/test/verify-bundle.mjs",
+        "lint:check": "eslint .",
+        "lint:fix": "eslint . --fix",
+        "test": "vitest run",
+        "test:unit": "vitest run",
+        "gauntlet": "node scripts/verify-ascii.mjs && vitest run"
+    },
+    "dependencies": {
+        "@astrojs/cloudflare": "^13.5.1",
+        "@astrojs/react": "7.0.1",
+        "@clerk/astro": "^3.0.15",
+        "@tailwindcss/vite": "^4.2.2",
+        "@types/react": "19.3.0",
+        "@types/react-dom": "19.3.0",
+        "astro": "^6.3.3",
+        "nanostores": "^1.2.0",
+        "react": "19.3.1",
+        "react-dom": "19.3.1",
+        "tailwindcss": "^4.2.2"
+    },
+    "devDependencies": {
+        "eslint-plugin-astro": "^1.5.0",
+        "prettier-plugin-astro": "^0.14.1"
+    }
+}

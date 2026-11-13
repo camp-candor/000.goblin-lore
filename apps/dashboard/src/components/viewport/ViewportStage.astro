@@ -1,0 +1,103 @@
+---
+/**
+ * apps/dashboard/src/components/viewport/ViewportStage.astro
+ * Full-Viewport Container Enclosure for Autonomous SPAs (goblin-lore).
+ * Enforces permission sandboxing, executes host frame synchronization,
+ * and maintains bidirectional browser history updates via deepLinkBridge.
+ * Pure 7-bit clean ASCII compliance strictly enforced.
+ */
+interface Props {
+  readonly spaUrl: string;
+  readonly fallbackUrl?: string;
+  readonly title?: string;
+  readonly allowForms?: boolean;
+}
+
+const {
+  spaUrl,
+  fallbackUrl = '/lore/new',
+  title = 'Proscenium Viewport Stage',
+  allowForms = true,
+} = Astro.props;
+
+const sandboxFlags = [
+  'allow-scripts',
+  'allow-same-origin',
+  allowForms ? 'allow-forms' : '',
+  'allow-downloads',
+  'allow-popups',
+]
+  .filter(Boolean)
+  .join(' ');
+---
+
+<div class="proscenium-viewport-enclosure" data-testid="viewport-stage">
+  <iframe
+    id="flight-deck"
+    src={spaUrl}
+    title={title}
+    sandbox={sandboxFlags}
+    class="proscenium-frame"
+    data-iframe-url={spaUrl}
+    data-fallback={fallbackUrl}
+  />
+</div>
+
+<style>
+  .proscenium-viewport-enclosure {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100dvh;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    background-color: #000000;
+    border: none;
+    z-index: 10;
+  }
+
+  .proscenium-frame {
+    display: block;
+    width: 100%;
+    height: 100%;
+    border: none;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+  }
+</style>
+
+<script>
+  // PROSCENIUM INERT
+  import {
+    validateRouteChangedEnvelope,
+    mirrorRouteToHostHistory,
+  } from '../../lib/routing/deepLinkBridge';
+
+  function initViewportBridge() {
+    window.addEventListener('message', (event: MessageEvent) => {
+      // Validate origin to prevent untrusted cross-origin injection
+      if (event.origin !== window.location.origin) {
+        return;
+      }
+
+      const envelope = validateRouteChangedEnvelope(event.data);
+      if (!envelope) {
+        return;
+      }
+
+      const mirrored = mirrorRouteToHostHistory(envelope.payload.path);
+      if (mirrored) {
+        console.info(`>> [VIEWPORT][ROUTER] Ingested ROUTE_CHANGED -> ${envelope.payload.path}`);
+      }
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initViewportBridge, { once: true });
+  } else {
+    initViewportBridge();
+  }
+</script>

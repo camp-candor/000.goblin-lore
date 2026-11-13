@@ -11,6 +11,7 @@ export default tseslint.config(
             '**/packages/**',
             '**/data/**',
             '**/apps/worker/**',
+            '**/apps/dashboard/**',
             '**/apps/sower/**',
             '**/vcode/**',
             '**/coverage/**',
