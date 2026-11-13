@@ -37,15 +37,23 @@ export const runErrataMenu = async (
 
     if (report.valid) {
         const headShort = report.headHash.slice(0, 8)
-        await emitConsole(
-            ste,
-            `>> [ERRATA:CHAIN_OK] Verified ${report.totalRecords} historical retcon(s) | Head: ${headShort}... Status: 0`,
-        )
+        const okLine = `>> [ERRATA:CHAIN_OK] Verified ${report.totalRecords} historical retcon(s) | Head: ${headShort}... Status: 0`
+        const sealedLine = `>> [ERRATA:SEALED] Lineage verified and sealed for '${seriesSlug}' [OK]`
+        await emitConsole(ste, okLine)
+        await emitConsole(ste, sealedLine)
+        cpy.activeSelection = '[X] RECORD CANONICAL ERRATA ENTRY'
+        cpy.lastLifecycleReceipt = '[ERRATA:SEALED]'
         cpy.statusMessage = 'ERRATA_CHAIN_VALID'
+        if (!Array.isArray(cpy.lastTelemetryReport)) {
+            cpy.lastTelemetryReport = []
+        }
+        cpy.lastTelemetryReport.push(okLine, sealedLine)
     } else {
         for (const err of report.errors) {
             await emitConsole(ste, `:: [ERRATA:DISCONTINUITY] ${err}`)
         }
+        cpy.activeSelection = '[X] RECORD CANONICAL ERRATA ENTRY'
+        cpy.lastLifecycleReceipt = '[ERRATA:FAIL]'
         cpy.statusMessage = 'ERRATA_DISCONTINUITY'
     }
 
@@ -53,7 +61,7 @@ export const runErrataMenu = async (
         bal.slv({
             mnuBit: {
                 idx: 'run-errata-menu',
-                val: report.valid ? 0 : -1,
+                val: report.valid ? 1 : -1,
                 dat: report,
             },
         })

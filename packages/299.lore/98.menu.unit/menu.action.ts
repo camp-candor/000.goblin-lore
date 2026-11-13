@@ -55,6 +55,20 @@ export class OpenErrataMenu implements Action {
     constructor(public bale: MenuBit) {}
 }
 
+export const PUBLISH_SEALED_CANON =
+    '[Menu action] Publish Sealed Canon To Simulation Fleet'
+export class PublishSealedCanon implements Action {
+    readonly type = PUBLISH_SEALED_CANON
+    constructor(public bale: MenuBit) {}
+}
+
+export const EXPORT_TOPOLOGY_MANIFEST =
+    '[Menu action] Export Static Topology Manifest'
+export class ExportTopologyManifest implements Action {
+    readonly type = EXPORT_TOPOLOGY_MANIFEST
+    constructor(public bale: MenuBit) {}
+}
+
 export type Actions =
     | InitMenu
     | UpdateMenu
@@ -65,3 +79,5 @@ export type Actions =
     | OpenHealthMenu
     | OpenHygieneMenu
     | OpenErrataMenu
+    | PublishSealedCanon
+    | ExportTopologyManifest

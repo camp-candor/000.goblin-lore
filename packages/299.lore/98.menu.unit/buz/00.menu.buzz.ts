@@ -88,6 +88,8 @@ import { runEntityScaffoldMenu } from './entityScaffoldMenu.buzz.js'
 import { runEntityRetirementMenu } from './retirementMenu.buzz.js'
 import { runCorpusHealthMenu } from './corpusHealthMenu.buzz.js'
 import { runErrataMenu } from './errataMenu.buzz.js'
+import { publishSealedCanonToFleet } from './fleetPublish.buzz.js'
+import { exportStaticTopologyManifest } from './topologyExport.buzz.js'
 import {
     HYGIENE_LABEL,
     HYGIENE_SWEEP_LABEL,
@@ -103,6 +105,8 @@ export const ENTITY_SCAFFOLDER_LABEL = '[S] ATOMIC ENTITY SCAFFOLDER'
 export const RETIRE_ENTITY_LABEL = '[R] RETIRE CANONICAL ENTITY'
 export const CORPUS_HEALTH_LABEL = '[H] STATIC CORPUS HEALTH TELEMETRY'
 export const RECORD_ERRATA_LABEL = '[X] RECORD CANONICAL ERRATA ENTRY'
+export const PUBLISH_CANON_LABEL =
+    '[P] PUBLISH SEALED CANON TO SIMULATION FLEET'
 export const HYGIENE_MENU_LABEL = HYGIENE_LABEL
 export const LAWS_MENU_LABEL = '[LAWS MENU]'
 export const ERRATA_DECK_MENU_LABEL = '[ERRATA MENU]'
@@ -342,6 +346,7 @@ export const updateMenu = async (
         '[H] HERMETIC OFFLINE DELETION PARITY',
         '[HYGIENE]',
         '[C] COMPILE CANON & GATE 0 GAUNTLET',
+        PUBLISH_CANON_LABEL,
         ...LIFECYCLE_MENU_OPTIONS,
         'ROOT MENU',
     ]
@@ -392,6 +397,8 @@ export const updateMenu = async (
             'Open the hygiene flight deck to ping every mounted unit buzzer.',
         '[C] COMPILE CANON & GATE 0 GAUNTLET':
             'Open 3-pass compiler flight deck, Merkle emission, and Gate 0 verification.',
+        [PUBLISH_CANON_LABEL]:
+            'Copy verified bible-state.json into 000.series-sower-engine and export room topology manifest into 000.goblin-spatial.',
         '[X] RECORD CANONICAL ERRATA ENTRY':
             'Inspect errata hash-chain lineage and seal new retcon records.',
         'ROOT MENU': 'Return to master flight deck switchboard.',
@@ -557,6 +564,18 @@ export const updateMenu = async (
                 await ste.hunt(ActMnu.UPDATE_MENU, {})
             }
         }, 333)
+        return cpy
+    }
+    if (src === PUBLISH_CANON_LABEL) {
+        await publishSealedCanonToFleet(cpy, bal as any, ste)
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        if (bal?.slv) {
+            bal.slv({ mnuBit: bal })
+        }
         return cpy
     }
 

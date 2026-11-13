@@ -61,7 +61,17 @@ export const exportStaticTopologyManifest = async (
     try {
         const bibleContent = fs.readFileSync(compiledBiblePath, 'utf-8')
         const bibleState = JSON.parse(bibleContent)
-        const locations = bibleState?.entities?.locations || {}
+        const rawEntities = bibleState?.entities || {}
+        const locations =
+            rawEntities.locations && typeof rawEntities.locations === 'object'
+                ? rawEntities.locations
+                : Object.fromEntries(
+                      Object.entries<any>(rawEntities).filter(
+                          ([locId, locData]) =>
+                              locData?.entity_type === 'location' ||
+                              locId.startsWith('loc_'),
+                      ),
+                  )
 
         const spatialNodes: Record<string, any> = {}
         let nodeCount = 0
@@ -70,11 +80,18 @@ export const exportStaticTopologyManifest = async (
             spatialNodes[locId] = {
                 locationId: locId,
                 displayName: locData.title || locId,
-                adjacentLocations: locData.adjacent_locations || [],
-                acousticDampingFactor: locData.acoustic_damping_cdb || 1500,
+                adjacentLocations:
+                    locData.adjacent_locations || locData.adjacent_to || [],
+                acousticDampingFactor:
+                    locData.acoustic_damping_cdb ??
+                    locData.acoustic_dampening_cdb ??
+                    1500,
                 lightingLevel: locData.lighting_level || 'INCANDESCENT',
                 volumeCapacity: {
-                    maxAdultGoblins: locData.max_adult_goblins || 2,
+                    maxAdultGoblins:
+                        locData.max_adult_goblins ??
+                        locData.occupancy_limit ??
+                        2,
                     isCramped: Boolean(locData.is_cramped),
                 },
             }
@@ -84,7 +101,10 @@ export const exportStaticTopologyManifest = async (
         const topologyManifest = {
             schema_version: '1.0.0',
             series_slug: seriesSlug,
-            merkle_root: bibleState?._meta?.state_hash || '0'.repeat(64),
+            merkle_root:
+                bibleState?._meta?.state_hash ||
+                bibleState?.root_merkle_hash ||
+                '0'.repeat(64),
             nodes: spatialNodes,
             timestamp: new Date().toISOString(),
         }

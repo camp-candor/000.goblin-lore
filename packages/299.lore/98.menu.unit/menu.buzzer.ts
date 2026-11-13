@@ -18,6 +18,7 @@ export {
     RETIRE_ENTITY_LABEL,
     CORPUS_HEALTH_LABEL,
     RECORD_ERRATA_LABEL,
+    PUBLISH_CANON_LABEL,
     LIFECYCLE_MENU_OPTIONS,
     HYGIENE_MENU_LABEL,
     openHygieneMenu,
@@ -53,6 +54,8 @@ export {
 export { runEntityRetirementMenu } from './buz/retirementMenu.buzz.js'
 export { runCorpusHealthMenu } from './buz/corpusHealthMenu.buzz.js'
 export { runErrataMenu } from './buz/errataMenu.buzz.js'
+export { publishSealedCanonToFleet } from './buz/fleetPublish.buzz.js'
+export { exportStaticTopologyManifest } from './buz/topologyExport.buzz.js'
 export {
     runHygieneMenu,
     sweepMountedUnits,

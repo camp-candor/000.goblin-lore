@@ -30,6 +30,18 @@ export function reducer(
             return Buzz.runHygieneMenu(clone(model), act.bale, state)
         case Act.OPEN_ERRATA_MENU:
             return Buzz.runErrataMenu(clone(model), act.bale, state)
+        case Act.PUBLISH_SEALED_CANON:
+            return Buzz.publishSealedCanonToFleet(
+                clone(model),
+                act.bale as any,
+                state,
+            )
+        case Act.EXPORT_TOPOLOGY_MANIFEST:
+            return Buzz.exportStaticTopologyManifest(
+                clone(model),
+                act.bale as any,
+                state,
+            )
         default:
             return model
     }

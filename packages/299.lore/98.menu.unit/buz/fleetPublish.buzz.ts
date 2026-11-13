@@ -4,6 +4,7 @@ import type State from '../../99.core/state.js'
 import type FleetPublishBit from '../fce/fleetPublish.bit.js'
 import { resolveRepoRoot } from '../../00.lore.unit/buz/lore.buzz.js'
 import { resolveLibraryBus } from './blessedModal.buzz.js'
+import { exportStaticTopologyManifest } from './topologyExport.buzz.js'
 
 const UPDATE_CONSOLE = '[Console action] Update Console'
 
@@ -26,22 +27,58 @@ export const publishSealedCanonToFleet = async (
     bal: FleetPublishBit,
     ste?: State,
 ): Promise<any> => {
-    const dat = (bal as any).dat || {}
-    const seriesSlug =
-        (bal as any).src || dat.seriesSlug || 'gotham-trinity-crisis'
+    const dat = (bal as any)?.dat || {}
+    const requestedSlug =
+        (bal as any)?.src ||
+        dat.seriesSlug ||
+        cpy?.activeSeries ||
+        'gotham-trinity-crisis'
     const repoRoot = resolveRepoRoot()
 
-    const sourceManifest = path.resolve(
+    let seriesSlug = requestedSlug
+    let sourceManifest = path.resolve(
         repoRoot,
         'compiled',
         seriesSlug,
         'bible-state.json',
     )
 
+    if (
+        !fs.existsSync(sourceManifest) &&
+        !(bal as any)?.src &&
+        !dat.seriesSlug
+    ) {
+        const fallbackSlugs = [
+            'gotham-trinity-crisis',
+            'wiregrass-basin',
+            'under-the-floorboards',
+            'ashfall-basin',
+        ]
+        for (const candidate of fallbackSlugs) {
+            const candidatePath = path.resolve(
+                repoRoot,
+                'compiled',
+                candidate,
+                'bible-state.json',
+            )
+            if (fs.existsSync(candidatePath)) {
+                seriesSlug = candidate
+                sourceManifest = candidatePath
+                break
+            }
+        }
+    }
+
     if (!fs.existsSync(sourceManifest)) {
         const err = `[PUBLISH_ERROR] Compiled manifest not found at ${sourceManifest}. Run COMPILE LORE INSTANCE first.`
         emitConsole(ste, `:: ${err}`)
-        if (bal.slv) {
+        if (cpy && typeof cpy === 'object') {
+            cpy.lastActionTimestamp = Date.now()
+            cpy.statusMessage = 'FLEET_CANON_PUBLISH_FAILED'
+            cpy.lastError = err
+        }
+
+        if (bal?.slv) {
             bal.slv({
                 pubBit: {
                     idx: 'publish-fleet-fail',
@@ -95,7 +132,15 @@ export const publishSealedCanonToFleet = async (
                 `${seriesSlug}-topology.json`,
             )
             fs.mkdirSync(path.dirname(spatialDestination), { recursive: true })
-            fs.copyFileSync(sourceManifest, spatialDestination)
+            await exportStaticTopologyManifest(
+                cpy,
+                {
+                    idx: 'fleet-publish-topology',
+                    src: seriesSlug,
+                    dat: { seriesSlug, targetSpatialRoot },
+                },
+                ste,
+            )
             emitConsole(
                 ste,
                 `>> [SPATIAL:SYNC] [OK] Exported room topology manifest into 000.goblin-spatial`,
@@ -112,7 +157,13 @@ export const publishSealedCanonToFleet = async (
             `>> [FLEET:PUBLISH] [OK] Fleet broadcast successfully sealed and completed.`,
         )
 
-        if (bal.slv) {
+        if (cpy && typeof cpy === 'object') {
+            cpy.lastActionTimestamp = Date.now()
+            cpy.statusMessage = 'FLEET_CANON_PUBLISHED'
+            cpy.lastLifecycleReceipt = '[FLEET:PUBLISH:OK]'
+        }
+
+        if (bal?.slv) {
             bal.slv({
                 pubBit: {
                     idx: 'publish-fleet-success',
@@ -134,7 +185,13 @@ export const publishSealedCanonToFleet = async (
             ste,
             `:: [PUBLISH_FAULT] Fleet publication failed: ${errorMsg}`,
         )
-        if (bal.slv) {
+        if (cpy && typeof cpy === 'object') {
+            cpy.lastActionTimestamp = Date.now()
+            cpy.statusMessage = 'FLEET_CANON_PUBLISH_FAULT'
+            cpy.lastError = errorMsg
+        }
+
+        if (bal?.slv) {
             bal.slv({
                 pubBit: {
                     idx: 'publish-fleet-error',
