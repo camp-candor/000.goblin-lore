@@ -53,6 +53,13 @@ export function reducer(
                 state!,
             )
 
+        case Act.RUN_SOMATIC_GAUNTLET:
+            return Buzz.runSomaticGauntletAction(
+                clone(model),
+                act.bale as any,
+                state!,
+            )
+
         default:
             return model
     }

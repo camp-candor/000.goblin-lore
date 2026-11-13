@@ -5,6 +5,10 @@ import { validateTtsGenerationPayload } from './buz/validateTtsPayload.buzz.js'
 import { assertVocalMotorFeasibility } from './buz/vocalFeasibilityGate.buzz.js'
 import { evaluateSceneSomaticStaleness } from './buz/pinSomaticFactVersion.buzz.js'
 import {
+    runSomaticGauntlet,
+    runSomaticGauntletAction,
+} from './buz/somaticGauntlet.buzz.js'
+import {
     hashTtsGenerationRequest,
     verifyPayloadHashParity as verifyHashParityBuzz,
 } from './buz/canonicalPayloadHasher.buzz.js'
@@ -355,3 +359,17 @@ export const verifyPayloadHashParity = (
 
     return cpy
 }
+
+export {
+    runSomaticGauntlet,
+    runSomaticGauntletAction,
+} from './buz/somaticGauntlet.buzz.js'
+export {
+    evaluateSceneSomaticStaleness,
+    type PinnedFactDependency,
+    type ScenePreconditionPayload,
+    type DirtyDependencyCollision,
+    type DirtySceneRejectionReceipt,
+    type ScenePreconditionVerdict,
+} from './buz/scenePrecondition.buzz.js'
+export * from './fce/somaticGauntlet.bit.js'

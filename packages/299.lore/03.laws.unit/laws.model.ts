@@ -10,4 +10,5 @@ export class LawsModel implements Laws {
     rules: Map<string, Rule> = new Map()
     authorizers: Map<string, Authorizer> = new Map()
     activePardons: Map<string, PardonRecord> = new Map()
+    errataHistory: Map<string, any> = new Map()
 }

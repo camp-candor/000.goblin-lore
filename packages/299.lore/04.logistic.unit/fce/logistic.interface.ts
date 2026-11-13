@@ -1,7 +1,10 @@
-import type LogisticBit from './logistic.bit.js'
+import type {
+    CharacterLogisticalVector,
+    PossessionLogisticalVector,
+} from '../val/logistic.val.js'
 
 export default interface Logistic {
     idx: string
-    logisticBitList: LogisticBit[]
-    logisticBits: Record<string, LogisticBit>
+    characterVectors: Record<string, CharacterLogisticalVector>
+    possessionCatalog: Record<string, PossessionLogisticalVector>
 }

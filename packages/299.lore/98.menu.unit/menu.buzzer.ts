@@ -92,3 +92,21 @@ export {
 export { runPressureMeterSimulatorMenu } from './buz/06.pressure.simulator.buzz.js'
 export { runAcousticParanoiaInspectorMenu } from './buz/07.acoustic.inspector.buzz.js'
 export { runSynthesisPayloadValidatorMenu } from './buz/10.payload.validator.buzz.js'
+
+export {
+    promptBlessedChoice,
+    promptBlessedInput,
+    sanitizeSeriesSlug,
+    resolveLibraryBus,
+} from './buz/blessedModal.buzz.js'
+export type {
+    GenreClassification,
+    AssembledFourTupleConfig,
+    BlessedChoiceModalOptions,
+    BlessedInputModalOptions,
+    ModalPromptResult,
+} from './fce/genesisWizard.interface.js'
+export {
+    promptGenreModality,
+    GENRE_CHOICE_MAP,
+} from './buz/genesisMenu.buzz.js'

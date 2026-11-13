@@ -1,8 +1,11 @@
 import type Logistic from './fce/logistic.interface.js'
-import type LogisticBit from './fce/logistic.bit.js'
+import type {
+    CharacterLogisticalVector,
+    PossessionLogisticalVector,
+} from './val/logistic.val.js'
 
 export class LogisticModel implements Logistic {
     idx: string = '04.logistic'
-    logisticBitList: LogisticBit[] = []
-    logisticBits: Record<string, LogisticBit> = {}
+    characterVectors: Record<string, CharacterLogisticalVector> = {}
+    possessionCatalog: Record<string, PossessionLogisticalVector> = {}
 }

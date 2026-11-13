@@ -1,81 +1,81 @@
 import type State from '../../99.core/state.js'
 import type { MenuModel } from '../menu.model.js'
 import type MenuBit from '../fce/menu.bit.js'
-import * as ActLog from '../../04.logistic.unit/logistic.action.js'
-import { sanitizeAscii } from './genesisMenu.buzz.js'
-import { discoverDomainForeignKeys } from './entityScaffoldMenu.buzz.js'
+import { retireCanonicalEntity } from '../../04.logistic.unit/buz/relocateRetired.buzz.js'
 
 const UPDATE_CONSOLE = '[Console action] Update Console'
+export const RETIRE_CANONICAL_ENTITY_LABEL = '[R] RETIRE CANONICAL ENTITY'
 
-function emitConsole(ste: State | undefined, line: string): void {
-    const clean = sanitizeAscii(line)
+async function emitConsole(
+    ste: State | undefined,
+    line: string,
+): Promise<void> {
     const lib = (globalThis as any).LIBRARY || (global as any).LIBRARY
     if (lib && typeof lib.hunt === 'function') {
-        lib.hunt(UPDATE_CONSOLE, { idx: 'cns00', src: clean }).catch(() => {})
+        await lib
+            .hunt(UPDATE_CONSOLE, { idx: 'cns00', src: line })
+            .catch(() => {})
     } else if (ste && typeof ste.hunt === 'function') {
-        ste.hunt(UPDATE_CONSOLE, { idx: 'cns00', src: clean }).catch(() => {})
+        await ste
+            .hunt(UPDATE_CONSOLE, { idx: 'cns00', src: line })
+            .catch(() => {})
     }
 }
 
-export const runEntityRetirementMenu = (
+export const runEntityRetirementMenu = async (
     cpy: MenuModel,
     bal: MenuBit,
     ste?: State,
-): MenuModel => {
-    const dat = bal?.dat || {}
+): Promise<MenuModel> => {
+    const dat = (bal as any)?.dat || {}
     const seriesSlug =
         dat.seriesSlug || cpy.activeSeries || 'under-the-floorboards'
-    const activeCast = discoverDomainForeignKeys(
-        seriesSlug,
-        'characters',
-        dat.repoRoot,
-    )
-    const targetEntityId = dat.entityId || activeCast[0] || 'char_wart'
-    const itemTransfers = dat.itemTransfers || {}
+    const targetEntityId = dat.entityId || 'char_old_snag'
+    const itemTransfers = Array.isArray(dat.itemTransfers)
+        ? dat.itemTransfers
+        : []
 
-    emitConsole(
+    await emitConsole(
         ste,
-        `>> [RETIRE:INIT] Sweeping active references for ${targetEntityId} in '${seriesSlug}'...`,
+        '>> [RETIRE:INIT] Sweeping active references for ' +
+            targetEntityId +
+            " in '" +
+            seriesSlug +
+            "'...",
     )
 
-    let logisticBit: any = null
-    if (ste && typeof ste.hunt === 'function') {
-        ste.hunt(ActLog.UPDATE_LOGISTIC, {
-            idx: 'menu-retire-entity',
-            src: targetEntityId,
-            dat: {
-                seriesSlug,
-                entityId: targetEntityId,
-                itemTransfers,
-                repoRoot: dat.repoRoot,
-            },
-            slv: (res: any) => {
-                logisticBit = res?.logBit || res
-            },
-        })
-    }
+    const receipt = await retireCanonicalEntity({
+        seriesSlug,
+        characterId: targetEntityId,
+        departureType: dat.departureType || 'death',
+        resolutionCause:
+            dat.resolutionCause ||
+            'Collapsed inside culvert siphon during Episode 105',
+        departureEpoch:
+            typeof dat.departureEpoch === 'number' ? dat.departureEpoch : 105,
+        itemTransfers,
+        repoRoot: dat.repoRoot,
+    })
 
-    const ok = !logisticBit || logisticBit.val !== -1
-    const receiptLine = ok
-        ? `>> [RETIRE:OK] Relocated ${targetEntityId} to _retired/ with matter conservation verified`
-        : `:: [RETIRE:FAIL] Retirement blocked for ${targetEntityId}`
+    const receiptLine = receipt.success
+        ? '>> [RETIRE:OK] Relocated ' +
+          targetEntityId +
+          ' to _retired/ | Seal: ' +
+          receipt.rootMerkleHash.slice(0, 12)
+        : ':: [RETIRE:FAIL] ' +
+          (receipt.errors[0] || 'Retirement blocked for ' + targetEntityId)
 
-    emitConsole(ste, receiptLine)
-    cpy.activeSelection = '[R] RETIRE CANONICAL ENTITY'
-    cpy.lastLifecycleReceipt = ok ? '[RETIRE:OK]' : '[RETIRE:FAIL]'
+    await emitConsole(ste, receiptLine)
+    cpy.activeSelection = RETIRE_CANONICAL_ENTITY_LABEL
     cpy.statusMessage = receiptLine
-    if (!Array.isArray(cpy.lastTelemetryReport)) {
-        cpy.lastTelemetryReport = []
-    }
-    cpy.lastTelemetryReport.push(receiptLine)
 
-    if (bal?.slv) {
+    if (bal.slv) {
         bal.slv({
             mnuBit: {
                 idx: 'open-retirement-menu',
-                val: ok ? 1 : 0,
+                val: receipt.success ? 1 : 0,
                 src: targetEntityId,
-                dat: { receipt: receiptLine, activeCast, logisticBit },
+                dat: { receipt, receiptLine },
             },
         })
     }

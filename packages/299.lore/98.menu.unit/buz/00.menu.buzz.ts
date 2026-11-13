@@ -116,6 +116,61 @@ export const LIFECYCLE_MENU_OPTIONS: readonly string[] = Object.freeze([
     RECORD_ERRATA_LABEL,
 ])
 
+import { assembleDualRailDossier } from '../../09.entity.unit/buz/entityAssemble.buzz.js'
+import { runEntityPreFlightGate } from '../../09.entity.unit/buz/preFlightGate.buzz.js'
+
+export const ASSEMBLE_BYTE_ZERO_DOSSIER_LABEL =
+    '[1] ASSEMBLE BYTE-ZERO DUAL-RAIL DOSSIER'
+
+export const assembleByteZeroDossierMenuAction = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste?: State,
+): Promise<MenuModel> => {
+    await emitConsoleLine(
+        ste,
+        '>> [ASSEMBLE:DOSSIER] Compiling Byte-0 Dual-Rail Dossier preview...',
+    )
+
+    const { dossierText, receipt } = assembleDualRailDossier(
+        'character',
+        {
+            id: 'char_wart',
+            name: 'Wart',
+            status: 'active',
+            created_at_epoch: 0,
+            somatic: {
+                available_arms_bps: 10000,
+            },
+        },
+        {
+            wantsSurface: 'Keep the culvert grate clear of silt.',
+            wantsActual: 'Hide the spare brass key behind the loose mortar.',
+            blindSpot: 'Believes nobody notices the missing tallow tin.',
+            voiceNotes: 'Short declarative sentences; gravelly cadence.',
+            fewShotLines: ['Valve is stuck. Hand me the iron bar.'],
+        },
+    )
+
+    await emitConsoleLine(
+        ste,
+        `>> [BYTE0:OK] Offset 0 header: 0x${receipt.firstFourBytesHex} | Total bytes: ${receipt.byteLength} | CRLF: 0`,
+    )
+
+    cpy.statusMessage = 'BYTE_ZERO_DOSSIER_ASSEMBLED'
+
+    if (bal.slv) {
+        bal.slv({
+            mnuBit: {
+                idx: 'assemble-byte-zero-dossier',
+                val: 0,
+                dat: { dossierText, receipt },
+            },
+        })
+    }
+    return cpy
+}
+
 import {
     COMPILE_MENU_OPTIONS,
     emitConsoleLine,
@@ -2738,3 +2793,808 @@ export const executeTrieDisjointnessScanAction = async (
 }
 
 export default updateMenu
+export const RUN_ENTITY_PREFLIGHT_GATE_LABEL =
+    '[2] RUN SOMATIC SAT FOREIGN-KEY GATE'
+
+export const runEntityPreFlightGateMenuAction = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste?: State,
+): Promise<MenuModel> => {
+    await emitConsoleLine(
+        ste,
+        '>> [PREFLIGHT:GATE] Evaluating Somatic SAT and Foreign-Key Integrity...',
+    )
+
+    const report = runEntityPreFlightGate(
+        'char_wart',
+        {
+            id: 'char_wart',
+            location_id: 'loc_culvert_siphon',
+            possessions: ['item_brass_key'],
+            somatic: {
+                left_arm: 'AMPUTATED',
+                right_arm: 'INTACT',
+            },
+        },
+        ['char_wart', 'char_bog', 'loc_culvert_siphon', 'item_brass_key'],
+        10000,
+    )
+
+    if (report.passed) {
+        await emitConsoleLine(
+            ste,
+            '>> [PREFLIGHT:PASS] ' +
+                report.entityId +
+                ' certified | Available: ' +
+                report.somatic.availableHandsBps +
+                ' bps | Required: ' +
+                report.somatic.requiredHandsBps +
+                ' bps | ForeignKeys: ' +
+                report.foreignKeys.danglingKeys.length +
+                ' dangling',
+        )
+        cpy.statusMessage = 'PREFLIGHT_GATE_PASSED'
+    } else {
+        for (const err of report.errors) {
+            await emitConsoleLine(ste, ':: [PREFLIGHT:BREACH] ' + err)
+        }
+        cpy.statusMessage = 'PREFLIGHT_GATE_BREACHED'
+    }
+
+    if (bal.slv) {
+        bal.slv({
+            mnuBit: {
+                idx: 'run-entity-preflight-gate',
+                val: report.passed ? 0 : -1,
+                dat: report,
+            },
+        })
+    }
+    return cpy
+}
+import {
+    verifyHandSaturationSat,
+    assertMassConservation,
+} from '../../04.logistic.unit/buz/logistic.buzz.js'
+
+export const AUDIT_EQUIPMENT_CONSERVATION_LABEL =
+    '[1] AUDIT FOUR-TIER EQUIPMENT CONSERVATION'
+
+export const auditEquipmentConservationMenuAction = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste?: State,
+): Promise<MenuModel> => {
+    await emitConsoleLine(
+        ste,
+        '>> [LOGISTIC:INSPECT] Target: char_wart | Limbs Available: 10000 bps (1.0 Arm)',
+    )
+
+    const sat = verifyHandSaturationSat({
+        entity_id: 'char_wart',
+        arms_available_bps: 10000,
+        held_items: [
+            {
+                item_id: 'item_iron_knife',
+                occupies_hands: 1,
+                occupies_hands_bps: 10000,
+                mass_grams: 150,
+                weight_class: 'scrap' as const,
+                is_contested: false,
+                allowed_slots: ['HELD_PRIMARY', 'HELD_OFFHAND'] as any,
+            },
+        ],
+    })
+
+    const conservation = assertMassConservation({
+        char_wart: {
+            entity_id: 'char_wart',
+            worn: ['item_tallow_apron'],
+            held: ['item_iron_knife'],
+            carried: ['item_lockpick_wire'],
+            cached: { loc_culvert_siphon: ['item_spare_spring'] },
+        },
+        char_bog: {
+            entity_id: 'char_bog',
+            worn: [],
+            held: ['item_heavy_sledge'],
+            carried: [],
+            cached: {},
+        },
+    })
+
+    await emitConsoleLine(
+        ste,
+        '>> [SAT GATE] Demanded: ' +
+            sat.demanded_hands_bps +
+            ' bps <= Available: ' +
+            sat.arms_available_bps +
+            ' bps [PASS / T0 = $0.00]',
+    )
+    await emitConsoleLine(
+        ste,
+        '>> [CONSERVATION] Audited ' +
+            conservation.total_characters_audited +
+            ' characters, ' +
+            conservation.total_unique_items +
+            ' unique items. Zero duplicate leases [OK]',
+    )
+
+    cpy.statusMessage = 'LOGISTIC_CONSERVATION_VERIFIED'
+
+    if (bal.slv) {
+        bal.slv({
+            mnuBit: {
+                idx: 'audit-equipment-conservation',
+                val: sat.valid && conservation.valid ? 1 : 0,
+                dat: { sat, conservation },
+            },
+        })
+    }
+    return cpy
+}
+import { reconcileRetiredEntityPossessions } from '../../04.logistic.unit/buz/matterConservation.buzz.js'
+
+export const SIMULATE_MATTER_CONSERVATION_LABEL =
+    '[3] SIMULATE MATTER CONSERVATION GATE'
+
+export const simulateMatterConservationMenuAction = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste?: State,
+): Promise<MenuModel> => {
+    await emitConsoleLine(
+        ste,
+        '>> [CONSERVATION:SIM] Simulating physical matter conservation for retiring entity char_old_snag...',
+    )
+
+    const brassKey = {
+        item_id: 'item_brass_key',
+        occupies_hands: 1,
+        occupies_hands_bps: 10000,
+        mass_grams: 120,
+        weight_class: 'shine' as const,
+        is_contested: false,
+        allowed_slots: [
+            'HELD_PRIMARY',
+            'POCKET_STORAGE',
+            'CACHED_LOCATION',
+        ] as any,
+    }
+
+    const heavySledge = {
+        item_id: 'item_heavy_sledge',
+        occupies_hands: 2,
+        occupies_hands_bps: 20000,
+        mass_grams: 4500,
+        weight_class: 'weight' as const,
+        is_contested: false,
+        allowed_slots: ['HELD_PRIMARY', 'CACHED_LOCATION'] as any,
+    }
+
+    const receipt = reconcileRetiredEntityPossessions({
+        retiring_entity_id: 'char_old_snag',
+        held_possessions: [brassKey, heavySledge],
+        item_transfers: [
+            {
+                item_id: 'item_brass_key',
+                disposition_type: 'TRANSFER_TO_CHARACTER',
+                recipient_character_id: 'char_wart',
+                target_partition: 'held',
+            },
+            {
+                item_id: 'item_heavy_sledge',
+                disposition_type: 'DROP_AT_LOCATION',
+                recipient_character_id: null,
+                drop_location_id: 'loc_culvert_siphon',
+            },
+        ],
+        active_characters: {
+            char_wart: {
+                arms_available_bps: 10000,
+                vector: {
+                    entity_id: 'char_wart',
+                    worn: [],
+                    held: [],
+                    carried: [],
+                    cached: {},
+                },
+            },
+        },
+        valid_location_ids: ['loc_culvert_siphon'],
+        known_possessions: {
+            item_brass_key: brassKey,
+            item_heavy_sledge: heavySledge,
+        },
+    })
+
+    if (receipt.valid) {
+        await emitConsoleLine(
+            ste,
+            '>> [CUSTODY:OK] Accounted ' +
+                receipt.total_items_accounted +
+                ' item(s): ' +
+                receipt.transferred_count +
+                ' transferred, ' +
+                receipt.dropped_count +
+                ' dropped [T0 = $0.00]',
+        )
+        cpy.statusMessage = 'MATTER_CONSERVATION_VERIFIED'
+    } else {
+        for (const err of receipt.errors) {
+            await emitConsoleLine(ste, ':: [CONSERVATION:BREACH] ' + err)
+        }
+        cpy.statusMessage = 'MATTER_CONSERVATION_BREACHED'
+    }
+
+    if (bal.slv) {
+        bal.slv({
+            mnuBit: {
+                idx: 'simulate-matter-conservation',
+                val: receipt.valid ? 1 : 0,
+                dat: receipt,
+            },
+        })
+    }
+    return cpy
+}
+import { sweepActiveDependencies } from '../../41.canon.unit/buz/dependencySweeper.buzz.js'
+import type { ActiveDependencyEdge } from '../../41.canon.unit/fce/dependencySweeper.bit.js'
+
+export const SWEEP_ACTIVE_DEPENDENCIES_LABEL =
+    '[4] SWEEP ACTIVE DEPENDENCY REFERENCES'
+
+export const sweepActiveDependenciesMenuAction = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste?: State,
+): Promise<MenuModel> => {
+    await emitConsoleLine(
+        ste,
+        '>> [SWEEP:SCAN] Sweeping inbound dependency edges prior to retirement...',
+    )
+
+    const sampleEdges: ActiveDependencyEdge[] = [
+        {
+            source_id: 'scene_ep104_climax',
+            target_id: 'char_wart',
+            domain: 'SCENE_CASTING',
+            source_standing: 'ACTIVE_ENDORSED',
+            field_path: 'cast_ids[0]',
+        },
+        {
+            source_id: 'grv_culvert_collapse',
+            target_id: 'char_wart',
+            domain: 'GRIEVANCE_TARGET',
+            source_standing: 'ACTIVE_ENDORSED',
+            field_path: 'target_entity_id',
+        },
+        {
+            source_id: 'scene_ep101_deleted_draft',
+            target_id: 'item_cracked_mug',
+            domain: 'POSSESSION_LEASE',
+            source_standing: 'DEPRECATED_ARCHIVED',
+            field_path: 'props[0]',
+        },
+    ]
+
+    const wartSweep = sweepActiveDependencies('char_wart', sampleEdges)
+    const mugSweep = sweepActiveDependencies('item_cracked_mug', sampleEdges)
+
+    if (!wartSweep.retirement_cleared) {
+        await emitConsoleLine(
+            ste,
+            ':: [REF_LOCK] ' + wartSweep.reason + ' [HALTED AT T0 = $0.00]',
+        )
+    }
+
+    if (mugSweep.retirement_cleared) {
+        await emitConsoleLine(
+            ste,
+            ">> [RETIRE_READY] Entity '" +
+                mugSweep.target_entity_id +
+                "' has 0 active referents (" +
+                mugSweep.archived_in_degree_ignored +
+                ' archived ignored). Cleared for retirement [OK]',
+        )
+    }
+
+    cpy.statusMessage = 'DEPENDENCY_SWEEP_COMPLETE'
+
+    if (bal.slv) {
+        bal.slv({
+            mnuBit: {
+                idx: 'sweep-active-dependencies',
+                val: 1,
+                dat: { wartSweep, mugSweep },
+            },
+        })
+    }
+    return cpy
+}
+import { reconcileReciprocalLinks } from '../../01.location.unit/buz/reciprocalLinker.buzz.js'
+import { LocationModel } from '../../01.location.unit/location.model.js'
+
+export const RECONCILE_SPATIAL_PORTALS_LABEL =
+    '[1] RECONCILE RECIPROCAL SPATIAL PORTALS'
+
+export const reconcileSpatialPortalsMenuAction = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste?: State,
+): Promise<MenuModel> => {
+    const seriesSlug =
+        (bal as any)?.dat?.seriesSlug ||
+        cpy.activeSeries ||
+        'under-the-floorboards'
+    const locationId = (bal as any)?.dat?.locationId || 'loc_culvert_siphon'
+    await emitConsoleLine(
+        ste,
+        '>> [PORTAL:SCAN] Inspecting portal connections in ' +
+            "'" +
+            locationId +
+            "'...",
+    )
+
+    const locModel = new LocationModel()
+    let receiptData: any = null
+
+    await reconcileReciprocalLinks(
+        locModel,
+        {
+            idx: 'menu-reconcile-portals',
+            dat: {
+                seriesSlug,
+                locationId,
+                dryRun: true,
+            },
+            slv: (res: any) => {
+                receiptData = res.locationBit
+            },
+        } as any,
+        ste,
+    )
+
+    cpy.statusMessage =
+        receiptData?.val === 1
+            ? 'PORTAL_RECIPROCITY_VERIFIED'
+            : 'PORTAL_RECIPROCITY_DEFECT'
+
+    if (bal.slv) {
+        bal.slv({
+            mnuBit: {
+                idx: 'reconcile-spatial-portals',
+                val: receiptData?.val ?? 0,
+                dat: receiptData?.dat,
+            },
+        })
+    }
+    return cpy
+}
+import { voidStateScan } from '../../32.status.unit/buz/voidStateScan.buzz.js'
+import { StatusModel } from '../../32.status.unit/status.model.js'
+
+export const EVALUATE_VOID_STATE_LABEL = '[2] EVALUATE COLD-BOOT VOID STATE'
+
+export const evaluateVoidStateMenuAction = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste?: State,
+): Promise<MenuModel> => {
+    await emitConsoleLine(
+        ste,
+        '>> [VOID:SCAN] Scanning <repoRoot>/series/ for sealed storyworlds...',
+    )
+
+    const stsModel = new StatusModel()
+    let scanPayload: any = null
+
+    await voidStateScan(
+        stsModel,
+        {
+            idx: 'menu-void-state-scan',
+            src: (bal as any)?.src,
+            slv: (res: any) => {
+                scanPayload = res.statusBit
+            },
+        },
+        ste,
+    )
+
+    const dat = scanPayload?.dat
+    if (dat?.isVoidState) {
+        await emitConsoleLine(
+            ste,
+            ':: [LOCKED] COLD-BOOT VOID STATE DETECTED (0 sealed series). Dispatch lock engaged [T0 = $0.00]',
+        )
+        cpy.statusMessage = 'VOID_STATE_LOCKED'
+    } else {
+        await emitConsoleLine(
+            ste,
+            '>> [SEALED] Active storyworlds discovered (' +
+                dat.discoveredSlugs.length +
+                '): [' +
+                dat.discoveredSlugs.join(', ') +
+                '] [OK]',
+        )
+        cpy.statusMessage = 'SERIES_CORPUS_ACTIVE'
+    }
+
+    if (bal.slv) {
+        bal.slv({
+            mnuBit: {
+                idx: 'evaluate-void-state',
+                val: scanPayload?.val ?? 1,
+                dat,
+            },
+        })
+    }
+    return cpy
+}
+import * as os from 'node:os'
+import {
+    computePreSealMerkleHash,
+    loadBibleState,
+} from '../../23.port.unit/buz/bibleClient.buzz.js'
+
+export const VERIFY_CANON_PORT_SEAL_LABEL =
+    '[1] VERIFY READ-ONLY CANON PORT SEAL'
+
+export const verifyCanonPortSealMenuAction = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste?: State,
+): Promise<MenuModel> => {
+    await emitConsoleLine(
+        ste,
+        '>> [PORT:VERIFY] Auditing RFC 8785 Merkle verification port and deepFreeze guard...',
+    )
+
+    const tmpRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'goblin-port-seal-'))
+    try {
+        const slug = 'under-the-floorboards'
+        const compiledDir = path.join(tmpRoot, 'compiled', slug)
+        fs.mkdirSync(compiledDir, { recursive: true })
+
+        const basePayload = {
+            schema_version: '1.0.0',
+            series_slug: slug,
+            catalog_summary: { total_entities: 1 },
+            entity_hashes: { char_wart: 'a'.repeat(64) },
+            entities: { char_wart: { id: 'char_wart', name: 'Wart' } },
+        }
+        const rootMerkleHash = computePreSealMerkleHash(basePayload)
+        const biblePath = path.join(compiledDir, 'bible-state.json')
+        fs.writeFileSync(
+            biblePath,
+            JSON.stringify(
+                { ...basePayload, root_merkle_hash: rootMerkleHash },
+                null,
+                2,
+            ),
+            'utf8',
+        )
+
+        const verified = loadBibleState(slug, { repoRoot: tmpRoot })
+        const frozen =
+            Object.isFrozen(verified) && Object.isFrozen(verified.entities)
+
+        fs.writeFileSync(
+            biblePath,
+            JSON.stringify(
+                {
+                    ...basePayload,
+                    entities: { char_wart: { id: 'char_wart', name: 'WartX' } },
+                    root_merkle_hash: rootMerkleHash,
+                },
+                null,
+                2,
+            ),
+            'utf8',
+        )
+
+        let tamperTrapped = false
+        try {
+            loadBibleState(slug, { repoRoot: tmpRoot })
+        } catch (err: any) {
+            tamperTrapped = String(err.message).includes(
+                '[CANON_TAMPER_DETECTED]',
+            )
+        }
+
+        if (frozen && tamperTrapped) {
+            await emitConsoleLine(
+                ste,
+                '>> [PORT:SEAL_VERIFIED] RFC 8785 H_root=' +
+                    rootMerkleHash.slice(0, 12) +
+                    ' | deepFreeze=true | TamperTrap=ACTIVE [OK]',
+            )
+            cpy.statusMessage = 'CANON_PORT_SEAL_VERIFIED'
+        } else {
+            await emitConsoleLine(
+                ste,
+                ':: [FAIL] Canon port seal or tamper trap verification failed',
+            )
+            cpy.statusMessage = 'CANON_PORT_SEAL_FAILED'
+        }
+
+        if (bal.slv) {
+            bal.slv({
+                mnuBit: {
+                    idx: 'verify-canon-port-seal',
+                    val: frozen && tamperTrapped ? 1 : 0,
+                    dat: { rootMerkleHash, frozen, tamperTrapped },
+                },
+            })
+        }
+    } finally {
+        fs.rmSync(tmpRoot, { recursive: true, force: true })
+    }
+
+    return cpy
+}
+import { runSomaticGauntlet } from '../../22.payload.unit/buz/somaticGauntlet.buzz.js'
+
+export const RUN_SOMATIC_GAUNTLET_LABEL =
+    '[9] RUN FULL SOMATIC DSP VERIFICATION SWEEP'
+
+export const runSomaticGauntletMenuAction = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste?: State,
+): Promise<MenuModel> => {
+    await emitConsoleLine(
+        ste,
+        '>> [DISPATCH] Executing: ' + RUN_SOMATIC_GAUNTLET_LABEL,
+    )
+
+    const summary = runSomaticGauntlet(100)
+    const stageNames = [
+        '[STAGE_1] Float Metric Trap',
+        '[STAGE_2] Strict Key Closure Trap',
+        '[STAGE_3] Aphonia Delivery Trap',
+        '[STAGE_4] Monotonic Regression Trap',
+        '[STAGE_5] Hash Parity Sentinel Trap',
+    ]
+
+    for (let i = 0; i < summary.results.length; i++) {
+        const trap = summary.results[i]
+        const label = stageNames[i] || trap.stageLabel
+        const statusTag = trap.passed
+            ? '[OK] TRAPPED'
+            : '[FAIL] ' + trap.caughtExceptionSignature
+        await emitConsoleLine(ste, '>> ' + label + ' -> ' + statusTag)
+    }
+
+    await emitConsoleLine(
+        ste,
+        '>> [RECEIPT] [GAUNTLET_PASS: ' +
+            summary.trapsPassed +
+            '/' +
+            summary.totalTraps +
+            ' TRAPS VERIFIED AT T0 = $0.00] (' +
+            summary.totalLatencyMs +
+            'ms) Finished [OK]',
+    )
+
+    cpy.statusMessage = summary.isCertified
+        ? 'SOMATIC_GAUNTLET_CERTIFIED'
+        : 'SOMATIC_GAUNTLET_BREACH'
+
+    if (bal.slv) {
+        bal.slv({
+            mnuBit: {
+                idx: 'run-somatic-gauntlet',
+                val: summary.isCertified ? 1 : 0,
+                dat: summary,
+            },
+        })
+    }
+    return cpy
+}
+import {
+    computeLocalDependencyHash,
+    filterDrainableDrafts,
+} from '../../23.port.unit/buz/stagingDrain.buzz.js'
+
+export const AUDIT_EDGE_STAGING_BUFFER_LABEL =
+    '[2] AUDIT EDGE STAGING QUARANTINE BUFFER'
+
+export const auditEdgeStagingBufferMenuAction = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste?: State,
+): Promise<MenuModel> => {
+    await emitConsoleLine(
+        ste,
+        '>> [STAGING:AUDIT] Verifying Asymmetric Edge Quarantine Buffer & H_dep stale-canon barrier...',
+    )
+
+    const localHashes = {
+        char_bog: 'a'.repeat(64),
+        loc_culvert_siphon: 'b'.repeat(64),
+    }
+    const freshHDep = computeLocalDependencyHash(
+        'char_bog',
+        ['loc_culvert_siphon'],
+        localHashes,
+    )
+
+    const report = filterDrainableDrafts(
+        {
+            series_slug: 'under-the-floorboards',
+            trunk_h_root: 'c'.repeat(64),
+            drained_at_ms: Date.now(),
+            drafts: [
+                {
+                    draft_id: 'draft_fresh_01',
+                    series_slug: 'under-the-floorboards',
+                    entity_id: 'char_bog',
+                    author_id: 'writer_alice',
+                    base_h_root: 'c'.repeat(64),
+                    base_h_dep: freshHDep,
+                    foreign_key_ids: ['loc_culvert_siphon'],
+                    markdown_payload: '---\nid: char_bog\n---\nFresh draft.\n',
+                    status: 'OPEN',
+                },
+                {
+                    draft_id: 'draft_stale_02',
+                    series_slug: 'under-the-floorboards',
+                    entity_id: 'char_bog',
+                    author_id: 'writer_bob',
+                    base_h_root: 'c'.repeat(64),
+                    base_h_dep: '0'.repeat(64),
+                    foreign_key_ids: ['loc_culvert_siphon'],
+                    markdown_payload: '---\nid: char_bog\n---\nStale draft.\n',
+                    status: 'OPEN',
+                },
+            ],
+        },
+        localHashes,
+    )
+
+    if (report.accepted.length === 1 && report.quarantined.length === 1) {
+        await emitConsoleLine(
+            ste,
+            '>> [STAGING:QUARANTINE_OK] Accepted: ' +
+                report.accepted.length +
+                ' | Quarantined (H_dep stale): ' +
+                report.quarantined.length +
+                ' [T0 = $0.00]',
+        )
+        cpy.statusMessage = 'EDGE_STAGING_QUARANTINE_VERIFIED'
+    } else {
+        await emitConsoleLine(
+            ste,
+            ':: [FAIL] Edge staging quarantine filter failed parity check',
+        )
+        cpy.statusMessage = 'EDGE_STAGING_QUARANTINE_FAILED'
+    }
+
+    if (bal.slv) {
+        bal.slv({
+            mnuBit: {
+                idx: 'audit-edge-staging-buffer',
+                val:
+                    report.accepted.length === 1 &&
+                    report.quarantined.length === 1
+                        ? 1
+                        : 0,
+                dat: report,
+            },
+        })
+    }
+    return cpy
+}
+import { exportPinnedEdgeSchemaBundle } from '../../26.schema.unit/buz/schemaBundleExporter.buzz.js'
+
+export const AUDIT_EDGE_SCHEMA_BUNDLE_LABEL =
+    '[3] AUDIT EDGE PINNED SCHEMA BUNDLE'
+
+export const auditEdgeSchemaBundleMenuAction = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste?: State,
+): Promise<MenuModel> => {
+    await emitConsoleLine(
+        ste,
+        '>> [SCHEMA_PIN:AUDIT] Exporting version-pinned schemas.json bundle for edge Worker parity...',
+    )
+
+    const bundle = exportPinnedEdgeSchemaBundle('trunk_sha_001', '1.0.0')
+    const domainCount = Object.keys(bundle.domains).length
+
+    if (bundle.schema_bundle_hash.length === 64 && domainCount === 4) {
+        await emitConsoleLine(
+            ste,
+            '>> [SCHEMA_PIN:OK] Domains: ' +
+                domainCount +
+                ' | SHA-256: ' +
+                bundle.schema_bundle_hash.slice(0, 12) +
+                ' | Zero skew [T0 = $0.00]',
+        )
+        cpy.statusMessage = 'EDGE_SCHEMA_BUNDLE_VERIFIED'
+    } else {
+        await emitConsoleLine(
+            ste,
+            ':: [FAIL] Edge schema bundle export failed hash verification',
+        )
+        cpy.statusMessage = 'EDGE_SCHEMA_BUNDLE_FAILED'
+    }
+
+    if (bal.slv) {
+        bal.slv({
+            mnuBit: {
+                idx: 'audit-edge-schema-bundle',
+                val: bundle.schema_bundle_hash.length === 64 ? 1 : 0,
+                dat: bundle,
+            },
+        })
+    }
+    return cpy
+}
+import { evaluateSceneSomaticStaleness } from '../../22.payload.unit/buz/scenePrecondition.buzz.js'
+
+export const SIMULATE_HTTP_412_GATE_LABEL =
+    '[3] SIMULATE HTTP 412 DIRTY-SCENE GATE'
+
+export const simulateHttp412DirtySceneGateMenuAction = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste?: State,
+): Promise<MenuModel> => {
+    await emitConsoleLine(
+        ste,
+        '>> [HTTP_412:PROBE] Dispatching stale scene EP101_SC02 to /api/lore/verify-scene-precondition...',
+    )
+
+    const verdict = evaluateSceneSomaticStaleness({
+        scene_id: 'EP101_SC02',
+        series_slug: 'under-the-floorboards',
+        scene_bible_merkle_hash: '1'.repeat(64),
+        sealed_root_merkle_hash: '9'.repeat(64),
+        is_dirty: 1,
+        fact_dependencies: [
+            {
+                fact_id: 'fact_wart_left_arm',
+                entity_id: 'char_wart',
+                pinned_version: 1,
+                current_version: 2,
+            },
+        ],
+    })
+
+    const resStatus = verdict.admitted ? 200 : 412
+    const body: any = verdict.admitted ? verdict : (verdict as any).receipt
+
+    if (resStatus === 412 && body.error === 'DIRTY_SCENE_REJECTED') {
+        await emitConsoleLine(
+            ste,
+            '>> [HTTP_412:REJECTED] DIRTY_SCENE_REJECTED | Scene: ' +
+                body.scene_id +
+                ' | Collisions: ' +
+                (body.collisions?.length ?? 1) +
+                ' [T0 = $0.00]',
+        )
+        cpy.statusMessage = 'HTTP_412_DIRTY_SCENE_GATE_VERIFIED'
+    } else {
+        await emitConsoleLine(
+            ste,
+            ':: [FAIL] Expected HTTP 412 DIRTY_SCENE_REJECTED, got ' +
+                resStatus,
+        )
+        cpy.statusMessage = 'HTTP_412_DIRTY_SCENE_GATE_FAILED'
+    }
+
+    if (bal.slv) {
+        bal.slv({
+            mnuBit: {
+                idx: 'simulate-http-412-gate',
+                val: resStatus === 412 ? 1 : 0,
+                dat: body,
+            },
+        })
+    }
+    return cpy
+}

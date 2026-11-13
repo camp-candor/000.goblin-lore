@@ -12,7 +12,14 @@ export {
     TrieClueDisjointnessSolver,
     verifyTrieClueDisjointnessAction,
 } from './buz/trieDisjointness.buzz.js'
+export {
+    buildReverseAdjacencyIndex,
+    sweepActiveDependencies,
+    sweepCorpusBlastRadius,
+    sweepActiveDependenciesAction,
+} from './buz/dependencySweeper.buzz.js'
 export * from './fce/unresolved.schema.js'
 export * from './fce/standing.schema.js'
 export * from './fce/reconsideration.bit.js'
 export * from './fce/trieDisjointness.bit.js'
+export * from './fce/dependencySweeper.bit.js'

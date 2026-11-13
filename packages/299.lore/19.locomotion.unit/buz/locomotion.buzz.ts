@@ -1,6 +1,6 @@
 import { LocomotionModel } from '../locomotion.model.js'
 import LocomotionBit from '../fce/locomotion.bit.js'
-import State from '../../99.core/state.js'
+import type State from '../../99.core/state.js'
 import {
     SomaticVector,
     SomaticVectorSchema,
@@ -10,6 +10,10 @@ import {
     KineticVerb,
     VERB_FAMILIES,
 } from '../../39.verbs.unit/fce/verbs.schema.js'
+import {
+    resolveLocomotionProfile,
+    validateLocomotionBaseline,
+} from '../val/locomotion.val.js'
 
 export interface SomaticMask {
     effectiveArms: number
@@ -67,13 +71,13 @@ export function deriveSomaticMask(vector: SomaticVector): SomaticMask {
 
     if (effectiveLegs === 1 || derivedLocomotionTier === 'BIPEDAL_LIMPING') {
         for (const verb of ['SPRINT', 'VAULT', 'LEAP'] as const) {
-            bannedSet.add(verb)
+            bannedSet.add(verb as KineticVerb)
         }
     }
 
     if (effectiveLegs === 0 || derivedLocomotionTier === 'CRAWLWAY_SLITHER') {
         for (const verb of ['SCUTTLE', 'SPRINT', 'VAULT', 'LEAP'] as const) {
-            bannedSet.add(verb)
+            bannedSet.add(verb as KineticVerb)
         }
     }
 
@@ -87,7 +91,7 @@ export function deriveSomaticMask(vector: SomaticVector): SomaticMask {
             'SLITHER',
             'LIMP',
         ] as const) {
-            bannedSet.add(verb)
+            bannedSet.add(verb as KineticVerb)
         }
     }
 
@@ -115,25 +119,25 @@ export function evaluateMotorActionsFeasibility(
     }
 }
 
+export function validateLocomotionBaselineProfile(
+    raw: unknown,
+): ReturnType<typeof resolveLocomotionProfile> {
+    const baseline = validateLocomotionBaseline(raw)
+    return resolveLocomotionProfile(baseline)
+}
+
 export const initLocomotion = (
     cpy: LocomotionModel,
     bal: LocomotionBit,
-    ste?: State,
-): LocomotionModel => {
-    cpy.idx = bal.idx || '19.locomotion'
-    if (bal.slv) {
-        bal.slv({ lcmBit: { idx: 'init-locomotion', val: 0 } })
-    }
+    ste: State,
+) => {
     return cpy
 }
 
 export const updateLocomotion = (
     cpy: LocomotionModel,
     bal: LocomotionBit,
-    ste?: State,
-): LocomotionModel => {
-    if (bal.slv) {
-        bal.slv({ lcmBit: { idx: 'update-locomotion', val: 0 } })
-    }
+    ste: State,
+) => {
     return cpy
 }

@@ -16,12 +16,20 @@
                 "name": "AGENT_SESSION",
                 "class_name": "AgentSessionDO",
             },
+            {
+                "name": "LORE_STAGING",
+                "class_name": "LoreStagingDO",
+            },
         ],
     },
     "migrations": [
         {
             "tag": "v1",
             "new_sqlite_classes": ["AgentSessionDO"],
+        },
+        {
+            "tag": "v2",
+            "new_sqlite_classes": ["LoreStagingDO"],
         },
     ],
     "alias": {

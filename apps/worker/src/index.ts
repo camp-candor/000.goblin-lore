@@ -99,4 +99,30 @@ app.all('/*', async (c) => {
 })
 
 export const AgentSessionDO = dynamicWorker.AgentSessionDO
+
+// Edge LoreStagingDO export for Wrangler binding
+export { LoreStagingDO } from './objects/LoreStagingDO.js'
+
+import { handleVerifyScenePrecondition } from './validation/preconditionGate.js'
+
+// Staging route handler
+app.all('/api/staging/:seriesSlug/*', async (c) => {
+    const env = c.env as any
+    const seriesSlug = c.req.param('seriesSlug')
+    if (!env?.LORE_STAGING) {
+        return c.json({ ok: false, errorCode: 'STAGING_UNAVAILABLE' }, 503)
+    }
+    const id = env.LORE_STAGING.idFromName(seriesSlug)
+    const stub = env.LORE_STAGING.get(id)
+    const url = new URL(c.req.url)
+    const pathSuffix = url.pathname.replace(`/api/staging/${seriesSlug}`, '')
+    const targetUrl = `https://staging.internal${pathSuffix}${url.search}`
+    return await stub.fetch(new Request(targetUrl, c.req.raw))
+})
+
+// HTTP 412 Dirty-Scene Precondition Gate
+app.post('/api/lore/verify-scene-precondition', async (c) => {
+    return await handleVerifyScenePrecondition(c.req.raw)
+})
+
 export default app

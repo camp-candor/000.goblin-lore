@@ -8,13 +8,13 @@ export function reducer(
     model: CanonModel = new CanonModel(),
     act: Act.Actions,
     state?: State,
-) {
+): CanonModel {
     switch (act.type) {
-        case Act.UPDATE_CANON:
-            return Buzz.updateCanon(clone(model), act.bale, state)
-
         case Act.INIT_CANON:
             return Buzz.initCanon(clone(model), act.bale, state)
+
+        case Act.UPDATE_CANON:
+            return Buzz.updateCanon(clone(model), act.bale, state)
 
         case Act.RANK_RECONSIDERATION_QUEUE:
             return Buzz.rankReconsiderationQueueAction(
@@ -28,6 +28,13 @@ export function reducer(
 
         case Act.VERIFY_TRIE_CLUE_DISJOINTNESS:
             return Buzz.verifyTrieClueDisjointnessAction(
+                clone(model),
+                act.bale,
+                state,
+            )
+
+        case Act.SWEEP_ACTIVE_DEPENDENCIES:
+            return Buzz.sweepActiveDependenciesAction(
                 clone(model),
                 act.bale,
                 state,

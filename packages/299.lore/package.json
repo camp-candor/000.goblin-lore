@@ -21,6 +21,11 @@
             "import": "./hunt.ts",
             "require": "./hunt.ts",
             "default": "./hunt.ts"
+        },
+        "./client": {
+            "types": "./23.port.unit/index.ts",
+            "import": "./23.port.unit/index.ts",
+            "default": "./23.port.unit/index.ts"
         }
     },
     "scripts": {

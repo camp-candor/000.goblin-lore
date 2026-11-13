@@ -1,7 +1,8 @@
-import type StatusBit from './status.bit.js'
-
 export default interface Status {
     idx: string
-    statusBitList: StatusBit[]
-    statusBits: Record<string, StatusBit>
+    isVoidState: boolean
+    dispatchLockEngaged: boolean
+    discoveredSlugs: string[]
+    activeBorderColor: 'amber' | 'green' | 'yellow' | 'cyan'
+    hudLines: string[]
 }

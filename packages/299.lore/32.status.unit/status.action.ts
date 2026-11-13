@@ -1,7 +1,5 @@
-import { Action } from '../99.core/interface/action.interface'
-import StatusBit from './fce/status.bit'
-
-// Status actions
+import type { Action } from '../99.core/interface/action.interface.js'
+import type StatusBit from './fce/status.bit.js'
 
 export const INIT_STATUS = '[Status action] Init Status'
 export class InitStatus implements Action {
@@ -15,4 +13,10 @@ export class UpdateStatus implements Action {
     constructor(public bale: StatusBit) {}
 }
 
-export type Actions = InitStatus | UpdateStatus
+export const EVALUATE_VOID_STATE = '[Status action] Evaluate Void State'
+export class EvaluateVoidState implements Action {
+    readonly type = EVALUATE_VOID_STATE
+    constructor(public bale: StatusBit) {}
+}
+
+export type Actions = InitStatus | UpdateStatus | EvaluateVoidState

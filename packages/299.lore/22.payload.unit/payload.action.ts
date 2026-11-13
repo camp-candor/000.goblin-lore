@@ -48,6 +48,14 @@ export class VerifyPayloadHashParity implements Action {
     constructor(public bale: PayloadBit & { dat: UnifiedPayloadBitData }) {}
 }
 
+import type PayloadGauntletBit from './fce/somaticGauntlet.bit.js'
+
+export const RUN_SOMATIC_GAUNTLET = '[Payload action] Run Somatic Gauntlet'
+export class RunSomaticGauntlet implements Action {
+    readonly type = RUN_SOMATIC_GAUNTLET
+    constructor(public bale: PayloadGauntletBit) {}
+}
+
 export type Actions =
     | InitPayload
     | UpdatePayload
@@ -56,3 +64,4 @@ export type Actions =
     | CheckSceneSomaticStaleness
     | HashTtsGenerationPayload
     | VerifyPayloadHashParity
+    | RunSomaticGauntlet
