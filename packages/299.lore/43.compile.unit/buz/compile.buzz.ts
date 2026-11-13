@@ -12,6 +12,8 @@ import type {
     OfflineParityReport,
 } from '../fce/compile.bit'
 import type State from '../../99.core/state'
+import { resolveChronologyConfig } from '../../38.types.unit/fce/chronology.interface.js'
+import { parseCalendarStart } from '../../05.clock.unit/buz/clock.buzz.js'
 import * as ActCns from '../../act/console.action'
 import { validatePass2Pardons } from '../../03.laws.unit/laws.buzzer.js'
 import type { Rule, Authorizer } from '../../03.laws.unit/fce/rule.schema.js'
@@ -1506,6 +1508,19 @@ export const pass3Seal = (
             .digest('hex')
     }
 
+    const seriesDir = path.join(seriesBase, 'series', seriesSlug)
+    let seriesConfig: any = null
+    const configPath = path.join(seriesDir, 'series.config.json')
+    if (fs.existsSync(configPath)) {
+        try {
+            seriesConfig = JSON.parse(fs.readFileSync(configPath, 'utf8'))
+        } catch {
+            seriesConfig = null
+        }
+    }
+    const chronology = resolveChronologyConfig(seriesConfig?.chronology)
+    const startSnapshot = parseCalendarStart(chronology)
+
     const summary = computeSummary(catalog)
     const preSealPayload = {
         schema_version: '1.0.0',
@@ -1516,6 +1531,7 @@ export const pass3Seal = (
         catalog_summary: summary,
         entity_hashes: entityHashes,
         entities: catalog,
+        chronology: { ...chronology, start_snapshot: startSnapshot },
     }
 
     // Compute universal Merkle Root SHA-256 over RFC 8785 JCS payload (excluding volatile fields)
@@ -1542,6 +1558,7 @@ export const pass3Seal = (
         catalog_summary: summary,
         entity_hashes: entityHashes,
         entities: catalog,
+        chronology: { ...chronology, start_snapshot: startSnapshot },
     }
 
     const formattedJson =

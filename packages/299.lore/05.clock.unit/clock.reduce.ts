@@ -16,6 +16,15 @@ export function reducer(
         case Act.INIT_CLOCK:
             return Buzz.initClock(clone(model), act.bale, state)
 
+        case Act.DERIVE_CHRONOLOGY:
+            return Buzz.deriveChronology(clone(model), act.bale, state)
+
+        case Act.ADVANCE_CLOCK:
+            return Buzz.advanceClock(clone(model), act.bale, state)
+
+        case Act.FORMAT_TIMECODE:
+            return Buzz.formatTimecode(clone(model), act.bale, state)
+
         default:
             return model
     }

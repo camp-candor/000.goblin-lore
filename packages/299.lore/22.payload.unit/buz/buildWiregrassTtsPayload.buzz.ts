@@ -109,6 +109,7 @@ export function verifyWiregrassCanonSealForTts(
         catalog_summary: parsed.catalog_summary,
         entity_hashes: entityHashes,
         entities,
+        chronology: parsed.chronology,
     }
     const recomputedRoot = sha256Hex(canonicalizeJson(preSealPayload))
     if (recomputedRoot !== parsed.root_merkle_hash) {

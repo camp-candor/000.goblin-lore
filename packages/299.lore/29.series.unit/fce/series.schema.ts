@@ -3,6 +3,11 @@ import {
     GenreClassificationEnum,
     type GenreClassification,
 } from '../../38.types.unit/val/genre.val.js'
+import {
+    ChronologyConfigSchema,
+    resolveSeriesChronology,
+} from '../../38.types.unit/fce/chronology.interface.js'
+export { resolveSeriesChronology } from '../../38.types.unit/fce/chronology.interface.js'
 
 /**
  * 7-bit ASCII Slug Regular Expression for Series Identifiers.
@@ -265,6 +270,7 @@ export const SeriesConfigSchema = z
         action_vocabulary: ActionVocabularySchema,
         invariant_rules: InvariantRulesSchema,
         medium_projections: MediumProjectionsSchema,
+        chronology: ChronologyConfigSchema.optional(),
     })
     .strict()
 

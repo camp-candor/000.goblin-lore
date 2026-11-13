@@ -16,6 +16,12 @@ export function reducer(
         case Act.INIT_TICK:
             return Buzz.initTick(clone(model), act.bale, state)
 
+        case Act.CONFIGURE_TICK_CADENCE:
+            return Buzz.configureTickCadence(clone(model), act.bale, state)
+
+        case Act.STEP_TICK_FRAME:
+            return Buzz.stepTickFrame(clone(model), act.bale, state)
+
         default:
             return model
     }

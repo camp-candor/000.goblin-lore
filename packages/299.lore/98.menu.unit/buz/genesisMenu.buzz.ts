@@ -19,6 +19,8 @@ import type {
     GenreClassification,
     ModalPromptResult,
 } from '../fce/genesisWizard.interface.js'
+import { resolveChronologyConfig } from '../../38.types.unit/fce/chronology.interface.js'
+import { parseCalendarStart } from '../../05.clock.unit/buz/clock.buzz.js'
 import {
     GENRE_TAXONOMY_PROFILES,
     VALID_GENRE_CLASSIFICATIONS,
@@ -34,6 +36,12 @@ export function sanitizeAscii(raw: string): string {
     return String(raw || '')
         .replace(/[^\x20-\x7E]/g, '')
         .trim()
+}
+
+export function buildGenesisChronologyConfig(raw?: any): any {
+    const resolved = resolveChronologyConfig(raw ?? {})
+    parseCalendarStart(resolved)
+    return resolved
 }
 
 function emitConsole(ste: State | undefined, line: string): void {
@@ -311,6 +319,13 @@ export const runSeriesGenesisMenu = async (
             video_service_port: 8188,
             aspect_ratio: '16:9',
         },
+        chronology: buildGenesisChronologyConfig(dat.chronology),
+    }
+
+    if (!(assembledConfig as any).chronology) {
+        ;(assembledConfig as any).chronology = buildGenesisChronologyConfig(
+            dat.chronology,
+        )
     }
 
     emitConsole(

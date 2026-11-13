@@ -27,6 +27,7 @@ describe('Phase 10 Blessed Terminal Flight Deck Menu Integration Suite', () => {
             '[R] RETIRE CANONICAL ENTITY',
             '[H] STATIC CORPUS HEALTH TELEMETRY',
             '[X] RECORD CANONICAL ERRATA ENTRY',
+            '[T] SIMULATION CHRONOLOGY CLOCK',
         ])
     })
 

@@ -50,6 +50,7 @@ export interface AssembledFourTupleConfig {
     readonly action_vocabulary: GenesisWizardActionVocabulary
     readonly invariant_rules: GenesisWizardInvariantRules
     readonly medium_projections: GenesisWizardMediumProjections
+    readonly chronology?: any
 }
 
 export interface BlessedChoiceModalOptions {

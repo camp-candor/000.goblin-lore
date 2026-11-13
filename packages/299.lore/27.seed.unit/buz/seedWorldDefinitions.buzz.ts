@@ -2,6 +2,11 @@ import * as fs from 'node:fs'
 import * as path from 'node:path'
 import * as crypto from 'node:crypto'
 import type { CreatedSeedDossier } from '../fce/seed.bit.js'
+import {
+    resolveChronologyConfig,
+    DEFAULT_CHRONOLOGY_CONFIG,
+} from '../../38.types.unit/fce/chronology.interface.js'
+import { parseCalendarStart } from '../../05.clock.unit/buz/clock.buzz.js'
 
 /**
  * Asserts that a byte buffer opens with '---' at byte 0.
@@ -115,5 +120,92 @@ export function seedWorldDefinitions(
             .digest('hex'),
     })
 
+    // 3. world/chronology.md
+    try {
+        const chronologyPath = path.join(worldDir, 'chronology.md')
+        const chronologyContent = buildChronologyWorldDossier(
+            DEFAULT_CHRONOLOGY_CONFIG,
+            seriesSlug,
+        )
+        const normalizedChronology = chronologyContent
+            .replace(/\r\n/g, '\n')
+            .replace(/\r/g, '')
+        fs.writeFileSync(chronologyPath, normalizedChronology, {
+            encoding: 'utf8',
+        })
+        const chronoBytes = fs.readFileSync(chronologyPath)
+        results.push({
+            id: 'world_chronology',
+            domain: 'world',
+            relativePath: `series/${seriesSlug}/world/chronology.md`,
+            absolutePath: chronologyPath,
+            byteZeroVerified: verifyByteZeroBuffer(chronoBytes),
+            contentSha256: crypto
+                .createHash('sha256')
+                .update(chronoBytes)
+                .digest('hex'),
+        })
+    } catch {
+        // ignore
+    }
+
     return results
 }
+
+export function buildChronologyWorldDossier(
+    chronology: any,
+    seriesSlug: string,
+): string {
+    const cfg = resolveChronologyConfig(chronology ?? {})
+    const snap = parseCalendarStart(cfg)
+    const lines = [
+        '---',
+        'id: world_chronology',
+        'entity_type: world_chronology',
+        `series_slug: ${seriesSlug}`,
+        'calendar_system: GREGORIAN_24H',
+        `start_date: ${cfg.start_date}`,
+        `start_time: ${cfg.start_time}`,
+        `tick_seconds: ${cfg.tick_seconds}`,
+        `frames_per_second: ${cfg.frames_per_second}`,
+        `daypart: ${snap.daypart}`,
+        `timezone_label: ${cfg.timezone_label}`,
+        `era_label: ${cfg.era_label}`,
+        'status: active',
+        '---',
+        '',
+        '# Canonical Chronology Anchor',
+        '',
+        `This series opens at **${cfg.start_date} ${cfg.start_time}** (\`${snap.daypart}\`, \`${cfg.timezone_label}\`) at a cadence of **${cfg.tick_seconds}s per simulation tick** (\`${cfg.frames_per_second} fps\` SMPTE projection).`,
+        '',
+    ]
+    return lines.join('\n')
+}
+
+export const buildChronologyDossier = buildChronologyWorldDossier
+
+export function seedChronologyDossier(
+    seriesDir: string,
+    seriesSlug: string,
+    chronology: any,
+): any {
+    const worldDir = path.join(seriesDir, 'world')
+    if (!fs.existsSync(worldDir)) {
+        fs.mkdirSync(worldDir, { recursive: true })
+    }
+    const content = buildChronologyWorldDossier(chronology, seriesSlug)
+    const filePath = path.join(worldDir, 'chronology.md')
+    const normalized = content.replace(/\r\n/g, '\n').replace(/\r/g, '')
+    fs.writeFileSync(filePath, normalized, { encoding: 'utf8' })
+    const buf = fs.readFileSync(filePath)
+    return {
+        id: 'world_chronology',
+        domain: 'world',
+        relativePath: `series/${seriesSlug}/world/chronology.md`,
+        absolutePath: filePath,
+        byteZeroVerified: verifyByteZeroBuffer(buf),
+        contentSha256: crypto.createHash('sha256').update(buf).digest('hex'),
+    }
+}
+
+export const seedChronologyWorldDossier = seedChronologyDossier

@@ -128,13 +128,14 @@ export const DOMAIN_SELECTOR_LABEL = '[D] SELECT ENTITY DOMAIN TYPE'
 export const CAPACITY_STAT_AUDIT_LABEL =
     '[B] AUDIT BASIS-POINT CAPACITY & STATS'
 export const LOCOMOTION_MENU_LABEL = '[LOCOMOTION BASELINE]'
-
+export const CHRONOLOGY_MENU_LABEL = '[T] SIMULATION CHRONOLOGY CLOCK'
 export const LIFECYCLE_MENU_OPTIONS: readonly string[] = Object.freeze([
     GENESIS_WIZARD_LABEL,
     ENTITY_SCAFFOLDER_LABEL,
     RETIRE_ENTITY_LABEL,
     CORPUS_HEALTH_LABEL,
     RECORD_ERRATA_LABEL,
+    '[T] SIMULATION CHRONOLOGY CLOCK',
 ])
 
 import { assembleDualRailDossier } from '../../09.entity.unit/buz/entityAssemble.buzz.js'
@@ -458,6 +459,8 @@ export const updateMenu = async (
             'Open 3-pass compiler flight deck, Merkle emission, and Gate 0 verification.',
         [PUBLISH_CANON_LABEL]:
             'Copy verified bible-state.json into 000.series-sower-engine and export room topology manifest into 000.goblin-spatial.',
+        [CHRONOLOGY_MENU_LABEL]:
+            'Inspect or update canonical series start date, start time, tick cadence, and daypart preview.',
         '[X] RECORD CANONICAL ERRATA ENTRY':
             'Inspect errata hash-chain lineage and seal new retcon records.',
         'ROOT MENU': 'Return to master flight deck switchboard.',
@@ -723,6 +726,19 @@ export const updateMenu = async (
     }
     if (src === PUBLISH_CANON_LABEL) {
         await publishSealedCanonToFleet(cpy, bal as any, ste)
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        if (bal?.slv) {
+            bal.slv({ mnuBit: bal })
+        }
+        return cpy
+    }
+    if (src === CHRONOLOGY_MENU_LABEL) {
+        const { runChronologyMenu } = await import('./chronologyMenu.buzz.js')
+        await runChronologyMenu(cpy, bal, ste)
         setTimeout(async () => {
             if (ste?.hunt) {
                 await ste.hunt(ActMnu.UPDATE_MENU, {})

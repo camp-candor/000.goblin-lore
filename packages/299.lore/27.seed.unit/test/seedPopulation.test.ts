@@ -61,7 +61,7 @@ describe('Task 4.3 Series Genesis Seed Population Gauntlet', () => {
 
         expect(result).toBeDefined()
         expect(result.seedBit.val).toBe(1)
-        expect(result.seedBit.dat.totalSeeded).toBe(3)
+        expect(result.seedBit.dat.totalSeeded).toBe(4)
 
         const seriesDir = path.join(tempRepoRoot, 'series', seriesSlug)
         const conditionsPath = path.join(seriesDir, 'world', 'conditions.md')

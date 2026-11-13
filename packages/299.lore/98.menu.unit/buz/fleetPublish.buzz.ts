@@ -100,8 +100,9 @@ export const publishSealedCanonToFleet = async (
         return cpy
     }
 
+    let parsedBibleState: any = null
     try {
-        JSON.parse(fs.readFileSync(sourceManifest, 'utf-8'))
+        parsedBibleState = JSON.parse(fs.readFileSync(sourceManifest, 'utf-8'))
     } catch (parseErr: any) {
         const err = `[PUBLISH_ERROR] Compiled manifest at ${sourceManifest} failed JSON parse: ${parseErr?.message || String(parseErr)}`
         emitConsole(ste, `:: ${err}`)
@@ -120,6 +121,19 @@ export const publishSealedCanonToFleet = async (
             })
         }
         return cpy
+    }
+
+    const chronology = parsedBibleState?.chronology
+    if (chronology?.start_date && chronology?.start_time) {
+        emitConsole(
+            ste,
+            `>> [PUBLISH:CHRONO] Exported start=${chronology.start_date} ${chronology.start_time} (${chronology.start_snapshot?.daypart || chronology.daypart || 'NIGHT'}) cadence=${chronology.tick_seconds}s`,
+        )
+    } else {
+        emitConsole(
+            ste,
+            `:: [PUBLISH:WARN] Missing chronology seal -- recompile recommended`,
+        )
     }
 
     emitConsole(

@@ -45,6 +45,7 @@ const PROBE_SLUG = 'audit-genesis-probe'
 const EXPECTED_SEED_IDS = [
     'world_conditions_registry',
     'world_economy_registry',
+    'world_chronology',
     'loc_origin_hub',
 ]
 
@@ -91,7 +92,7 @@ export async function auditGenesisSeeds(): Promise<GenesisSeedsAudit> {
 
         initSealed =
             result?.seedBit?.val === 1 &&
-            result?.seedBit?.dat?.totalSeeded === 3
+            result?.seedBit?.dat?.totalSeeded === 4
         if (!initSealed) {
             errors.push(
                 '[SEED:BREACH] populateGenesisSeeds failed val: 1 with 3 dossiers.',
@@ -105,6 +106,7 @@ export async function auditGenesisSeeds(): Promise<GenesisSeedsAudit> {
         const files = [
             path.join(seriesBase, 'world', 'conditions.md'),
             path.join(seriesBase, 'world', 'economy.md'),
+            path.join(seriesBase, 'world', 'chronology.md'),
             path.join(seriesBase, 'locations', 'loc_origin_hub.md'),
         ]
         triadSealed =

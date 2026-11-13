@@ -76,6 +76,12 @@ export class SelectDomainEntityType implements Action {
     constructor(public bale: MenuBit) {}
 }
 
+export const OPEN_CHRONOLOGY_MENU = '[Menu action] Open Chronology Menu'
+export class OpenChronologyMenu implements Action {
+    readonly type = OPEN_CHRONOLOGY_MENU
+    constructor(public bale: MenuBit) {}
+}
+
 export type Actions =
     | InitMenu
     | UpdateMenu
@@ -89,3 +95,4 @@ export type Actions =
     | PublishSealedCanon
     | ExportTopologyManifest
     | SelectDomainEntityType
+    | OpenChronologyMenu

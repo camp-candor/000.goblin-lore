@@ -1,8 +1,6 @@
 import { Action } from '../99.core/interface/action.interface'
 import TickBit from './fce/tick.bit'
 
-// Tick actions
-
 export const INIT_TICK = '[Tick action] Init Tick'
 export class InitTick implements Action {
     readonly type = INIT_TICK
@@ -15,4 +13,17 @@ export class UpdateTick implements Action {
     constructor(public bale: TickBit) {}
 }
 
-export type Actions = InitTick | UpdateTick
+export const CONFIGURE_TICK_CADENCE = '[Tick action] Configure Tick Cadence'
+export class ConfigureTickCadence implements Action {
+    readonly type = CONFIGURE_TICK_CADENCE
+    constructor(public bale: TickBit) {}
+}
+
+export const STEP_TICK_FRAME = '[Tick action] Step Tick Frame'
+export class StepTickFrame implements Action {
+    readonly type = STEP_TICK_FRAME
+    constructor(public bale: TickBit) {}
+}
+
+export type Actions =
+    InitTick | UpdateTick | ConfigureTickCadence | StepTickFrame
