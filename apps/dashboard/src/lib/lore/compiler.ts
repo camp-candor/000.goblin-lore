@@ -39,7 +39,9 @@ export function canonicalJson(value: unknown): string {
     const keys = Object.keys(obj)
         .filter((k) => obj[k] !== undefined)
         .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
-    const entries = keys.map((k) => `${JSON.stringify(k)}:${canonicalJson(obj[k])}`)
+    const entries = keys.map(
+        (k) => `${JSON.stringify(k)}:${canonicalJson(obj[k])}`,
+    )
     return `{${entries.join(',')}}`
 }
 
@@ -67,7 +69,9 @@ export async function sha256Hex(input: string): Promise<string> {
     return (partA + partB).repeat(4)
 }
 
-export function serializeEntityForHash(dossier: LoreDossier): Record<string, unknown> {
+export function serializeEntityForHash(
+    dossier: LoreDossier,
+): Record<string, unknown> {
     const base: Record<string, unknown> = {
         entity_type: dossier.entity_type,
         id: dossier.id,
@@ -105,7 +109,9 @@ export function serializeEntityForHash(dossier: LoreDossier): Record<string, unk
     return base
 }
 
-export function detectGrievanceCycle(grievances: LoreDossier[]): string[] | null {
+export function detectGrievanceCycle(
+    grievances: LoreDossier[],
+): string[] | null {
     const byId = new Map<string, LoreDossier>()
     for (const g of grievances) byId.set(g.id, g)
 
@@ -175,14 +181,18 @@ export function runStylometricLint(dossiers: LoreDossier[]): {
         for (const slop of slopTerms) {
             if (lowerProse.includes(slop)) {
                 slopViolations++
-                findings.push(`:: [STYLOMETRICS:SLOP] ${d.id}: prohibited token '${slop}'`)
+                findings.push(
+                    `:: [STYLOMETRICS:SLOP] ${d.id}: prohibited token '${slop}'`,
+                )
             }
         }
     }
 
     const unique = new Set(tokens)
     const lexicalDiversityBp =
-        tokens.length > 0 ? Math.min(10000, Math.round((unique.size / tokens.length) * 10000)) : 10000
+        tokens.length > 0
+            ? Math.min(10000, Math.round((unique.size / tokens.length) * 10000))
+            : 10000
 
     // Voice-bleed callback collision detection across characters
     const callbackOwners = new Map<string, string[]>()
@@ -216,7 +226,9 @@ export function runStylometricLint(dossiers: LoreDossier[]): {
     }
 }
 
-export async function runCompileGauntlet(series: SeriesCorpus): Promise<CompileGauntletReport> {
+export async function runCompileGauntlet(
+    series: SeriesCorpus,
+): Promise<CompileGauntletReport> {
     const started = performance.now()
     const dossiers = series.dossiers
     const entityById = new Map<string, LoreDossier>()
@@ -366,7 +378,9 @@ export async function runCompileGauntlet(series: SeriesCorpus): Promise<CompileG
     }
 
     for (const m of mysteries) {
-        const clueSet = new Set((m.clue_tokens ?? []).map((t) => t.toLowerCase()))
+        const clueSet = new Set(
+            (m.clue_tokens ?? []).map((t) => t.toLowerCase()),
+        )
         for (const lemma of m.trigger_lemmas ?? []) {
             if (clueSet.has(lemma.toLowerCase())) {
                 clueOk = false

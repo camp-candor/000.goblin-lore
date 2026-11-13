@@ -1,7 +1,12 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import type { CorpusSnapshot, EntityKind, LoreDossier, SeriesCorpus } from './types'
+import type {
+    CorpusSnapshot,
+    EntityKind,
+    LoreDossier,
+    SeriesCorpus,
+} from './types'
 import { isPure7BitAscii } from './compiler'
 
 function findRepoRoot(startDir: string): string {
@@ -47,7 +52,10 @@ function parseScalar(raw: string): string | number | string[] {
     return trimmed.replace(/^['"]|['"]$/g, '')
 }
 
-export function parseDossierMarkdown(filename: string, rawContent: string): LoreDossier | null {
+export function parseDossierMarkdown(
+    filename: string,
+    rawContent: string,
+): LoreDossier | null {
     const normalized = rawContent.replace(/\r\n/g, '\n')
     const byte0Valid = normalized.startsWith('---\n')
     const asciiValid = isPure7BitAscii(rawContent)
@@ -92,7 +100,13 @@ export function parseDossierMarkdown(filename: string, rawContent: string): Lore
     }
 
     const rawKind = String(fields.entity_type || 'character')
-    const validKinds: EntityKind[] = ['character', 'location', 'item', 'grievance', 'mystery']
+    const validKinds: EntityKind[] = [
+        'character',
+        'location',
+        'item',
+        'grievance',
+        'mystery',
+    ]
     const entity_type: EntityKind = validKinds.includes(rawKind as EntityKind)
         ? (rawKind as EntityKind)
         : 'character'
@@ -118,7 +132,9 @@ export function parseDossierMarkdown(filename: string, rawContent: string): Lore
         available_arms: toNum(fields.available_arms),
         available_legs: toNum(fields.available_legs),
         locomotion_tier:
-            typeof fields.locomotion_tier === 'string' ? fields.locomotion_tier : undefined,
+            typeof fields.locomotion_tier === 'string'
+                ? fields.locomotion_tier
+                : undefined,
         paranoia: toNum(fields.paranoia),
         trust: toNum(fields.trust),
         somatic_strain: toNum(fields.somatic_strain),
@@ -130,15 +146,21 @@ export function parseDossierMarkdown(filename: string, rawContent: string): Lore
         temperature_bp: toNum(fields.temperature_bp),
         acoustic_dampening_cdb: toNum(fields.acoustic_dampening_cdb),
         adjacent_to: toStringArray(fields.adjacent_to),
-        owner_id: typeof fields.owner_id === 'string' ? fields.owner_id : undefined,
-        weight_class: typeof fields.weight_class === 'string' ? fields.weight_class : undefined,
+        owner_id:
+            typeof fields.owner_id === 'string' ? fields.owner_id : undefined,
+        weight_class:
+            typeof fields.weight_class === 'string'
+                ? fields.weight_class
+                : undefined,
         occupies_hands: toNum(fields.occupies_hands),
         min_intensity: toNum(fields.min_intensity),
         max_intensity: toNum(fields.max_intensity),
         intensity_bp: toNum(fields.intensity_bp),
         escalation_ceiling_bp: toNum(fields.escalation_ceiling_bp),
         participants: toStringArray(fields.participants),
-        spawns_on_max_escalation: toStringArray(fields.spawns_on_max_escalation),
+        spawns_on_max_escalation: toStringArray(
+            fields.spawns_on_max_escalation,
+        ),
     }
 }
 
@@ -163,7 +185,12 @@ export function loadCorpusSnapshotFromDisk(): CorpusSnapshot {
     }
 
     try {
-        const libPkgPath = path.join(rootDir, 'apps', '995.library', 'package.json')
+        const libPkgPath = path.join(
+            rootDir,
+            'apps',
+            '995.library',
+            'package.json',
+        )
         if (fs.existsSync(libPkgPath)) {
             const libPkg = JSON.parse(fs.readFileSync(libPkgPath, 'utf-8')) as {
                 version?: string
@@ -207,14 +234,17 @@ export function loadCorpusSnapshotFromDisk(): CorpusSnapshot {
             const biblePath = path.join(compiledDir, slug, 'bible-state.json')
             if (fs.existsSync(biblePath)) {
                 try {
-                    const bible = JSON.parse(fs.readFileSync(biblePath, 'utf-8')) as {
+                    const bible = JSON.parse(
+                        fs.readFileSync(biblePath, 'utf-8'),
+                    ) as {
                         root_merkle_hash?: string
                         compiled_at?: string
                         catalog_summary?: { totalEntities?: number }
                     }
                     compiledRootHash = bible.root_merkle_hash ?? null
                     compiledAt = bible.compiled_at ?? null
-                    compiledEntityCount = bible.catalog_summary?.totalEntities ?? 0
+                    compiledEntityCount =
+                        bible.catalog_summary?.totalEntities ?? 0
                 } catch {
                     // Ignore malformed snapshot
                 }

@@ -15,8 +15,12 @@ describe('Goblin Lore Terminal Cockpit :: 19 Buzzers & Real Corpus', () => {
     it('loads live disk series from lore/series and compiled Merkle hashes', () => {
         const snapshot = loadCorpusSnapshotFromDisk()
         expect(snapshot.seriesList.length).toBeGreaterThanOrEqual(2)
-        const hearth = snapshot.seriesList.find((s) => s.slug === '000.sample-hearth')
-        const wiregrass = snapshot.seriesList.find((s) => s.slug === 'wiregrass-basin')
+        const hearth = snapshot.seriesList.find(
+            (s) => s.slug === '000.sample-hearth',
+        )
+        const wiregrass = snapshot.seriesList.find(
+            (s) => s.slug === 'wiregrass-basin',
+        )
         expect(hearth?.dossiers.length).toBe(6)
         expect(wiregrass?.dossiers.length).toBe(9)
         expect(wiregrass?.compiledRootHash).toMatch(/^[a-f0-9]{64}$/)
@@ -37,7 +41,9 @@ describe('Goblin Lore Terminal Cockpit :: 19 Buzzers & Real Corpus', () => {
 
     it('executes deterministic 3-pass compile gauntlet cleanly over sample-hearth', async () => {
         const snapshot = loadCorpusSnapshotFromDisk()
-        const hearth = snapshot.seriesList.find((s) => s.slug === '000.sample-hearth')!
+        const hearth = snapshot.seriesList.find(
+            (s) => s.slug === '000.sample-hearth',
+        )!
         const report = await runCompileGauntlet(hearth)
         expect(report.failures).toHaveLength(0)
         expect(report.invariants.BYTE0).toBe(true)
@@ -85,9 +91,17 @@ describe('Goblin Lore Terminal Cockpit :: 19 Buzzers & Real Corpus', () => {
         }
 
         // Verify Motor Lab evaluation
-        const breach = evaluateMotorModalSubmission('char_wart', 'BIMANUAL_LIFT')
+        const breach = evaluateMotorModalSubmission(
+            'char_wart',
+            'BIMANUAL_LIFT',
+        )
         expect(breach.some((l) => l.includes('[SOMATIC_BREACH]'))).toBe(true)
-        const feasible = evaluateMotorModalSubmission('char_bog', 'BIMANUAL_LIFT')
-        expect(feasible.some((l) => l.includes('[SOMATIC_FEASIBLE]'))).toBe(true)
+        const feasible = evaluateMotorModalSubmission(
+            'char_bog',
+            'BIMANUAL_LIFT',
+        )
+        expect(feasible.some((l) => l.includes('[SOMATIC_FEASIBLE]'))).toBe(
+            true,
+        )
     })
 })

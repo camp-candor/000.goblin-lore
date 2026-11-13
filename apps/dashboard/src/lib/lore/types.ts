@@ -1,4 +1,5 @@
-export type EntityKind = 'character' | 'location' | 'item' | 'grievance' | 'mystery'
+export type EntityKind =
+    'character' | 'location' | 'item' | 'grievance' | 'mystery'
 
 export interface LoreDossier {
     id: string

@@ -82,7 +82,10 @@ export const MOTOR_LAB_PROFILES: Record<
     },
 }
 
-export function evaluateMotorCandidate(entityId: string, rawVerb: string): {
+export function evaluateMotorCandidate(
+    entityId: string,
+    rawVerb: string,
+): {
     lines: string[]
     feasible: boolean
 } {
@@ -110,7 +113,8 @@ export function runPressureStep(
     debitBp: number,
     isFirstCycle: boolean,
 ): string[] {
-    const entityMeters = state.pressureMeters[entityId] ?? (state.pressureMeters[entityId] = {})
+    const entityMeters =
+        state.pressureMeters[entityId] ?? (state.pressureMeters[entityId] = {})
     const prev = entityMeters[meterCategory] ?? 5000
     const chronicFloor = 1200
     const dissipated = isFirstCycle && prev > chronicFloor ? 500 : 0
@@ -147,7 +151,9 @@ export function runPressureStep(
 }
 
 // 07.acoustic.inspector.buzz.ts
-export const ACOUSTIC_EVENTS: Array<ChoiceOption & { sourceCdB: number; wallCdB: number }> = [
+export const ACOUSTIC_EVENTS: Array<
+    ChoiceOption & { sourceCdB: number; wallCdB: number }
+> = [
     {
         id: 'evt_boiler_groan_01',
         label: 'evt_boiler_groan_01 (11000 cdB source, 2500 cdB wall)',
@@ -182,7 +188,8 @@ export function runAcousticImpulse(
     }
     const prev = state.paranoiaClocks[entityId] ?? 2600
     const arrival = Math.max(0, evt.sourceCdB - evt.wallCdB)
-    const impulseDelta = arrival >= 5000 ? Math.round((arrival - 2500) * 0.5) : 0
+    const impulseDelta =
+        arrival >= 5000 ? Math.round((arrival - 2500) * 0.5) : 0
     const next = Math.min(10000, prev + impulseDelta)
     state.paranoiaClocks[entityId] = next
 
@@ -191,7 +198,11 @@ export function runAcousticImpulse(
     const depthCt = Math.round(40 + (next / 10000) * 206)
     const visionCone = next >= 8000 ? 45 : next >= 5000 ? 60 : 90
     const tierLabel =
-        next >= 8000 ? 'Panic Locked' : next >= 5000 ? 'Hypervigilant' : 'Steady'
+        next >= 8000
+            ? 'Panic Locked'
+            : next >= 5000
+              ? 'Hypervigilant'
+              : 'Steady'
 
     return [
         `>> [ACOUSTIC_IMPULSE] ${entityId} | Arrival: ${arrival} cdB | Next: ${next}/8000 bps${boilOver} [OK]`,
@@ -200,7 +211,10 @@ export function runAcousticImpulse(
 }
 
 // 08.algebraic.inspector.buzz.ts
-export function runAlgebraicScenario(entityId: string, scenarioId: string): string[] {
+export function runAlgebraicScenario(
+    entityId: string,
+    scenarioId: string,
+): string[] {
     if (scenarioId === 'motor_collapse') {
         return [
             `:: [ALGEBRAIC_DSP] Validating kinetic proposal [CRAWL, SPEAK, RUN] for ${entityId} at fatigue 8200 bps`,
@@ -236,7 +250,9 @@ export function runPostBreakAction(
         if (stored) {
             return stored
         }
-        return [`:: [POST_BREAK] ${entityId} ${meterCategory}: no break recorded (unbroken).`]
+        return [
+            `:: [POST_BREAK] ${entityId} ${meterCategory}: no break recorded (unbroken).`,
+        ]
     }
 
     const lines = [
@@ -279,10 +295,16 @@ export const DEMO_TTS_LINES = [
     },
 ]
 
-export function validateDemoTtsLine(lineId: string): { lines: string[]; ok: boolean } {
+export function validateDemoTtsLine(lineId: string): {
+    lines: string[]
+    ok: boolean
+} {
     const line = DEMO_TTS_LINES.find((l) => l.lineId === lineId)
     if (!line) {
-        return { lines: [`:: [PAYLOAD_FAIL] Unknown demo line: ${lineId}`], ok: false }
+        return {
+            lines: [`:: [PAYLOAD_FAIL] Unknown demo line: ${lineId}`],
+            ok: false,
+        }
     }
     if (!line.canSpeak) {
         return {
@@ -302,7 +324,10 @@ export function validateDemoTtsLine(lineId: string): { lines: string[]; ok: bool
 }
 
 // 11.vocal.feasibility.buzz.ts
-export function checkVocalFeasibilityCase(caseId: string): { lines: string[]; ok: boolean } {
+export function checkVocalFeasibilityCase(caseId: string): {
+    lines: string[]
+    ok: boolean
+} {
     if (caseId === 'bog_clean') {
         return {
             lines: [
@@ -331,7 +356,10 @@ export function checkVocalFeasibilityCase(caseId: string): { lines: string[]; ok
 }
 
 // 12.fact.staleness.buzz.ts
-export function checkFactStalenessCase(sceneCaseId: string): { lines: string[]; ok: boolean } {
+export function checkFactStalenessCase(sceneCaseId: string): {
+    lines: string[]
+    ok: boolean
+} {
     if (sceneCaseId === 'siphon_mutated') {
         return {
             lines: [

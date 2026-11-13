@@ -101,7 +101,6 @@
         "zod": "^3.25.76"
     },
     "dependencies": {
-        "@astrojs/node": "11.1.12",
         "lodash": "4.18.1"
     }
 }

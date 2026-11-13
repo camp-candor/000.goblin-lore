@@ -62,11 +62,21 @@ export function mountTerminalCockpit(): void {
     const caliperEl = document.getElementById('lore-char-caliper')
     const terminatedEl = document.getElementById('lore-terminated-view')
 
-    if (!rootEl || !dataEl || !topLeftEl || !navEl || !logScrollEl || !caliperEl || !terminatedEl) {
+    if (
+        !rootEl ||
+        !dataEl ||
+        !topLeftEl ||
+        !navEl ||
+        !logScrollEl ||
+        !caliperEl ||
+        !terminatedEl
+    ) {
         return
     }
 
-    const initialCorpus = JSON.parse(dataEl.textContent || '{}') as CorpusSnapshot
+    const initialCorpus = JSON.parse(
+        dataEl.textContent || '{}',
+    ) as CorpusSnapshot
 
     let session: CockpitSession = createInitialCockpitSession(initialCorpus)
     let rawLines: string[] = buildBootBannerLines(session)
@@ -76,7 +86,11 @@ export function mountTerminalCockpit(): void {
     let consoleCols = 84
     let lastEscTime = 0
     let pendingTimer: ReturnType<typeof setTimeout> | null = null
-    let inputModalState: { prompt: string; entityId: string; value: string } | null = null
+    let inputModalState: {
+        prompt: string
+        entityId: string
+        value: string
+    } | null = null
 
     const getChoices = (): ChoiceOption[] => getChoicesForRoute(session)
 
@@ -108,7 +122,10 @@ export function mountTerminalCockpit(): void {
         logScrollEl.scrollTop = logScrollEl.scrollHeight
     }
 
-    const applyFocusStyles = (buttons: HTMLButtonElement[], scrollTarget = true) => {
+    const applyFocusStyles = (
+        buttons: HTMLButtonElement[],
+        scrollTarget = true,
+    ) => {
         buttons.forEach((btn, idx) => {
             if (idx === focusedIndex) {
                 btn.className =
@@ -168,7 +185,8 @@ export function mountTerminalCockpit(): void {
         if (!inputModalState) return
 
         const form = document.createElement('form')
-        form.className = 'relative m-[1ch] mt-[1.5em] border border-[#e5e5e5] bg-black p-[0.5em]'
+        form.className =
+            'relative m-[1ch] mt-[1.5em] border border-[#e5e5e5] bg-black p-[0.5em]'
 
         const titleBadge = document.createElement('div')
         titleBadge.className =
@@ -195,7 +213,10 @@ export function mountTerminalCockpit(): void {
         form.addEventListener('submit', (e) => {
             e.preventDefault()
             if (!inputModalState) return
-            const lines = evaluateMotorModalSubmission(inputModalState.entityId, inputModalState.value)
+            const lines = evaluateMotorModalSubmission(
+                inputModalState.entityId,
+                inputModalState.value,
+            )
             appendConsoleLines(lines)
             inputModalState = null
             renderInputModal()

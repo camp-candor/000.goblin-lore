@@ -55,7 +55,12 @@ export type MenuRoute =
     | { kind: 'LEDGER_SELECT_CHAR'; seriesSlug: string }
     | { kind: 'PRESSURE_ENTITY' }
     | { kind: 'PRESSURE_METER'; entityId: string }
-    | { kind: 'PRESSURE_DEBIT'; entityId: string; meterCategory: string; cycleCount: number }
+    | {
+          kind: 'PRESSURE_DEBIT'
+          entityId: string
+          meterCategory: string
+          cycleCount: number
+      }
     | { kind: 'ACOUSTIC_ENTITY' }
     | { kind: 'ACOUSTIC_EVENT'; entityId: string }
     | { kind: 'ALGEBRAIC_ENTITY' }
@@ -76,7 +81,9 @@ export interface CockpitSession {
     dsp: DspRuntimeState
 }
 
-export function createInitialCockpitSession(corpus: CorpusSnapshot): CockpitSession {
+export function createInitialCockpitSession(
+    corpus: CorpusSnapshot,
+): CockpitSession {
     return {
         corpus,
         route: { kind: 'LORE_MENU' },
@@ -94,9 +101,13 @@ export function createInitialCockpitSession(corpus: CorpusSnapshot): CockpitSess
 
 export function buildBootBannerLines(session: CockpitSession): string[] {
     const activeSlug = session.overlay.activeSeries
-    const diskSeries = session.corpus.seriesList.find((s) => s.slug === activeSlug)
+    const diskSeries = session.corpus.seriesList.find(
+        (s) => s.slug === activeSlug,
+    )
     const rootHash =
-        session.overlay.mintedRoots[activeSlug] || diskSeries?.compiledRootHash || null
+        session.overlay.mintedRoots[activeSlug] ||
+        diskSeries?.compiledRootHash ||
+        null
     const rootDisplay = rootHash
         ? `${rootHash.slice(0, 16)}...${rootHash.slice(-8)}`
         : 'UNSEALED (RUN [C] TO MINT)'
@@ -238,42 +249,50 @@ export const SCHEMA_SUBMENU_CHOICES: ChoiceOption[] = [
     {
         id: '[ 1. VALIDATE ENTITY MANIFESTS ]',
         label: '[ 1. VALIDATE ENTITY MANIFESTS ]',
-        tooltip: 'Run basis-point bounds, Banker parity, and fail-closed schema router probes.',
+        tooltip:
+            'Run basis-point bounds, Banker parity, and fail-closed schema router probes.',
     },
     {
         id: '[ 2. RUN SOMATIC SAT SOLVER ]',
         label: '[ 2. RUN SOMATIC SAT SOLVER ]',
-        tooltip: 'Evaluate multi-character hand-capacity SAT matrix and overload halts.',
+        tooltip:
+            'Evaluate multi-character hand-capacity SAT matrix and overload halts.',
     },
     {
         id: '[ 3. CONSTITUTIONAL RULE REGISTRY ]',
         label: '[ 3. CONSTITUTIONAL RULE REGISTRY ]',
-        tooltip: 'Audit canonical laws, authorizers, and Pass-2 pardon waivers at T0 = $0.00.',
+        tooltip:
+            'Audit canonical laws, authorizers, and Pass-2 pardon waivers at T0 = $0.00.',
     },
     {
         id: '[ 4. CRYPTOGRAPHIC ERRATA LEDGER ]',
         label: '[ 4. CRYPTOGRAPHIC ERRATA LEDGER ]',
-        tooltip: 'Verify append-only SHA-256 hash-chain lineage across world/errata.json ledgers.',
+        tooltip:
+            'Verify append-only SHA-256 hash-chain lineage across world/errata.json ledgers.',
     },
     {
         id: '[ 5. UNIVERSAL NARRATIVE FOUR-TUPLE SCHEMA ]',
         label: '[ 5. UNIVERSAL NARRATIVE FOUR-TUPLE SCHEMA ]',
-        tooltip: 'Validate <S, A, I, R_m> series.config.json contract with 7 negative probes.',
+        tooltip:
+            'Validate <S, A, I, R_m> series.config.json contract with 7 negative probes.',
     },
     {
         id: '[ 6. SERIES TREE SCAFFOLDING ]',
         label: '[ 6. SERIES TREE SCAFFOLDING ]',
-        tooltip: 'Run hermetic sandboxed 8-directory series provisioning and collision guard.',
+        tooltip:
+            'Run hermetic sandboxed 8-directory series provisioning and collision guard.',
     },
     {
         id: '[ 7. POPULATE GENESIS SEEDS ]',
         label: '[ 7. POPULATE GENESIS SEEDS ]',
-        tooltip: 'Verify 3 genesis seeds and Byte-0 0x2D2D2D0A preamble enforcement.',
+        tooltip:
+            'Verify 3 genesis seeds and Byte-0 0x2D2D2D0A preamble enforcement.',
     },
     {
         id: '[ 8. RECONCILE SPATIAL PORTAL LINKS ]',
         label: '[ 8. RECONCILE SPATIAL PORTAL LINKS ]',
-        tooltip: 'Inject missing reverse portals, check idempotency, and trap dangling pointers.',
+        tooltip:
+            'Inject missing reverse portals, check idempotency, and trap dangling pointers.',
     },
     {
         id: '[ BACK ]',
@@ -286,62 +305,74 @@ export const SOMATIC_HUB_CHOICES: ChoiceOption[] = [
     {
         id: '[Extract Somatic Ledger]',
         label: '[Extract Somatic Ledger]',
-        tooltip: 'Inspect live series dossiers on disk and extract kinematic somatic ledger.',
+        tooltip:
+            'Inspect live series dossiers on disk and extract kinematic somatic ledger.',
     },
     {
         id: '[Pressure Meter Thermodynamic Simulator]',
         label: '[Pressure Meter Thermodynamic Simulator]',
-        tooltip: 'Simulate basis-point pressure decay, debits, and inter-meter refusal bridges.',
+        tooltip:
+            'Simulate basis-point pressure decay, debits, and inter-meter refusal bridges.',
     },
     {
         id: '[Acoustic Paranoia Clock Inspector]',
         label: '[Acoustic Paranoia Clock Inspector]',
-        tooltip: 'Inject cdB acoustic impulses into paranoia clocks and inspect pitch flutter.',
+        tooltip:
+            'Inject cdB acoustic impulses into paranoia clocks and inspect pitch flutter.',
     },
     {
         id: '[Algebraic DSP Matrix Inspector]',
         label: '[Algebraic DSP Matrix Inspector]',
-        tooltip: 'Compose Banker-rounded pitch, formant, pause dilation, and visceral hold DSP.',
+        tooltip:
+            'Compose Banker-rounded pitch, formant, pause dilation, and visceral hold DSP.',
     },
     {
         id: '[Post-Break Finality Trigger]',
         label: '[Post-Break Finality Trigger]',
-        tooltip: 'Trigger permanent broken meter clamps, refusal mutations, and climax directives.',
+        tooltip:
+            'Trigger permanent broken meter clamps, refusal mutations, and climax directives.',
     },
     {
         id: '[Synthesis Ingress Payload Validator]',
         label: '[Synthesis Ingress Payload Validator]',
-        tooltip: 'Validate closed-world TTSGenerationRequest envelopes and [BEAT] rhythm ratios.',
+        tooltip:
+            'Validate closed-world TTSGenerationRequest envelopes and [BEAT] rhythm ratios.',
     },
     {
         id: '[Vocal-Motor Feasibility Gate Inspector]',
         label: '[Vocal-Motor Feasibility Gate Inspector]',
-        tooltip: 'Test aphonia fail-closed defense and banned vocal verb rejections.',
+        tooltip:
+            'Test aphonia fail-closed defense and banned vocal verb rejections.',
     },
     {
         id: '[Monotonic Fact Staleness Checker]',
         label: '[Monotonic Fact Staleness Checker]',
-        tooltip: 'Detect upstream somatic ledger fact version drift against pinned scenes.',
+        tooltip:
+            'Detect upstream somatic ledger fact version drift against pinned scenes.',
     },
     {
         id: '[Deterministic Payload Hasher]',
         label: '[Deterministic Payload Hasher]',
-        tooltip: 'Compute RFC 8785 JCS canonical SHA-256 payload hashes and test parity traps.',
+        tooltip:
+            'Compute RFC 8785 JCS canonical SHA-256 payload hashes and test parity traps.',
     },
     {
         id: '[Payload Serialization Reducer Console]',
         label: '[Payload Serialization Reducer Console]',
-        tooltip: 'Dispatch individual or full-pipeline 22.payload.unit reducer transitions.',
+        tooltip:
+            'Dispatch individual or full-pipeline 22.payload.unit reducer transitions.',
     },
     {
         id: '[9] RUN FULL SOMATIC DSP VERIFICATION SWEEP',
         label: '[9] RUN FULL SOMATIC DSP VERIFICATION SWEEP',
-        tooltip: 'Execute all 5 fail-closed negative-control somatic verification traps at T0 = $0.00.',
+        tooltip:
+            'Execute all 5 fail-closed negative-control somatic verification traps at T0 = $0.00.',
     },
     {
         id: '[0] ROOT MENU',
         label: '[0] ROOT MENU',
-        tooltip: 'Exit Somatic DSP Hub and return to master ROOT MENU switchboard.',
+        tooltip:
+            'Exit Somatic DSP Hub and return to master ROOT MENU switchboard.',
     },
     {
         id: '[<] RETURN TO LORE MENU',
@@ -354,27 +385,32 @@ export const COMPILE_DECK_CHOICES: ChoiceOption[] = [
     {
         id: '[1] RUN COMPLETE THREE-PASS GAUNTLET',
         label: '[1] RUN COMPLETE THREE-PASS GAUNTLET',
-        tooltip: 'Run Pass 1 (Structural/SAT), Pass 2 (Relational/DAG), Pass 3 (Merkle Seal).',
+        tooltip:
+            'Run Pass 1 (Structural/SAT), Pass 2 (Relational/DAG), Pass 3 (Merkle Seal).',
     },
     {
         id: '[2] PASS 1: STRUCTURAL BOUNDS & SOMATIC SAT',
         label: '[2] PASS 1: STRUCTURAL BOUNDS & SOMATIC SAT',
-        tooltip: 'Evaluate Byte-0 preambles, 7-bit ASCII, Zod bounds, and hand-capacity SAT.',
+        tooltip:
+            'Evaluate Byte-0 preambles, 7-bit ASCII, Zod bounds, and hand-capacity SAT.',
     },
     {
         id: '[3] PASS 2: RELATIONAL DAG & ACYCLICITY CHECK',
         label: '[3] PASS 2: RELATIONAL DAG & ACYCLICITY CHECK',
-        tooltip: 'Sweep foreign keys, portal reciprocity, and 3-color DFS grievance DAG.',
+        tooltip:
+            'Sweep foreign keys, portal reciprocity, and 3-color DFS grievance DAG.',
     },
     {
         id: '[4] PASS 3: DETERMINISTIC SEAL & MERKLE EMISSION',
         label: '[4] PASS 3: DETERMINISTIC SEAL & MERKLE EMISSION',
-        tooltip: 'Canonicalize entities via RFC 8785 JCS and compute SHA-256 Merkle root H_root.',
+        tooltip:
+            'Canonicalize entities via RFC 8785 JCS and compute SHA-256 Merkle root H_root.',
     },
     {
         id: '[5] GATE 0 VERIFICATION AUDIT (ZERO-DRIFT TRIPWIRE)',
         label: '[5] GATE 0 VERIFICATION AUDIT (ZERO-DRIFT TRIPWIRE)',
-        tooltip: 'Verify fresh deterministic rebuild matches compiled bible-state snapshot bit-for-bit.',
+        tooltip:
+            'Verify fresh deterministic rebuild matches compiled bible-state snapshot bit-for-bit.',
     },
     {
         id: '[<] RETURN TO LORE MENU',
@@ -392,12 +428,14 @@ export const ROOT_MENU_CHOICES: ChoiceOption[] = [
     {
         id: 'LIBRARY MENU',
         label: 'LIBRARY MENU',
-        tooltip: 'Open the library menu to explore core 995.library harness status.',
+        tooltip:
+            'Open the library menu to explore core 995.library harness status.',
     },
     {
         id: 'AGENT MENU',
         label: 'AGENT MENU',
-        tooltip: 'Inspect 100.agent deterministic DevOps cascade and Durable Object bindings.',
+        tooltip:
+            'Inspect 100.agent deterministic DevOps cascade and Durable Object bindings.',
     },
     {
         id: 'CLOUDFLARE MENU',
@@ -410,7 +448,8 @@ export const LIBRARY_MENU_CHOICES: ChoiceOption[] = [
     {
         id: '[1] INSPECT TERMINAL GRID TOPOLOGY',
         label: '[1] INSPECT TERMINAL GRID TOPOLOGY',
-        tooltip: 'Inspect immutable 12x12 dual-pane grid allocation (0-4 choice | 4-12 console).',
+        tooltip:
+            'Inspect immutable 12x12 dual-pane grid allocation (0-4 choice | 4-12 console).',
     },
     {
         id: '[2] CHECK CORPUS VERSION MANIFEST',
@@ -444,12 +483,14 @@ export function getChoicesForRoute(session: CockpitSession): ChoiceOption[] {
                 {
                     id: 'char_wart',
                     label: 'char_wart',
-                    tooltip: 'Inspect char_wart (brachial plexus severed, BIPEDAL_HUNCHED).',
+                    tooltip:
+                        'Inspect char_wart (brachial plexus severed, BIPEDAL_HUNCHED).',
                 },
                 {
                     id: 'char_bog',
                     label: 'char_bog',
-                    tooltip: 'Inspect char_bog (clean somatic capacity, BIPEDAL_NIMBLE).',
+                    tooltip:
+                        'Inspect char_bog (clean somatic capacity, BIPEDAL_NIMBLE).',
                 },
                 {
                     id: '[<] BACK',
@@ -462,7 +503,8 @@ export function getChoicesForRoute(session: CockpitSession): ChoiceOption[] {
                 {
                     id: '[ TEST MOTOR FEASIBILITY ]',
                     label: '[ TEST MOTOR FEASIBILITY ]',
-                    tooltip: 'Open interactive prompt to evaluate a candidate verb.',
+                    tooltip:
+                        'Open interactive prompt to evaluate a candidate verb.',
                 },
                 {
                     id: '[<] BACK',
@@ -484,8 +526,12 @@ export function getChoicesForRoute(session: CockpitSession): ChoiceOption[] {
                 },
             ]
         case 'LEDGER_SELECT_CHAR': {
-            const target = session.corpus.seriesList.find((s) => s.slug === r.seriesSlug)
-            const chars = (target?.dossiers ?? []).filter((d) => d.entity_type === 'character')
+            const target = session.corpus.seriesList.find(
+                (s) => s.slug === r.seriesSlug,
+            )
+            const chars = (target?.dossiers ?? []).filter(
+                (d) => d.entity_type === 'character',
+            )
             return [
                 ...chars.map((c) => ({
                     id: c.id,
@@ -504,9 +550,21 @@ export function getChoicesForRoute(session: CockpitSession): ChoiceOption[] {
         case 'ALGEBRAIC_ENTITY':
         case 'POSTBREAK_ENTITY':
             return [
-                { id: 'char_wart', label: 'char_wart', tooltip: 'Select entity char_wart.' },
-                { id: 'char_bog', label: 'char_bog', tooltip: 'Select entity char_bog.' },
-                { id: 'char_spleen', label: 'char_spleen', tooltip: 'Select entity char_spleen.' },
+                {
+                    id: 'char_wart',
+                    label: 'char_wart',
+                    tooltip: 'Select entity char_wart.',
+                },
+                {
+                    id: 'char_bog',
+                    label: 'char_bog',
+                    tooltip: 'Select entity char_bog.',
+                },
+                {
+                    id: 'char_spleen',
+                    label: 'char_spleen',
+                    tooltip: 'Select entity char_spleen.',
+                },
                 {
                     id: '[<] BACK',
                     label: '[<] BACK',
@@ -518,7 +576,8 @@ export function getChoicesForRoute(session: CockpitSession): ChoiceOption[] {
                 {
                     id: 'SOMATIC_FATIGUE',
                     label: 'SOMATIC_FATIGUE',
-                    tooltip: 'Inspect SOMATIC_FATIGUE meter & refusal threshold bridge.',
+                    tooltip:
+                        'Inspect SOMATIC_FATIGUE meter & refusal threshold bridge.',
                 },
                 {
                     id: 'PHYSICAL_PAIN',
@@ -535,7 +594,11 @@ export function getChoicesForRoute(session: CockpitSession): ChoiceOption[] {
                     label: 'PARANOIA_CLOCK',
                     tooltip: 'Inspect PARANOIA_CLOCK meter.',
                 },
-                { id: '[<] BACK', label: '[<] BACK', tooltip: 'Back to entity selector.' },
+                {
+                    id: '[<] BACK',
+                    label: '[<] BACK',
+                    tooltip: 'Back to entity selector.',
+                },
             ]
         case 'PRESSURE_DEBIT':
             return [
@@ -554,26 +617,40 @@ export function getChoicesForRoute(session: CockpitSession): ChoiceOption[] {
                     label: '+1000 bp (Evasion Sprint)',
                     tooltip: 'Inject +1000 bp thermodynamic debit.',
                 },
-                { id: '[<] BACK', label: '[<] BACK', tooltip: 'Back to meter selector.' },
+                {
+                    id: '[<] BACK',
+                    label: '[<] BACK',
+                    tooltip: 'Back to meter selector.',
+                },
             ]
         case 'ACOUSTIC_EVENT':
             return [
                 ...ACOUSTIC_EVENTS,
-                { id: '[<] BACK', label: '[<] BACK', tooltip: 'Back to entity selector.' },
+                {
+                    id: '[<] BACK',
+                    label: '[<] BACK',
+                    tooltip: 'Back to entity selector.',
+                },
             ]
         case 'ALGEBRAIC_SCENARIO':
             return [
                 {
                     id: 'pilot_case',
                     label: 'Pilot Case: fatigue 8200, pain 7500 [CRAWL, SPEAK]',
-                    tooltip: 'Compose DSP matrix under high exhaustion and pain.',
+                    tooltip:
+                        'Compose DSP matrix under high exhaustion and pain.',
                 },
                 {
                     id: 'motor_collapse',
                     label: 'Motor Collapse Conflict: append RUN at fatigue 8200',
-                    tooltip: 'Prove RUN fails closed under exhaustion collapse.',
+                    tooltip:
+                        'Prove RUN fails closed under exhaustion collapse.',
                 },
-                { id: '[<] BACK', label: '[<] BACK', tooltip: 'Back to entity selector.' },
+                {
+                    id: '[<] BACK',
+                    label: '[<] BACK',
+                    tooltip: 'Back to entity selector.',
+                },
             ]
         case 'POSTBREAK_METER':
             return [
@@ -592,40 +669,56 @@ export function getChoicesForRoute(session: CockpitSession): ChoiceOption[] {
                     label: 'PARANOIA_CLOCK',
                     tooltip: 'Target PARANOIA_CLOCK finality threshold.',
                 },
-                { id: '[<] BACK', label: '[<] BACK', tooltip: 'Back to entity selector.' },
+                {
+                    id: '[<] BACK',
+                    label: '[<] BACK',
+                    tooltip: 'Back to entity selector.',
+                },
             ]
         case 'POSTBREAK_ACTION':
             return [
                 {
                     id: 'force_breach',
                     label: 'Force Breach: 10000/8000 bps',
-                    tooltip: 'Clamp meter permanently at 10000 bps and emit climax directive.',
+                    tooltip:
+                        'Clamp meter permanently at 10000 bps and emit climax directive.',
                 },
                 {
                     id: 'inspect_status',
                     label: '[Inspect Somatic Status]',
-                    tooltip: 'Read current finality break record for this meter.',
+                    tooltip:
+                        'Read current finality break record for this meter.',
                 },
-                { id: '[<] BACK', label: '[<] BACK', tooltip: 'Back to meter selector.' },
+                {
+                    id: '[<] BACK',
+                    label: '[<] BACK',
+                    tooltip: 'Back to meter selector.',
+                },
             ]
         case 'PAYLOAD_VALIDATOR':
             return [
                 {
                     id: 'line_wart_001',
                     label: 'line_wart_001 (char_wart :: valid [BEAT])',
-                    tooltip: 'Validate closed-world TTS envelope for line_wart_001.',
+                    tooltip:
+                        'Validate closed-world TTS envelope for line_wart_001.',
                 },
                 {
                     id: 'line_bog_002',
                     label: 'line_bog_002 (char_bog :: valid [BEAT])',
-                    tooltip: 'Validate closed-world TTS envelope for line_bog_002.',
+                    tooltip:
+                        'Validate closed-world TTS envelope for line_bog_002.',
                 },
                 {
                     id: 'line_aphonic_test',
                     label: 'line_aphonic_test (cnd_crushed_larynx :: MUTE)',
                     tooltip: 'Prove aphonic dialogue is rejected fail-closed.',
                 },
-                { id: '[<] BACK', label: '[<] BACK', tooltip: 'Return to Somatic DSP Hub.' },
+                {
+                    id: '[<] BACK',
+                    label: '[<] BACK',
+                    tooltip: 'Return to Somatic DSP Hub.',
+                },
             ]
         case 'VOCAL_FEASIBILITY':
             return [
@@ -642,54 +735,73 @@ export function getChoicesForRoute(session: CockpitSession): ChoiceOption[] {
                 {
                     id: 'spleen_ban',
                     label: 'char_spleen :: "Speak now." (banned verb: speak)',
-                    tooltip: 'Verify banned verb exclusion traps vocal proposal.',
+                    tooltip:
+                        'Verify banned verb exclusion traps vocal proposal.',
                 },
-                { id: '[<] BACK', label: '[<] BACK', tooltip: 'Return to Somatic DSP Hub.' },
+                {
+                    id: '[<] BACK',
+                    label: '[<] BACK',
+                    tooltip: 'Return to Somatic DSP Hub.',
+                },
             ]
         case 'FACT_STALENESS':
             return [
                 {
                     id: 'siphon_clean',
                     label: 'sc_culvert_siphon_02 :: Clean Pinned Versions',
-                    tooltip: 'Verify pinned fact versions match somatic ledger.',
+                    tooltip:
+                        'Verify pinned fact versions match somatic ledger.',
                 },
                 {
                     id: 'siphon_mutated',
                     label: 'sc_culvert_siphon_02 :: Upstream Mutation (fact_wart_arm_severed v3)',
-                    tooltip: 'Prove stale scene fails closed when ledger advances.',
+                    tooltip:
+                        'Prove stale scene fails closed when ledger advances.',
                 },
                 {
                     id: 'boiler_clean',
                     label: 'sc_boiler_flue_01 :: Clean Pinned Versions',
                     tooltip: 'Verify sc_boiler_flue_01 fact parity.',
                 },
-                { id: '[<] BACK', label: '[<] BACK', tooltip: 'Return to Somatic DSP Hub.' },
+                {
+                    id: '[<] BACK',
+                    label: '[<] BACK',
+                    tooltip: 'Return to Somatic DSP Hub.',
+                },
             ]
         case 'PAYLOAD_HASHER':
             return [
                 {
                     id: 'line_wart_001',
                     label: 'line_wart_001 (RFC 8785 JCS SHA-256)',
-                    tooltip: 'Hash line_wart_001 via JCS + NFC SHA-256 and check parity.',
+                    tooltip:
+                        'Hash line_wart_001 via JCS + NFC SHA-256 and check parity.',
                 },
                 {
                     id: 'line_bog_002',
                     label: 'line_bog_002 (RFC 8785 JCS SHA-256)',
-                    tooltip: 'Hash line_bog_002 via JCS + NFC SHA-256 and check parity.',
+                    tooltip:
+                        'Hash line_bog_002 via JCS + NFC SHA-256 and check parity.',
                 },
                 {
                     id: 'inject_parity_fail',
                     label: '[Inject Hash Parity Audit]',
-                    tooltip: 'Inject all-zero digest to trigger PAYLOAD_HASH_PARITY_MISMATCH.',
+                    tooltip:
+                        'Inject all-zero digest to trigger PAYLOAD_HASH_PARITY_MISMATCH.',
                 },
-                { id: '[<] BACK', label: '[<] BACK', tooltip: 'Return to Somatic DSP Hub.' },
+                {
+                    id: '[<] BACK',
+                    label: '[<] BACK',
+                    tooltip: 'Return to Somatic DSP Hub.',
+                },
             ]
         case 'PAYLOAD_REDUCER':
             return [
                 {
                     id: 'full_pipeline',
                     label: '[Run Full Pipeline Dispatch]',
-                    tooltip: 'Execute validate -> feasibility -> staleness -> hash sequentially.',
+                    tooltip:
+                        'Execute validate -> feasibility -> staleness -> hash sequentially.',
                 },
                 {
                     id: 'validate',
@@ -714,9 +826,14 @@ export function getChoicesForRoute(session: CockpitSession): ChoiceOption[] {
                 {
                     id: 'inspect_model',
                     label: '[Inspect Model State]',
-                    tooltip: 'Dump in-memory 22.payload.unit reducer receipt lists.',
+                    tooltip:
+                        'Dump in-memory 22.payload.unit reducer receipt lists.',
                 },
-                { id: '[<] BACK', label: '[<] BACK', tooltip: 'Return to Somatic DSP Hub.' },
+                {
+                    id: '[<] BACK',
+                    label: '[<] BACK',
+                    tooltip: 'Return to Somatic DSP Hub.',
+                },
             ]
     }
 }
@@ -757,7 +874,9 @@ export async function executeMenuChoice(
             }
             case '[ 26. SCHEMA & INVARIANTS ]':
                 return {
-                    logs: [`>> [MENU:SCHEMA] Opening 26.schema.unit subsystem...`],
+                    logs: [
+                        `>> [MENU:SCHEMA] Opening 26.schema.unit subsystem...`,
+                    ],
                     nextRoute: { kind: 'SCHEMA_SUBMENU' },
                 }
             case '[Somatic DSP Modulation Hub]':
@@ -820,7 +939,9 @@ export async function executeMenuChoice(
                 }
             case '8. INTERACTIVE SOMATIC MOTOR LAB':
                 return {
-                    logs: [`>> [2. SOMATIC CAPABILITY AUDIT] Select character fixture:`],
+                    logs: [
+                        `>> [2. SOMATIC CAPABILITY AUDIT] Select character fixture:`,
+                    ],
                     nextRoute: { kind: 'MOTOR_LAB_SELECT' },
                 }
             case '[S] STYLOMETRIC & VOICE-BLEED LINTER':
@@ -868,7 +989,10 @@ export async function executeMenuChoice(
                 return {
                     logs: [
                         `>> [DISPATCH] Executing: ${choice.label}`,
-                        ...runAtomicEntityScaffolder(session.corpus, session.overlay),
+                        ...runAtomicEntityScaffolder(
+                            session.corpus,
+                            session.overlay,
+                        ),
                         `>> [RECEIPT] [SCAFFOLD:OK] Finished [OK]`,
                     ],
                 }
@@ -925,7 +1049,9 @@ export async function executeMenuChoice(
         }
         if (choice.id === 'LIBRARY MENU') {
             return {
-                logs: [`>> [LIBRARY] Mounted 995.library v${session.corpus.libraryVersion}`],
+                logs: [
+                    `>> [LIBRARY] Mounted 995.library v${session.corpus.libraryVersion}`,
+                ],
                 nextRoute: { kind: 'LIBRARY_MENU' },
             }
         }
@@ -988,7 +1114,8 @@ export async function executeMenuChoice(
                 runConstitutionalRegistryAudit(session.corpus),
             '[ 4. CRYPTOGRAPHIC ERRATA LEDGER ]': () =>
                 runErrataLedgerAudit(session.corpus, session.overlay),
-            '[ 5. UNIVERSAL NARRATIVE FOUR-TUPLE SCHEMA ]': runFourTupleContractAudit,
+            '[ 5. UNIVERSAL NARRATIVE FOUR-TUPLE SCHEMA ]':
+                runFourTupleContractAudit,
             '[ 6. SERIES TREE SCAFFOLDING ]': runSeriesTreeScaffoldAudit,
             '[ 7. POPULATE GENESIS SEEDS ]': runGenesisSeedsAudit,
             '[ 8. RECONCILE SPATIAL PORTAL LINKS ]': runPortalReconcileAudit,
@@ -1012,7 +1139,10 @@ export async function executeMenuChoice(
                 nextRoute: { kind: 'LORE_MENU' },
             }
         }
-        const modeMap: Record<string, 'full' | 'pass1' | 'pass2' | 'pass3' | 'gate0'> = {
+        const modeMap: Record<
+            string,
+            'full' | 'pass1' | 'pass2' | 'pass3' | 'gate0'
+        > = {
             '[1] RUN COMPLETE THREE-PASS GAUNTLET': 'full',
             '[2] PASS 1: STRUCTURAL BOUNDS & SOMATIC SAT': 'pass1',
             '[3] PASS 2: RELATIONAL DAG & ACYCLICITY CHECK': 'pass2',
@@ -1058,7 +1188,9 @@ export async function executeMenuChoice(
     if (r.kind === 'MOTOR_LAB_ENTITY') {
         if (choice.id === '[<] BACK') {
             return {
-                logs: [`>> [2. SOMATIC CAPABILITY AUDIT] Select character fixture:`],
+                logs: [
+                    `>> [2. SOMATIC CAPABILITY AUDIT] Select character fixture:`,
+                ],
                 nextRoute: { kind: 'MOTOR_LAB_SELECT' },
             }
         }
@@ -1083,27 +1215,37 @@ export async function executeMenuChoice(
                 }
             case '[Pressure Meter Thermodynamic Simulator]':
                 return {
-                    logs: [`>> [SIMULATOR:ENTITY] Select target character entity:`],
+                    logs: [
+                        `>> [SIMULATOR:ENTITY] Select target character entity:`,
+                    ],
                     nextRoute: { kind: 'PRESSURE_ENTITY' },
                 }
             case '[Acoustic Paranoia Clock Inspector]':
                 return {
-                    logs: [`>> [INSPECTOR:ENTITY] Select target character paranoia clock:`],
+                    logs: [
+                        `>> [INSPECTOR:ENTITY] Select target character paranoia clock:`,
+                    ],
                     nextRoute: { kind: 'ACOUSTIC_ENTITY' },
                 }
             case '[Algebraic DSP Matrix Inspector]':
                 return {
-                    logs: [`>> [ALGEBRAIC_DSP:ENTITY] Select character for DSP synthesis matrix:`],
+                    logs: [
+                        `>> [ALGEBRAIC_DSP:ENTITY] Select character for DSP synthesis matrix:`,
+                    ],
                     nextRoute: { kind: 'ALGEBRAIC_ENTITY' },
                 }
             case '[Post-Break Finality Trigger]':
                 return {
-                    logs: [`>> [POST_BREAK:ENTITY] Select character threshold target:`],
+                    logs: [
+                        `>> [POST_BREAK:ENTITY] Select character threshold target:`,
+                    ],
                     nextRoute: { kind: 'POSTBREAK_ENTITY' },
                 }
             case '[Synthesis Ingress Payload Validator]':
                 return {
-                    logs: [`>> [PAYLOAD:VALIDATOR] Select TTS dialogue fixture (under-the-floorboards):`],
+                    logs: [
+                        `>> [PAYLOAD:VALIDATOR] Select TTS dialogue fixture (under-the-floorboards):`,
+                    ],
                     nextRoute: { kind: 'PAYLOAD_VALIDATOR' },
                 }
             case '[Vocal-Motor Feasibility Gate Inspector]':
@@ -1113,7 +1255,9 @@ export async function executeMenuChoice(
                 }
             case '[Monotonic Fact Staleness Checker]':
                 return {
-                    logs: [`>> [STALENESS:CHECKER] Select scene dependency check:`],
+                    logs: [
+                        `>> [STALENESS:CHECKER] Select scene dependency check:`,
+                    ],
                     nextRoute: { kind: 'FACT_STALENESS' },
                 }
             case '[Deterministic Payload Hasher]':
@@ -1123,7 +1267,9 @@ export async function executeMenuChoice(
                 }
             case '[Payload Serialization Reducer Console]':
                 return {
-                    logs: [`>> [22.PAYLOAD.UNIT] Interactive Reducer Console Ready`],
+                    logs: [
+                        `>> [22.PAYLOAD.UNIT] Interactive Reducer Console Ready`,
+                    ],
                     nextRoute: { kind: 'PAYLOAD_REDUCER' },
                 }
             case '[9] RUN FULL SOMATIC DSP VERIFICATION SWEEP': {
@@ -1155,7 +1301,10 @@ export async function executeMenuChoice(
     // 7a. Extract Somatic Ledger nested picker
     if (r.kind === 'LEDGER_SELECT_SERIES') {
         if (choice.id === '[<] BACK') {
-            return { logs: [`>> [MENU] Returned to Somatic DSP Hub`], nextRoute: { kind: 'SOMATIC_HUB' } }
+            return {
+                logs: [`>> [MENU] Returned to Somatic DSP Hub`],
+                nextRoute: { kind: 'SOMATIC_HUB' },
+            }
         }
         session.overlay.activeSeries = choice.id
         return {
@@ -1167,7 +1316,9 @@ export async function executeMenuChoice(
         if (choice.id === '[<] BACK') {
             return { logs: [], nextRoute: { kind: 'LEDGER_SELECT_SERIES' } }
         }
-        const series = session.corpus.seriesList.find((s) => s.slug === r.seriesSlug)
+        const series = session.corpus.seriesList.find(
+            (s) => s.slug === r.seriesSlug,
+        )
         const doc = series?.dossiers.find((d) => d.id === choice.id)
         return {
             logs: [
@@ -1181,16 +1332,20 @@ export async function executeMenuChoice(
 
     // 7b. Pressure Meter Simulator
     if (r.kind === 'PRESSURE_ENTITY') {
-        if (choice.id === '[<] BACK') return { logs: [], nextRoute: { kind: 'SOMATIC_HUB' } }
+        if (choice.id === '[<] BACK')
+            return { logs: [], nextRoute: { kind: 'SOMATIC_HUB' } }
         return {
             logs: [`>> [SIMULATOR:METER] Selected entity: ${choice.id}`],
             nextRoute: { kind: 'PRESSURE_METER', entityId: choice.id },
         }
     }
     if (r.kind === 'PRESSURE_METER') {
-        if (choice.id === '[<] BACK') return { logs: [], nextRoute: { kind: 'PRESSURE_ENTITY' } }
+        if (choice.id === '[<] BACK')
+            return { logs: [], nextRoute: { kind: 'PRESSURE_ENTITY' } }
         return {
-            logs: [`>> [SIMULATOR:DEBIT] Target meter ${r.entityId}:${choice.id}`],
+            logs: [
+                `>> [SIMULATOR:DEBIT] Target meter ${r.entityId}:${choice.id}`,
+            ],
             nextRoute: {
                 kind: 'PRESSURE_DEBIT',
                 entityId: r.entityId,
@@ -1201,7 +1356,10 @@ export async function executeMenuChoice(
     }
     if (r.kind === 'PRESSURE_DEBIT') {
         if (choice.id === '[<] BACK') {
-            return { logs: [], nextRoute: { kind: 'PRESSURE_METER', entityId: r.entityId } }
+            return {
+                logs: [],
+                nextRoute: { kind: 'PRESSURE_METER', entityId: r.entityId },
+            }
         }
         const debitBp = Number.parseInt(choice.id, 10)
         const lines = runPressureStep(
@@ -1219,42 +1377,50 @@ export async function executeMenuChoice(
 
     // 7c. Acoustic Paranoia Clock Inspector
     if (r.kind === 'ACOUSTIC_ENTITY') {
-        if (choice.id === '[<] BACK') return { logs: [], nextRoute: { kind: 'SOMATIC_HUB' } }
+        if (choice.id === '[<] BACK')
+            return { logs: [], nextRoute: { kind: 'SOMATIC_HUB' } }
         return {
             logs: [`>> [INSPECTOR:CLOCK] Target clock: clk_${choice.id}`],
             nextRoute: { kind: 'ACOUSTIC_EVENT', entityId: choice.id },
         }
     }
     if (r.kind === 'ACOUSTIC_EVENT') {
-        if (choice.id === '[<] BACK') return { logs: [], nextRoute: { kind: 'ACOUSTIC_ENTITY' } }
+        if (choice.id === '[<] BACK')
+            return { logs: [], nextRoute: { kind: 'ACOUSTIC_ENTITY' } }
         return { logs: runAcousticImpulse(session.dsp, r.entityId, choice.id) }
     }
 
     // 7d. Algebraic DSP Matrix Inspector
     if (r.kind === 'ALGEBRAIC_ENTITY') {
-        if (choice.id === '[<] BACK') return { logs: [], nextRoute: { kind: 'SOMATIC_HUB' } }
+        if (choice.id === '[<] BACK')
+            return { logs: [], nextRoute: { kind: 'SOMATIC_HUB' } }
         return {
             logs: [`>> [ALGEBRAIC_DSP] Selected entity: ${choice.id}`],
             nextRoute: { kind: 'ALGEBRAIC_SCENARIO', entityId: choice.id },
         }
     }
     if (r.kind === 'ALGEBRAIC_SCENARIO') {
-        if (choice.id === '[<] BACK') return { logs: [], nextRoute: { kind: 'ALGEBRAIC_ENTITY' } }
+        if (choice.id === '[<] BACK')
+            return { logs: [], nextRoute: { kind: 'ALGEBRAIC_ENTITY' } }
         return { logs: runAlgebraicScenario(r.entityId, choice.id) }
     }
 
     // 7e. Post-Break Finality Trigger
     if (r.kind === 'POSTBREAK_ENTITY') {
-        if (choice.id === '[<] BACK') return { logs: [], nextRoute: { kind: 'SOMATIC_HUB' } }
+        if (choice.id === '[<] BACK')
+            return { logs: [], nextRoute: { kind: 'SOMATIC_HUB' } }
         return {
             logs: [`>> [POST_BREAK] Selected entity: ${choice.id}`],
             nextRoute: { kind: 'POSTBREAK_METER', entityId: choice.id },
         }
     }
     if (r.kind === 'POSTBREAK_METER') {
-        if (choice.id === '[<] BACK') return { logs: [], nextRoute: { kind: 'POSTBREAK_ENTITY' } }
+        if (choice.id === '[<] BACK')
+            return { logs: [], nextRoute: { kind: 'POSTBREAK_ENTITY' } }
         return {
-            logs: [`>> [POST_BREAK] Target threshold: ${r.entityId}:${choice.id}`],
+            logs: [
+                `>> [POST_BREAK] Target threshold: ${r.entityId}:${choice.id}`,
+            ],
             nextRoute: {
                 kind: 'POSTBREAK_ACTION',
                 entityId: r.entityId,
@@ -1264,41 +1430,59 @@ export async function executeMenuChoice(
     }
     if (r.kind === 'POSTBREAK_ACTION') {
         if (choice.id === '[<] BACK') {
-            return { logs: [], nextRoute: { kind: 'POSTBREAK_METER', entityId: r.entityId } }
+            return {
+                logs: [],
+                nextRoute: { kind: 'POSTBREAK_METER', entityId: r.entityId },
+            }
         }
         return {
-            logs: runPostBreakAction(session.dsp, r.entityId, r.meterCategory, choice.id),
+            logs: runPostBreakAction(
+                session.dsp,
+                r.entityId,
+                r.meterCategory,
+                choice.id,
+            ),
         }
     }
 
     // 7f. Payload Validator, Feasibility, Staleness, Hasher, Reducer
     if (r.kind === 'PAYLOAD_VALIDATOR') {
-        if (choice.id === '[<] BACK') return { logs: [], nextRoute: { kind: 'SOMATIC_HUB' } }
+        if (choice.id === '[<] BACK')
+            return { logs: [], nextRoute: { kind: 'SOMATIC_HUB' } }
         return { logs: validateDemoTtsLine(choice.id).lines }
     }
     if (r.kind === 'VOCAL_FEASIBILITY') {
-        if (choice.id === '[<] BACK') return { logs: [], nextRoute: { kind: 'SOMATIC_HUB' } }
+        if (choice.id === '[<] BACK')
+            return { logs: [], nextRoute: { kind: 'SOMATIC_HUB' } }
         return { logs: checkVocalFeasibilityCase(choice.id).lines }
     }
     if (r.kind === 'FACT_STALENESS') {
-        if (choice.id === '[<] BACK') return { logs: [], nextRoute: { kind: 'SOMATIC_HUB' } }
+        if (choice.id === '[<] BACK')
+            return { logs: [], nextRoute: { kind: 'SOMATIC_HUB' } }
         return { logs: checkFactStalenessCase(choice.id).lines }
     }
     if (r.kind === 'PAYLOAD_HASHER') {
-        if (choice.id === '[<] BACK') return { logs: [], nextRoute: { kind: 'SOMATIC_HUB' } }
+        if (choice.id === '[<] BACK')
+            return { logs: [], nextRoute: { kind: 'SOMATIC_HUB' } }
         const res = await runPayloadHasherTarget(choice.id)
         return { logs: res.lines }
     }
     if (r.kind === 'PAYLOAD_REDUCER') {
-        if (choice.id === '[<] BACK') return { logs: [], nextRoute: { kind: 'SOMATIC_HUB' } }
+        if (choice.id === '[<] BACK')
+            return { logs: [], nextRoute: { kind: 'SOMATIC_HUB' } }
         const lines = await runReducerDispatch(session.dsp, choice.id)
         return { logs: lines }
     }
 
-    return { logs: [`:: [MENU_FAULT] Unhandled menu selection: ${choice.label}`] }
+    return {
+        logs: [`:: [MENU_FAULT] Unhandled menu selection: ${choice.label}`],
+    }
 }
 
-export function evaluateMotorModalSubmission(entityId: string, verb: string): string[] {
+export function evaluateMotorModalSubmission(
+    entityId: string,
+    verb: string,
+): string[] {
     return evaluateMotorCandidate(entityId, verb).lines
 }
 

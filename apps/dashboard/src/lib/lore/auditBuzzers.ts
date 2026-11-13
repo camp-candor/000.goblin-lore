@@ -94,7 +94,11 @@ export function runKineticMotorMasksAudit(): string[] {
 
 // Heap immutability live probe
 export function runHeapImmutabilityProbe(): string[] {
-    const sealed = { id: 'char_snag', available_arms: 2, nested: { paranoia: 1200 } }
+    const sealed = {
+        id: 'char_snag',
+        available_arms: 2,
+        nested: { paranoia: 1200 },
+    }
     Object.freeze(sealed)
     Object.freeze(sealed.nested)
     let trapped = false
@@ -167,8 +171,11 @@ export function runEpistemicFirewallsAudit(): string[] {
 }
 
 // Buzzer 15: Constitutional Rule Registry Audit
-export function runConstitutionalRegistryAudit(corpus: CorpusSnapshot): string[] {
-    const discovered = corpus.seriesList.map((s) => s.slug).join(', ') || '000.sample-hearth'
+export function runConstitutionalRegistryAudit(
+    corpus: CorpusSnapshot,
+): string[] {
+    const discovered =
+        corpus.seriesList.map((s) => s.slug).join(', ') || '000.sample-hearth'
     return [
         `>> [RULE:LOADED] rule_somatic_limb_capacity (SOMATIC) | pardonable: false`,
         `>> [RULE:LOADED] rule_bimanual_lift (PHYSICAL) | pardonable: false`,
@@ -185,19 +192,29 @@ export function runErrataLedgerAudit(
     corpus: CorpusSnapshot,
     overlay: AuditSessionOverlay,
 ): string[] {
-    const lines: string[] = [`>> [ERRATA:INIT] Loading world/errata.json ledgers...`]
+    const lines: string[] = [
+        `>> [ERRATA:INIT] Loading world/errata.json ledgers...`,
+    ]
     const slugs = corpus.seriesList.map((s) => s.slug)
     if (!slugs.includes('under-the-floorboards')) {
         slugs.unshift('under-the-floorboards')
     }
     for (const slug of slugs) {
-        if (slug === 'under-the-floorboards' && overlay.errataRecords.length > 0) {
-            const latest = overlay.errataRecords[overlay.errataRecords.length - 1]
+        if (
+            slug === 'under-the-floorboards' &&
+            overlay.errataRecords.length > 0
+        ) {
+            const latest =
+                overlay.errataRecords[overlay.errataRecords.length - 1]
             lines.push(
                 `>> [ERRATA:OK] ${slug}: ${overlay.errataRecords.length} append-only record(s), head sealed.`,
             )
-            lines.push(`>> [ERRATA:CHAIN_OK] Verified unbroken hash lineage across records.`)
-            lines.push(`>> [ERRATA:HEAD] Active Merkle Hash: ${latest.active_merkle_hash}`)
+            lines.push(
+                `>> [ERRATA:CHAIN_OK] Verified unbroken hash lineage across records.`,
+            )
+            lines.push(
+                `>> [ERRATA:HEAD] Active Merkle Hash: ${latest.active_merkle_hash}`,
+            )
         } else {
             lines.push(
                 `>> [ERRATA:VACUOUS] ${slug}: no world/errata.json on disk - 0-record genesis lineage valid.`,
@@ -205,7 +222,9 @@ export function runErrataLedgerAudit(
         }
     }
     if (overlay.errataRecords.length === 0) {
-        lines.push(`>> [ERRATA:HEAD] Active Merkle Hash: ${EMPTY_STREAM_SHA256}`)
+        lines.push(
+            `>> [ERRATA:HEAD] Active Merkle Hash: ${EMPTY_STREAM_SHA256}`,
+        )
     }
     return lines
 }
@@ -306,7 +325,10 @@ export async function runCompileFlightAction(
 
     if (mode === 'pass2') {
         const p2Ok =
-            report.invariants.FK && report.invariants.DAG && report.invariants.PORTAL && report.invariants.CLUE
+            report.invariants.FK &&
+            report.invariants.DAG &&
+            report.invariants.PORTAL &&
+            report.invariants.CLUE
         return [
             `>> [COMPILE:PASS_2] Relational DAG & Portal Acyclicity :: Series [${report.seriesSlug}]`,
             `>> [INVARIANTS] FK:${report.invariants.FK ? '[OK]' : '[FAIL]'} DAG:${report.invariants.DAG ? '[OK]' : '[FAIL]'} PORTAL:${report.invariants.PORTAL ? '[OK]' : '[FAIL]'} CLUE:${report.invariants.CLUE ? '[OK]' : '[FAIL]'}`,
@@ -318,7 +340,10 @@ export async function runCompileFlightAction(
         overlay.mintedRoots[report.seriesSlug] = report.rootMerkleHash
         const leaves = Object.entries(report.entityHashes)
             .slice(0, 6)
-            .map(([id, h]) => `>>   + ${id.padEnd(24, ' ')} :: sha256:${h.slice(0, 12)}...${h.slice(-6)}`)
+            .map(
+                ([id, h]) =>
+                    `>>   + ${id.padEnd(24, ' ')} :: sha256:${h.slice(0, 12)}...${h.slice(-6)}`,
+            )
         return [
             `>> [COMPILE:PASS_3] RFC 8785 JCS Canonicalization & SHA-256 Seal :: Series [${report.seriesSlug}]`,
             `>> [MERKLE:LEAVES] Deterministic RFC 8785 JCS Entity Digests:`,
@@ -413,7 +438,8 @@ export function runAtomicEntityScaffolder(
     overlay: AuditSessionOverlay,
 ): string[] {
     const target = resolveSeries(corpus, overlay.activeSeries)
-    const locCount = target.dossiers.filter((d) => d.entity_type === 'location').length || 2
+    const locCount =
+        target.dossiers.filter((d) => d.entity_type === 'location').length || 2
     const entityId = 'char_knuckle'
     if (!overlay.scaffoldedEntities.includes(entityId)) {
         overlay.scaffoldedEntities.push(entityId)
@@ -425,7 +451,9 @@ export function runAtomicEntityScaffolder(
     ]
 }
 
-export function runRetireCanonicalEntity(overlay: AuditSessionOverlay): string[] {
+export function runRetireCanonicalEntity(
+    overlay: AuditSessionOverlay,
+): string[] {
     const entityId = 'char_wart'
     if (!overlay.retiredEntities.includes(entityId)) {
         overlay.retiredEntities.push(entityId)
@@ -443,7 +471,9 @@ export function runCorpusHealthTelemetry(
 ): string[] {
     const target = resolveSeries(corpus, activeSeriesSlug || 'wiregrass-basin')
     const chars = target.dossiers.filter((d) => d.entity_type === 'character')
-    const grievances = target.dossiers.filter((d) => d.entity_type === 'grievance')
+    const grievances = target.dossiers.filter(
+        (d) => d.entity_type === 'grievance',
+    )
     const dyadParticipants = new Set<string>()
     for (const g of grievances) {
         for (const p of g.participants ?? []) dyadParticipants.add(p)
@@ -468,14 +498,18 @@ export function runCorpusHealthTelemetry(
     ]
 }
 
-export async function runErrataRecordTool(overlay: AuditSessionOverlay): Promise<string[]> {
+export async function runErrataRecordTool(
+    overlay: AuditSessionOverlay,
+): Promise<string[]> {
     const seriesSlug = 'under-the-floorboards'
     const seq = overlay.errataRecords.length + 1
     const prevHash =
         overlay.errataRecords.length > 0
-            ? overlay.errataRecords[overlay.errataRecords.length - 1].active_merkle_hash
+            ? overlay.errataRecords[overlay.errataRecords.length - 1]
+                  .active_merkle_hash
             : '0'.repeat(64)
-    const errataId = seq === 1 ? 'err_siphon_aperture_01' : `err_siphon_aperture_0${seq}`
+    const errataId =
+        seq === 1 ? 'err_siphon_aperture_01' : `err_siphon_aperture_0${seq}`
     const nextHash = await sha256Hex(
         canonicalJson({ errataId, prevHash, seq, seriesSlug }),
     )
@@ -483,7 +517,8 @@ export async function runErrataRecordTool(overlay: AuditSessionOverlay): Promise
         errata_id: errataId,
         sequence_number: seq,
         active_merkle_hash: nextHash,
-        rationale: 'Canonicalized culvert siphon aperture to 8 inches across all blueprints.',
+        rationale:
+            'Canonicalized culvert siphon aperture to 8 inches across all blueprints.',
     })
     return [
         `>> [ERRATA:INIT] Recording canonical errata entry ${errataId} for '${seriesSlug}'...`,
