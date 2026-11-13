@@ -22,6 +22,16 @@ function emitConsole(ste: State | undefined, line: string): void {
     }
 }
 
+function atomicCopyFileSync(sourcePath: string, destinationPath: string): void {
+    fs.mkdirSync(path.dirname(destinationPath), { recursive: true })
+    const tmpPath = path.join(
+        path.dirname(destinationPath),
+        `.tmp_${process.pid}_${Date.now()}_bible-state.json`,
+    )
+    fs.copyFileSync(sourcePath, tmpPath)
+    fs.renameSync(tmpPath, destinationPath)
+}
+
 export const publishSealedCanonToFleet = async (
     cpy: any,
     bal: FleetPublishBit,
@@ -90,6 +100,28 @@ export const publishSealedCanonToFleet = async (
         return cpy
     }
 
+    try {
+        JSON.parse(fs.readFileSync(sourceManifest, 'utf-8'))
+    } catch (parseErr: any) {
+        const err = `[PUBLISH_ERROR] Compiled manifest at ${sourceManifest} failed JSON parse: ${parseErr?.message || String(parseErr)}`
+        emitConsole(ste, `:: ${err}`)
+        if (cpy && typeof cpy === 'object') {
+            cpy.lastActionTimestamp = Date.now()
+            cpy.statusMessage = 'FLEET_CANON_PUBLISH_FAILED'
+            cpy.lastError = err
+        }
+        if (bal?.slv) {
+            bal.slv({
+                pubBit: {
+                    idx: 'publish-fleet-fail',
+                    val: -1,
+                    dat: { error: err },
+                },
+            })
+        }
+        return cpy
+    }
+
     emitConsole(
         ste,
         `>> [FLEET:PUBLISH] Broadcasting sealed canon '${seriesSlug}' across simulation fleet...`,
@@ -113,7 +145,7 @@ export const publishSealedCanonToFleet = async (
                 'bible-state.json',
             )
             fs.mkdirSync(path.dirname(engineDestination), { recursive: true })
-            fs.copyFileSync(sourceManifest, engineDestination)
+            atomicCopyFileSync(sourceManifest, engineDestination)
             emitConsole(
                 ste,
                 `>> [ENGINE:SYNC] [OK] Staged canon into 000.series-sower-engine`,

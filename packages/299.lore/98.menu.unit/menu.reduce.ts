@@ -42,6 +42,12 @@ export function reducer(
                 act.bale as any,
                 state,
             )
+        case Act.SELECT_DOMAIN_ENTITY_TYPE:
+            return Buzz.promptDomainEntityTypeSelector(
+                clone(model),
+                act.bale as any,
+                state,
+            )
         default:
             return model
     }

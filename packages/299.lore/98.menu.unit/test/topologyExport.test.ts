@@ -93,4 +93,146 @@ describe('299.lore - [Task 1.1.3] Route Static Topology Export', () => {
             exportedManifest.nodes.loc_gotham_rooftop.acousticDampingFactor,
         ).toBe(2200)
     })
+
+    it('fails closed with export-topology-fail (val: -1) and [TOPOLOGY_EXPORT_ERROR] when bible-state.json is missing', async () => {
+        tempFleetRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'topology-miss-'))
+        const loreRoot = path.join(tempFleetRoot, '000.goblin-lore')
+        const spatialRoot = path.join(tempFleetRoot, '000.goblin-spatial')
+        fs.mkdirSync(loreRoot, { recursive: true })
+        fs.mkdirSync(spatialRoot, { recursive: true })
+        ;(globalThis as any).__loreRoot = loreRoot
+
+        const logs: string[] = []
+        let resolved: any = null
+        await exportStaticTopologyManifest(
+            {},
+            {
+                idx: 'trap-missing-bible',
+                src: 'non-existent-series',
+                dat: {
+                    seriesSlug: 'non-existent-series',
+                    targetSpatialRoot: spatialRoot,
+                },
+                slv: (res: any) => {
+                    resolved = res
+                },
+            } as any,
+            {
+                hunt: async (_act: string, payload: any) => {
+                    logs.push(payload?.src ?? '')
+                    return {}
+                },
+            } as any,
+        )
+
+        expect(resolved?.topBit?.idx).toBe('export-topology-fail')
+        expect(resolved?.topBit?.val).toBe(-1)
+        expect(logs.some((l) => l.includes(':: [TOPOLOGY_EXPORT_ERROR]'))).toBe(
+            true,
+        )
+        expect(fs.existsSync(path.join(spatialRoot, 'manifests'))).toBe(false)
+    })
+
+    it('degrades gracefully with export-topology-no-spatial (val: 0) when sibling spatial repo is absent', async () => {
+        tempFleetRoot = fs.mkdtempSync(
+            path.join(os.tmpdir(), 'topology-nospatial-'),
+        )
+        const loreRoot = path.join(tempFleetRoot, '000.goblin-lore')
+        const missingSpatial = path.join(tempFleetRoot, 'absent-spatial-repo')
+        const seriesSlug = 'graceful-series'
+        const compiledBiblePath = path.join(
+            loreRoot,
+            'compiled',
+            seriesSlug,
+            'bible-state.json',
+        )
+        fs.mkdirSync(path.dirname(compiledBiblePath), { recursive: true })
+        fs.writeFileSync(
+            compiledBiblePath,
+            JSON.stringify({
+                entities: {
+                    locations: {
+                        loc_room_a: { title: 'Room A' },
+                        loc_room_b: { title: 'Room B' },
+                    },
+                },
+            }),
+            'utf-8',
+        )
+        ;(globalThis as any).__loreRoot = loreRoot
+
+        const logs: string[] = []
+        let resolved: any = null
+        await exportStaticTopologyManifest(
+            {},
+            {
+                idx: 'trap-no-spatial',
+                src: seriesSlug,
+                dat: {
+                    seriesSlug,
+                    targetSpatialRoot: missingSpatial,
+                },
+                slv: (res: any) => {
+                    resolved = res
+                },
+            } as any,
+            {
+                hunt: async (_act: string, payload: any) => {
+                    logs.push(payload?.src ?? '')
+                    return {}
+                },
+            } as any,
+        )
+
+        expect(resolved?.topBit?.idx).toBe('export-topology-no-spatial')
+        expect(resolved?.topBit?.val).toBe(0)
+        expect(resolved?.topBit?.dat?.nodeCount).toBe(2)
+        expect(logs.some((l) => l.includes('>> [TOPOLOGY:WARN]'))).toBe(true)
+    })
+
+    it('catches malformed JSON with export-topology-error (val: -1) and [TOPOLOGY_FAULT]', async () => {
+        tempFleetRoot = fs.mkdtempSync(
+            path.join(os.tmpdir(), 'topology-badjson-'),
+        )
+        const loreRoot = path.join(tempFleetRoot, '000.goblin-lore')
+        const spatialRoot = path.join(tempFleetRoot, '000.goblin-spatial')
+        const seriesSlug = 'broken-json-series'
+        const compiledBiblePath = path.join(
+            loreRoot,
+            'compiled',
+            seriesSlug,
+            'bible-state.json',
+        )
+        fs.mkdirSync(path.dirname(compiledBiblePath), { recursive: true })
+        fs.writeFileSync(compiledBiblePath, '{ broken_topology_json', 'utf-8')
+        fs.mkdirSync(spatialRoot, { recursive: true })
+        ;(globalThis as any).__loreRoot = loreRoot
+
+        const logs: string[] = []
+        let resolved: any = null
+        await exportStaticTopologyManifest(
+            {},
+            {
+                idx: 'trap-bad-json',
+                src: seriesSlug,
+                dat: {
+                    seriesSlug,
+                    targetSpatialRoot: spatialRoot,
+                },
+                slv: (res: any) => {
+                    resolved = res
+                },
+            } as any,
+            {
+                hunt: async (_act: string, payload: any) => {
+                    logs.push(payload?.src ?? '')
+                    return {}
+                },
+            } as any,
+        )
+
+        expect(resolved?.topBit?.idx).toBe('export-topology-error')
+        expect(resolved?.topBit?.val).toBe(-1)
+        expect(logs.some((l) => l.includes(':: [TOPOLOGY_FAULT]'))).toBe(true)
+    })
 })

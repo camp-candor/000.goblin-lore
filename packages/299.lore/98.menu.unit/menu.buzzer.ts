@@ -46,7 +46,12 @@ export {
     EXECUTE_TRIE_DISJOINTNESS_SCAN_LABEL,
     executeTrieDisjointnessScanAction,
 } from './buz/00.menu.buzz.js'
-export { runSeriesGenesisMenu, sanitizeAscii } from './buz/genesisMenu.buzz.js'
+export {
+    runSeriesGenesisMenu,
+    sanitizeAscii,
+    promptKineticVocabularyMenu,
+    VOCABULARY_PRESET_CHOICES,
+} from './buz/genesisMenu.buzz.js'
 export {
     runEntityScaffoldMenu,
     discoverDomainForeignKeys,
@@ -116,3 +121,9 @@ export {
 export { promptLocomotionChoice } from './buz/locomotionMenu.buzz.js'
 export { LOCOMOTION_MENU_LABEL } from './buz/00.menu.buzz.js'
 export { promptCustomSeedMenu } from './buz/customSeedMenu.buzz.js'
+export { promptDomainEntityTypeSelector } from './buz/domainEntitySelector.buzz.js'
+export {
+    DOMAIN_ENTITY_REGISTRY,
+    DOMAIN_ENTITY_CHOICES,
+    resolveDomainEntityDescriptor,
+} from './fce/domainSelector.bit.js'

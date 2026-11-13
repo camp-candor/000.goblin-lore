@@ -54,10 +54,16 @@ export async function promptBlessedChoice(
     const choiceList = [...options.choices, '[CANCEL]']
     const choiceBit: any = await lib.hunt(OPEN_CHOICE, {
         dat: {
-            clr0: 'black',
-            clr1: 'yellow',
+            clr0: 0,
+            clr1: 3,
+            cb: async (choice: string) => {
+                await lib.hunt(UPDATE_CONSOLE, {
+                    idx: 'cns00',
+                    src: `:: [WIZARD_CHOICE] ${choice}`,
+                })
+            },
         },
-        src: 'vertical',
+        src: 'VERTICAL',
         lst: choiceList,
         net: gridBit?.grdBit?.dat,
     })

@@ -216,4 +216,55 @@ describe('Phase 6 Reciprocal Spatial Portal Graph Linker Gauntlet', () => {
         const bDossier = parseLocationMarkdown(bRaw)
         expect(bDossier.frontmatter.portal_links.length).toBe(1)
     })
+
+    it('fails closed with [SELF_ADJACENCY_VIOLATION] when a location links to itself', async () => {
+        const locDir = path.join(
+            tempRepoRoot,
+            'series',
+            seriesSlug,
+            'locations',
+        )
+        fs.writeFileSync(
+            path.join(locDir, 'loc_self.md'),
+            [
+                '---',
+                'id: "loc_self"',
+                'title: "Self Loop Node"',
+                'type: "location"',
+                'portal_links:',
+                '  - portal_slug: "self_loop"',
+                '    target_location_id: "loc_self"',
+                '    damping_cdb: 1000',
+                '    line_of_sight: true',
+                '---',
+                '',
+                '## Description',
+                'Self-referential portal trap.',
+                '',
+            ].join('\n'),
+            'utf8',
+        )
+
+        const model = new LocationModel()
+        let result: any = null
+
+        await reconcileReciprocalLinks(model, {
+            idx: 'test-self-loop',
+            dat: {
+                seriesSlug,
+                locationId: 'loc_self',
+                repoRoot: tempRepoRoot,
+            },
+            slv: (res: any) => {
+                result = res
+            },
+        } as any)
+
+        expect(result).toBeDefined()
+        expect(result.locationBit.val).toBe(0)
+        expect(result.locationBit.dat.symmetrical).toBe(false)
+        expect(result.locationBit.dat.errors[0]).toContain(
+            '[SELF_ADJACENCY_VIOLATION]',
+        )
+    })
 })

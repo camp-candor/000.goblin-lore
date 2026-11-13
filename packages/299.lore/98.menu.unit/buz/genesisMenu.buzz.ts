@@ -17,6 +17,7 @@ import { promptCustomSeedMenu } from './customSeedMenu.buzz.js'
 import type {
     AssembledFourTupleConfig,
     GenreClassification,
+    ModalPromptResult,
 } from '../fce/genesisWizard.interface.js'
 import {
     GENRE_TAXONOMY_PROFILES,
@@ -24,6 +25,10 @@ import {
     resolveGenreProfile,
     type GenreTaxonomyProfile,
 } from '../../38.types.unit/val/genre.val.js'
+import {
+    customizeKineticVocabulary,
+    type CustomizedActionVocabulary,
+} from '../../39.verbs.unit/buz/verbs.buzz.js'
 
 export function sanitizeAscii(raw: string): string {
     return String(raw || '')
@@ -214,22 +219,18 @@ export const runSeriesGenesisMenu = async (
             STATE_SPACE_PRESETS[stateRes.value] || stateSpaceSelection
     }
 
-    let actionVocabSelection =
-        ACTION_VOCAB_PRESETS[
-            '[1] CONSTRAINED SCAVENGER (LIMP, SIPHON, CONCEAL)'
-        ]
-    if (!dat.actionVocabPreset && !dat.config) {
-        const actionOptions = Object.keys(ACTION_VOCAB_PRESETS)
-        const actionRes = await promptBlessedChoice({
-            promptHeader: 'Step 4/6: Configure <A> Bounded Action Vocabulary',
-            choices: actionOptions,
-            defaultValue: actionOptions[0],
+    let actionVocabSelection: CustomizedActionVocabulary =
+        customizeKineticVocabulary({
+            permittedVerbs: ['LIMP', 'SIPHON', 'CONCEAL'],
+            baseForbiddenVerbs: ['fly'],
+            locomotionTaxonomies: ['BIPEDAL_HUNCHED'],
         })
-        if (actionRes.cancelled) {
+    if (!dat.actionVocabPreset && !dat.config) {
+        const vocabRes = await promptKineticVocabularyMenu(genreTag)
+        if (vocabRes.cancelled) {
             return abortWizard('Aborted at Step 4 (Action Vocabulary <A>).')
         }
-        actionVocabSelection =
-            ACTION_VOCAB_PRESETS[actionRes.value] || actionVocabSelection
+        actionVocabSelection = vocabRes.value
     }
 
     let invariantSelection =
@@ -418,4 +419,116 @@ export async function promptGenreModality(
         GENRE_CHOICE_MAP[choiceRes.value] || defaultGenre
 
     return { cancelled: false, value: resolveGenreProfile(resolvedId) }
+}
+
+export const VOCABULARY_PRESET_CHOICES = [
+    '[1] CONSTRAINED SCAVENGER (LIMP, SIPHON, CONCEAL | Ban: fly)',
+    '[2] HEROIC KINETIC (FLY, GRAPNEL, LASSO_BIND, GLIDE, DEFLECT, DETONATE)',
+    '[3] STANDARD TACTICAL (STRIKE, DEFLECT, CONCEAL, SPRINT | Ban: fly)',
+    '[4] CUSTOM VERB LIST (Enter Comma-Separated Kinetic Verbs)',
+] as const
+
+export async function promptKineticVocabularyMenu(
+    defaultGenre: GenreClassification = 'LOW_FANTASY_FARCE',
+): Promise<ModalPromptResult<CustomizedActionVocabulary>> {
+    const defaultPreset =
+        defaultGenre === 'SUPERHERO_URBAN_VIGILANTE'
+            ? VOCABULARY_PRESET_CHOICES[1]
+            : VOCABULARY_PRESET_CHOICES[0]
+
+    const choiceRes = await promptBlessedChoice({
+        promptHeader: 'Step 4/6: Customize Bounded Kinetic Verb Vocabulary <A>',
+        choices: VOCABULARY_PRESET_CHOICES,
+        defaultValue: defaultPreset,
+    })
+
+    if (choiceRes.cancelled) {
+        return {
+            cancelled: true,
+            value: customizeKineticVocabulary({
+                permittedVerbs: ['LIMP', 'SIPHON', 'CONCEAL'],
+                baseForbiddenVerbs: ['fly'],
+            }),
+        }
+    }
+
+    if (choiceRes.value === VOCABULARY_PRESET_CHOICES[1]) {
+        return {
+            cancelled: false,
+            value: customizeKineticVocabulary({
+                permittedVerbs: [
+                    'FLY',
+                    'GRAPNEL',
+                    'LASSO_BIND',
+                    'GLIDE',
+                    'DEFLECT',
+                    'DETONATE',
+                ],
+                baseForbiddenVerbs: ['fly'],
+                locomotionTaxonomies: ['BIPEDAL_STANDARD', 'AERIAL'],
+            }),
+        }
+    }
+
+    if (choiceRes.value === VOCABULARY_PRESET_CHOICES[2]) {
+        return {
+            cancelled: false,
+            value: customizeKineticVocabulary({
+                permittedVerbs: ['STRIKE', 'DEFLECT', 'CONCEAL', 'SPRINT'],
+                baseForbiddenVerbs: ['fly'],
+                locomotionTaxonomies: ['BIPEDAL_STANDARD'],
+            }),
+        }
+    }
+
+    if (choiceRes.value === VOCABULARY_PRESET_CHOICES[3]) {
+        const customInput = await promptBlessedInput({
+            promptLabel:
+                'Enter Comma-Separated Kinetic Verbs (e.g. FLY, GRAPNEL, LASSO_BIND, GLIDE, DEFLECT, DETONATE)',
+            defaultValue: 'FLY, GRAPNEL, LASSO_BIND, GLIDE, DEFLECT, DETONATE',
+            sanitizeSlug: false,
+        })
+
+        if (customInput.cancelled) {
+            return {
+                cancelled: true,
+                value: customizeKineticVocabulary({
+                    permittedVerbs: ['LIMP', 'SIPHON', 'CONCEAL'],
+                    baseForbiddenVerbs: ['fly'],
+                }),
+            }
+        }
+
+        const parsedTokens = customInput.value
+            .split(',')
+            .map((s) => s.trim())
+            .filter((s) => s.length > 0)
+
+        return {
+            cancelled: false,
+            value: customizeKineticVocabulary({
+                permittedVerbs:
+                    parsedTokens.length > 0
+                        ? parsedTokens
+                        : [
+                              'FLY',
+                              'GRAPNEL',
+                              'LASSO_BIND',
+                              'GLIDE',
+                              'DEFLECT',
+                              'DETONATE',
+                          ],
+                baseForbiddenVerbs: ['fly'],
+            }),
+        }
+    }
+
+    return {
+        cancelled: false,
+        value: customizeKineticVocabulary({
+            permittedVerbs: ['LIMP', 'SIPHON', 'CONCEAL'],
+            baseForbiddenVerbs: ['fly'],
+            locomotionTaxonomies: ['BIPEDAL_HUNCHED'],
+        }),
+    }
 }

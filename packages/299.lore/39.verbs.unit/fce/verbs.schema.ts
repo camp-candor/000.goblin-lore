@@ -15,6 +15,14 @@ export const KineticVerbEnum = z.enum([
     'CLIMB',
     'TWO_HANDED_AIM',
     'BIMANUAL_BRACE',
+    'SIPHON',
+    'CONCEAL',
+    'FLY',
+    'GRAPNEL',
+    'LASSO_BIND',
+    'GLIDE',
+    'DEFLECT',
+    'DETONATE',
 ])
 
 export type KineticVerb = z.infer<typeof KineticVerbEnum>
@@ -26,8 +34,10 @@ export const VERB_FAMILIES = {
         'CLIMB',
         'TWO_HANDED_AIM',
         'BIMANUAL_BRACE',
+        'GRAPNEL',
+        'LASSO_BIND',
     ] as const,
-    HIGH_MOBILITY: ['SPRINT', 'VAULT', 'LEAP'] as const,
+    HIGH_MOBILITY: ['SPRINT', 'VAULT', 'LEAP', 'GLIDE'] as const,
     LOCOMOTION: [
         'SPRINT',
         'VAULT',
@@ -36,6 +46,17 @@ export const VERB_FAMILIES = {
         'LIMP',
         'SLITHER',
         'CRAWL',
+        'FLY',
+        'GLIDE',
+    ] as const,
+    LOCOMOTION_AERIAL: ['FLY', 'GLIDE', 'GRAPNEL'] as const,
+    HEROIC_TACTICAL: [
+        'FLY',
+        'GRAPNEL',
+        'LASSO_BIND',
+        'GLIDE',
+        'DEFLECT',
+        'DETONATE',
     ] as const,
     MANIPULATION: [
         'BIMANUAL_LIFT',
@@ -44,6 +65,9 @@ export const VERB_FAMILIES = {
         'TWO_HANDED_AIM',
         'BIMANUAL_BRACE',
         'POUR_OUT',
+        'LASSO_BIND',
+        'DEFLECT',
+        'DETONATE',
     ] as const,
     SENSORY: ['SNIFF'] as const,
 } as const

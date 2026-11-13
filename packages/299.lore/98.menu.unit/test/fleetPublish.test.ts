@@ -2,6 +2,7 @@ import { describe, it, expect, afterEach, vi } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
 import os from 'node:os'
+import crypto from 'node:crypto'
 import { publishSealedCanonToFleet } from '../buz/fleetPublish.buzz.js'
 import { MenuModel } from '../menu.model.js'
 import { reducer } from '../menu.reduce.js'
@@ -99,6 +100,46 @@ describe('299.lore - [Feature 1.1] Goblin Lore Fleet Publishing Menu Integration
         expect(spatialContent.nodes).toBeDefined()
     })
 
+    it('fails closed with val -1 when the compiled manifest is missing', async () => {
+        tempFleetRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'fleet-miss-'))
+        const loreRoot = path.join(tempFleetRoot, '000.goblin-lore')
+        const engineRoot = path.join(tempFleetRoot, '000.series-sower-engine')
+        const spatialRoot = path.join(tempFleetRoot, '000.goblin-spatial')
+        fs.mkdirSync(loreRoot, { recursive: true })
+
+        ;(globalThis as any).__loreRoot = loreRoot
+
+        let resolved: any = null
+        await publishSealedCanonToFleet(
+            {},
+            {
+                idx: 'test-fleet-missing',
+                src: 'ghost-series-slug',
+                dat: {
+                    seriesSlug: 'ghost-series-slug',
+                    targetEngineRoot: engineRoot,
+                    targetSpatialRoot: spatialRoot,
+                },
+                slv: (res: any) => {
+                    resolved = res
+                },
+            } as any,
+            { hunt: async () => ({}) } as any,
+        )
+
+        expect(resolved?.pubBit?.val).toBe(-1)
+        expect(
+            fs.existsSync(
+                path.join(
+                    engineRoot,
+                    'compiled',
+                    'ghost-series-slug',
+                    'bible-state.json',
+                ),
+            ),
+        ).toBe(false)
+    })
+
     it('registers [P] PUBLISH SEALED CANON TO SIMULATION FLEET in updateMenu and routes PUBLISH_SEALED_CANON in reducer', async () => {
         const model = new MenuModel()
         let headlessReceipt: any = null
@@ -170,5 +211,122 @@ describe('299.lore - [Feature 1.1] Goblin Lore Fleet Publishing Menu Integration
 
         expect(pubResolved?.pubBit?.val).toBe(1)
         expect(nextModel.statusMessage).toBe('FLEET_CANON_PUBLISHED')
+    })
+
+    it('fails closed on corrupted JSON without overwriting existing sibling bible-state.json', async () => {
+        tempFleetRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'fleet-corrupt-'))
+        const loreRoot = path.join(tempFleetRoot, '000.goblin-lore')
+        const engineRoot = path.join(tempFleetRoot, '000.series-sower-engine')
+        const spatialRoot = path.join(tempFleetRoot, '000.goblin-spatial')
+
+        const seriesSlug = 'corrupt-series'
+        const compiledSource = path.join(
+            loreRoot,
+            'compiled',
+            seriesSlug,
+            'bible-state.json',
+        )
+        fs.mkdirSync(path.dirname(compiledSource), { recursive: true })
+        fs.writeFileSync(compiledSource, '{ broken_json: ', 'utf-8')
+
+        const existingTarget = path.join(
+            engineRoot,
+            'compiled',
+            seriesSlug,
+            'bible-state.json',
+        )
+        fs.mkdirSync(path.dirname(existingTarget), { recursive: true })
+        const sentinelJson = JSON.stringify({ intact: true })
+        fs.writeFileSync(existingTarget, sentinelJson, 'utf-8')
+        fs.mkdirSync(spatialRoot, { recursive: true })
+
+        ;(globalThis as any).__loreRoot = loreRoot
+
+        let resolved: any = null
+        const model: any = {}
+        await publishSealedCanonToFleet(
+            model,
+            {
+                idx: 'test-fleet-corrupt',
+                src: seriesSlug,
+                dat: {
+                    seriesSlug,
+                    targetEngineRoot: engineRoot,
+                    targetSpatialRoot: spatialRoot,
+                },
+                slv: (res: any) => {
+                    resolved = res
+                },
+            } as any,
+            { hunt: async () => ({}) } as any,
+        )
+
+        expect(resolved?.pubBit?.val).toBe(-1)
+        expect(model.statusMessage).toBe('FLEET_CANON_PUBLISH_FAILED')
+        expect(fs.readFileSync(existingTarget, 'utf-8')).toBe(sentinelJson)
+    })
+
+    it('guarantees byte-for-byte SHA-256 identity and zero orphan .tmp_* files after atomic copy', async () => {
+        tempFleetRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'fleet-sha-'))
+        const loreRoot = path.join(tempFleetRoot, '000.goblin-lore')
+        const engineRoot = path.join(tempFleetRoot, '000.series-sower-engine')
+        const spatialRoot = path.join(tempFleetRoot, '000.goblin-spatial')
+
+        const seriesSlug = 'sha-verified-series'
+        const compiledSource = path.join(
+            loreRoot,
+            'compiled',
+            seriesSlug,
+            'bible-state.json',
+        )
+        fs.mkdirSync(path.dirname(compiledSource), { recursive: true })
+        fs.writeFileSync(
+            compiledSource,
+            JSON.stringify({ series_slug: seriesSlug, nonce: 42 }),
+            'utf-8',
+        )
+        fs.mkdirSync(engineRoot, { recursive: true })
+        fs.mkdirSync(spatialRoot, { recursive: true })
+        ;(globalThis as any).__loreRoot = loreRoot
+
+        let resolved: any = null
+        await publishSealedCanonToFleet(
+            {},
+            {
+                idx: 'test-fleet-sha',
+                src: seriesSlug,
+                dat: {
+                    seriesSlug,
+                    targetEngineRoot: engineRoot,
+                    targetSpatialRoot: spatialRoot,
+                },
+                slv: (res: any) => {
+                    resolved = res
+                },
+            } as any,
+            { hunt: async () => ({}) } as any,
+        )
+
+        expect(resolved?.pubBit?.val).toBe(1)
+        const targetEngineFile = path.join(
+            engineRoot,
+            'compiled',
+            seriesSlug,
+            'bible-state.json',
+        )
+        const srcHash = crypto
+            .createHash('sha256')
+            .update(fs.readFileSync(compiledSource))
+            .digest('hex')
+        const dstHash = crypto
+            .createHash('sha256')
+            .update(fs.readFileSync(targetEngineFile))
+            .digest('hex')
+        expect(dstHash).toBe(srcHash)
+
+        const leftoverEngineTmps = fs
+            .readdirSync(path.dirname(targetEngineFile))
+            .filter((f) => f.startsWith('.tmp_'))
+        expect(leftoverEngineTmps).toEqual([])
     })
 })

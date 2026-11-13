@@ -69,6 +69,13 @@ export class ExportTopologyManifest implements Action {
     constructor(public bale: MenuBit) {}
 }
 
+export const SELECT_DOMAIN_ENTITY_TYPE =
+    '[Menu action] Select Domain Entity Type'
+export class SelectDomainEntityType implements Action {
+    readonly type = SELECT_DOMAIN_ENTITY_TYPE
+    constructor(public bale: MenuBit) {}
+}
+
 export type Actions =
     | InitMenu
     | UpdateMenu
@@ -81,3 +88,4 @@ export type Actions =
     | OpenErrataMenu
     | PublishSealedCanon
     | ExportTopologyManifest
+    | SelectDomainEntityType

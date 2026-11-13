@@ -11,6 +11,9 @@ export class MenuModel implements Menu {
     lastLifecycleReceipt: string | null = null
     totalInteractions: number = 0
     activeSeries?: string = 'under-the-floorboards'
+    activeEntityDomain?: string
+    activeEntityPrefix?: string
+    activeEntityDirectory?: string
     lastError?: string
     lastTelemetryReport: string[] = []
 }

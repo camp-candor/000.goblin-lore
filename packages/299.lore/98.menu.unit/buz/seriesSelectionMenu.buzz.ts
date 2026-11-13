@@ -68,8 +68,14 @@ export const promptSeriesSelectionModal = async (
             ySpan: 10,
         })
         const choiceBit: any = await lib.hunt(OPEN_CHOICE, {
-            dat: { clr0: 'black', clr1: 'yellow' },
-            src: 'vertical',
+            dat: {
+                clr0: 0,
+                clr1: 3,
+                cb: async (choice: string) => {
+                    emitConsole(ste, `:: [SERIES_CHOICE] ${choice}`)
+                },
+            },
+            src: 'VERTICAL',
             lst: [...choices, '[<] RETURN TO LORE MENU'],
             net: gridBit?.grdBit?.dat,
         })

@@ -258,7 +258,9 @@ export async function dispatchSomaticChoice(
             return {
                 success: summary.isCertified,
                 label: item.label,
-                receiptTag: '[GAUNTLET_PASS: 5/5 TRAPS VERIFIED AT T0 = $0.00]',
+                receiptTag: summary.isCertified
+                    ? `[GAUNTLET_PASS: ${summary.trapsPassed}/${summary.totalTraps} TRAPS VERIFIED AT T0 = $0.00]`
+                    : `[GAUNTLET_FAIL: ${summary.trapsPassed}/${summary.totalTraps} TRAPS]`,
             }
         }
 

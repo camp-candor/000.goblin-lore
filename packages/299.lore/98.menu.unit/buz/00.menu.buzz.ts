@@ -84,6 +84,11 @@ import {
 import { getChoiceById, dispatchSomaticChoice } from './somaticMenu.buzz.js'
 
 import { runSeriesGenesisMenu } from './genesisMenu.buzz.js'
+import { promptSeriesSelectionModal } from './seriesSelectionMenu.buzz.js'
+import { promptDomainEntityTypeSelector } from './domainEntitySelector.buzz.js'
+import { auditEntityCapacityPreFlight } from '../../09.entity.unit/buz/capacityStatValidator.buzz.js'
+import { BasisPointSchema } from '../../38.types.unit/fce/capacityMetric.interface.js'
+import { CombatAttributeStatsSchema } from '../../09.entity.unit/val/capacityStat.val.js'
 import { promptLocomotionChoice } from './locomotionMenu.buzz.js'
 import { runEntityScaffoldMenu } from './entityScaffoldMenu.buzz.js'
 import { runEntityRetirementMenu } from './retirementMenu.buzz.js'
@@ -112,6 +117,16 @@ export const HYGIENE_MENU_LABEL = HYGIENE_LABEL
 export const LAWS_MENU_LABEL = '[LAWS MENU]'
 export const ERRATA_DECK_MENU_LABEL = '[ERRATA MENU]'
 export const CANON_MENU_LABEL = '[CANON MENU]'
+export const ENTITY_MENU_LABEL = '[ENTITY MENU]'
+export const LOCATION_MENU_LABEL = '[LOCATION MENU]'
+export const LOGISTIC_MENU_LABEL = '[LOGISTIC MENU]'
+export const STATUS_MENU_LABEL = '[STATUS MENU]'
+export const PORT_MENU_LABEL = '[PORT MENU]'
+export const WORKER_MENU_LABEL = '[WORKER MENU]'
+export const SWITCH_SERIES_LABEL = '[S] SWITCH ACTIVE SERIES'
+export const DOMAIN_SELECTOR_LABEL = '[D] SELECT ENTITY DOMAIN TYPE'
+export const CAPACITY_STAT_AUDIT_LABEL =
+    '[B] AUDIT BASIS-POINT CAPACITY & STATS'
 export const LOCOMOTION_MENU_LABEL = '[LOCOMOTION BASELINE]'
 
 export const LIFECYCLE_MENU_OPTIONS: readonly string[] = Object.freeze([
@@ -348,6 +363,15 @@ export const updateMenu = async (
         '[LAWS MENU]',
         '[ERRATA MENU]',
         '[CANON MENU]',
+        ENTITY_MENU_LABEL,
+        LOCATION_MENU_LABEL,
+        LOGISTIC_MENU_LABEL,
+        STATUS_MENU_LABEL,
+        PORT_MENU_LABEL,
+        WORKER_MENU_LABEL,
+        SWITCH_SERIES_LABEL,
+        DOMAIN_SELECTOR_LABEL,
+        CAPACITY_STAT_AUDIT_LABEL,
         '[Somatic DSP Modulation Hub]',
         LOCOMOTION_MENU_LABEL,
         '2. RUN SOMATIC SAT SOLVER',
@@ -388,6 +412,24 @@ export const updateMenu = async (
             'Open append-only errata ledger deck and validate record contracts.',
         '[CANON MENU]':
             'Open epistemic standing registry deck and inspect canon fact standings.',
+        [ENTITY_MENU_LABEL]:
+            'Open entity dossier assembler and pre-flight somatic SAT / FK gate deck.',
+        [LOCATION_MENU_LABEL]:
+            'Open spatial portal reconciliation and location topology deck.',
+        [LOGISTIC_MENU_LABEL]:
+            'Open four-tier equipment conservation and retired matter disposition deck.',
+        [STATUS_MENU_LABEL]:
+            'Open cold-boot void-state filesystem scanner and dispatch lock deck.',
+        [PORT_MENU_LABEL]:
+            'Open RFC 8785 Merkle port seal, edge staging quarantine, and pinned schema deck.',
+        [WORKER_MENU_LABEL]:
+            'Open edge worker HTTP 412 dirty-scene precondition gate simulator.',
+        [SWITCH_SERIES_LABEL]:
+            'Discover sealed series namespaces on disk and bind the active series target.',
+        [DOMAIN_SELECTOR_LABEL]:
+            'Select canonical entity domain type (char_, loc_, item_, grv_, law_).',
+        [CAPACITY_STAT_AUDIT_LABEL]:
+            'Audit integer basis-point hand capacity [0, 10000] and 2d6 combat stat bounds [1, 5].',
         '[Somatic DSP Modulation Hub]':
             'Extract disk-backed Somatic Ledger dossiers, trauma floors, and SQLite records.',
         [LOCOMOTION_MENU_LABEL]:
@@ -581,6 +623,93 @@ export const updateMenu = async (
     }
     if (src === CANON_MENU_LABEL) {
         await openCanonMenu(cpy, bal, ste)
+        return cpy
+    }
+    if (src === ENTITY_MENU_LABEL) {
+        await openEntityMenu(cpy, bal, ste)
+        return cpy
+    }
+    if (src === LOCATION_MENU_LABEL) {
+        await openLocationMenu(cpy, bal, ste)
+        return cpy
+    }
+    if (src === LOGISTIC_MENU_LABEL) {
+        await openLogisticMenu(cpy, bal, ste)
+        return cpy
+    }
+    if (src === STATUS_MENU_LABEL) {
+        await openStatusMenu(cpy, bal, ste)
+        return cpy
+    }
+    if (src === PORT_MENU_LABEL) {
+        await openPortMenu(cpy, bal, ste)
+        return cpy
+    }
+    if (src === WORKER_MENU_LABEL) {
+        await openWorkerMenu(cpy, bal, ste)
+        return cpy
+    }
+    if (src === SWITCH_SERIES_LABEL) {
+        await promptSeriesSelectionModal(cpy, bal, ste)
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        return cpy
+    }
+    if (src === DOMAIN_SELECTOR_LABEL) {
+        await promptDomainEntityTypeSelector(cpy, bal, ste)
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        return cpy
+    }
+    if (src === CAPACITY_STAT_AUDIT_LABEL) {
+        const bpOk = BasisPointSchema.safeParse(10000).success
+        const bpFloatRejected = !BasisPointSchema.safeParse(5000.5).success
+        const statsOk = CombatAttributeStatsSchema.safeParse({
+            spite: 3,
+            cunning: 5,
+            vigor: 4,
+            poise: 5,
+        }).success
+        const somatic = {
+            arms_available_bps: 10000,
+            locomotion_baseline: 'bipedal_standard' as const,
+            banned_kinetic_verbs: [],
+        }
+        const stats = { spite: 3, cunning: 5, vigor: 4, poise: 5 }
+        const okAudit = auditEntityCapacityPreFlight(
+            somatic,
+            [{ item_id: 'item_lasso_of_truth', occupies_hands_bps: 10000 }],
+            stats,
+        )
+        const breachAudit = auditEntityCapacityPreFlight(
+            somatic,
+            [
+                { item_id: 'item_lasso_of_truth', occupies_hands_bps: 10000 },
+                { item_id: 'item_heavy_shield', occupies_hands_bps: 10000 },
+            ],
+            stats,
+        )
+        if (lib?.hunt) {
+            await lib.hunt('[Console action] Update Console', {
+                idx: 'cns00',
+                src: `>> [CAPACITY:AUDIT] [OK] Integer basis-point [0, 10000] (${bpOk ? 'PASS' : 'FAIL'}) & float rejection (${bpFloatRejected ? 'PASS' : 'FAIL'})`,
+            })
+            await lib.hunt('[Console action] Update Console', {
+                idx: 'cns00',
+                src: `>> [CAPACITY:AUDIT] [OK] 2d6 combat stats [1, 5] (${statsOk ? 'PASS' : 'FAIL'}) & hand-load gate (valid=${okAudit.valid}, breach=${breachAudit.errorCode}, deficit=${breachAudit.deficit_bps})`,
+            })
+        }
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
         return cpy
     }
     if (src === RECORD_ERRATA_LABEL) {
@@ -2556,6 +2685,7 @@ export const openCanonMenu = async (
         INSPECT_STANDING_REGISTRY_LABEL,
         RUN_STILL_GOOD_AUDIT_LABEL,
         EXECUTE_TRIE_DISJOINTNESS_SCAN_LABEL,
+        SWEEP_ACTIVE_DEPENDENCIES_LABEL,
         CANON_MENU_BACK_LABEL,
     ]
     const canonDescriptions: Record<string, string> = {
@@ -2565,6 +2695,8 @@ export const openCanonMenu = async (
             'Rank reconsideration queue by blast-radius priority and affirm top fact.',
         [EXECUTE_TRIE_DISJOINTNESS_SCAN_LABEL]:
             'Scan clue tokens against forbidden mystery lemmas in linear O(L) time.',
+        [SWEEP_ACTIVE_DEPENDENCIES_LABEL]:
+            'Sweep active inbound dependency edges prior to entity retirement.',
         [CANON_MENU_BACK_LABEL]: 'Return to the primary lore dashboard.',
     }
 
@@ -2644,6 +2776,385 @@ export const openCanonMenu = async (
         if (bal?.slv) {
             bal.slv({ mnuBit: bal })
         }
+        return cpy
+    }
+
+    if (selection === SWEEP_ACTIVE_DEPENDENCIES_LABEL) {
+        await sweepActiveDependenciesMenuAction(cpy, bal, ste)
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        return cpy
+    }
+
+    return updateMenu(cpy, bal, ste as State)
+}
+
+const renderSubmenuChoice = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste: State | undefined,
+    idx: string,
+    options: string[],
+    descriptions: Record<string, string>,
+): Promise<string | undefined> => {
+    const lib = (globalThis as any).LIBRARY || (global as any).LIBRARY
+    if (!lib || typeof lib.hunt !== 'function') {
+        if (bal?.slv) {
+            bal.slv({
+                mnuBit: {
+                    idx,
+                    lst: options,
+                    val: 0,
+                },
+            })
+        }
+        return undefined
+    }
+
+    const gridBit = await lib.hunt(GRID_UPDATE, {
+        x: 0,
+        y: 4,
+        xSpan: 4,
+        ySpan: 8,
+    })
+
+    const choiceBit = await lib.hunt(CHOICE_OPEN, {
+        dat: {
+            clr0: 0,
+            clr1: 3,
+            cb: async (choice: string) => {
+                const text = descriptions[choice]
+                await lib.hunt(CONSOLE_UPDATE, {
+                    idx: 'cns00',
+                    src: `:: ${text || 'No description available.'}`,
+                })
+            },
+        },
+        src: 'VERTICAL',
+        lst: options,
+        net: gridBit?.grdBit?.dat,
+    })
+
+    return choiceBit?.chcBit?.src
+}
+
+export const openEntityMenu = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste?: State,
+): Promise<MenuModel> => {
+    const options = [
+        ASSEMBLE_BYTE_ZERO_DOSSIER_LABEL,
+        RUN_ENTITY_PREFLIGHT_GATE_LABEL,
+        '[ BACK ]',
+    ]
+    const descriptions: Record<string, string> = {
+        [ASSEMBLE_BYTE_ZERO_DOSSIER_LABEL]:
+            'Compile a Byte-0 Dual-Rail Dossier preview with deterministic YAML keys.',
+        [RUN_ENTITY_PREFLIGHT_GATE_LABEL]:
+            'Evaluate Somatic SAT limb capacity and closed-world foreign-key integrity.',
+        '[ BACK ]': 'Return to the primary lore dashboard.',
+    }
+
+    const selection = await renderSubmenuChoice(
+        cpy,
+        bal,
+        ste,
+        'open-entity-menu',
+        options,
+        descriptions,
+    )
+    if (
+        !selection &&
+        !(globalThis as any).LIBRARY &&
+        !(global as any).LIBRARY
+    ) {
+        return cpy
+    }
+
+    if (selection === ASSEMBLE_BYTE_ZERO_DOSSIER_LABEL) {
+        await assembleByteZeroDossierMenuAction(cpy, bal, ste)
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        return cpy
+    }
+
+    if (selection === RUN_ENTITY_PREFLIGHT_GATE_LABEL) {
+        await runEntityPreFlightGateMenuAction(cpy, bal, ste)
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        return cpy
+    }
+
+    return updateMenu(cpy, bal, ste as State)
+}
+
+export const openLocationMenu = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste?: State,
+): Promise<MenuModel> => {
+    const options = [RECONCILE_SPATIAL_PORTALS_LABEL, '[ BACK ]']
+    const descriptions: Record<string, string> = {
+        [RECONCILE_SPATIAL_PORTALS_LABEL]:
+            'Scan location portals and verify/reconcile reciprocal spatial links.',
+        '[ BACK ]': 'Return to the primary lore dashboard.',
+    }
+
+    const selection = await renderSubmenuChoice(
+        cpy,
+        bal,
+        ste,
+        'open-location-menu',
+        options,
+        descriptions,
+    )
+    if (
+        !selection &&
+        !(globalThis as any).LIBRARY &&
+        !(global as any).LIBRARY
+    ) {
+        return cpy
+    }
+
+    if (selection === RECONCILE_SPATIAL_PORTALS_LABEL) {
+        await reconcileSpatialPortalsMenuAction(cpy, bal, ste)
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        return cpy
+    }
+
+    return updateMenu(cpy, bal, ste as State)
+}
+
+export const openLogisticMenu = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste?: State,
+): Promise<MenuModel> => {
+    const options = [
+        AUDIT_EQUIPMENT_CONSERVATION_LABEL,
+        SIMULATE_MATTER_CONSERVATION_LABEL,
+        RETIRE_ENTITY_LABEL,
+        '[ BACK ]',
+    ]
+    const descriptions: Record<string, string> = {
+        [AUDIT_EQUIPMENT_CONSERVATION_LABEL]:
+            'Audit four-tier equipment slots, hand saturation SAT, and mass conservation.',
+        [SIMULATE_MATTER_CONSERVATION_LABEL]:
+            'Simulate retired entity possession disposition and hand-capacity rollback.',
+        [RETIRE_ENTITY_LABEL]:
+            'Execute atomic entity retirement relocator with matter conservation and tombstone seal.',
+        '[ BACK ]': 'Return to the primary lore dashboard.',
+    }
+
+    const selection = await renderSubmenuChoice(
+        cpy,
+        bal,
+        ste,
+        'open-logistic-menu',
+        options,
+        descriptions,
+    )
+    if (
+        !selection &&
+        !(globalThis as any).LIBRARY &&
+        !(global as any).LIBRARY
+    ) {
+        return cpy
+    }
+
+    if (selection === AUDIT_EQUIPMENT_CONSERVATION_LABEL) {
+        await auditEquipmentConservationMenuAction(cpy, bal, ste)
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        return cpy
+    }
+
+    if (selection === SIMULATE_MATTER_CONSERVATION_LABEL) {
+        await simulateMatterConservationMenuAction(cpy, bal, ste)
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        return cpy
+    }
+
+    if (selection === RETIRE_ENTITY_LABEL) {
+        await runEntityRetirementMenu(cpy, bal, ste)
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        return cpy
+    }
+
+    return updateMenu(cpy, bal, ste as State)
+}
+
+export const openStatusMenu = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste?: State,
+): Promise<MenuModel> => {
+    const options = [EVALUATE_VOID_STATE_LABEL, '[ BACK ]']
+    const descriptions: Record<string, string> = {
+        [EVALUATE_VOID_STATE_LABEL]:
+            'Scan <repoRoot>/series/ for sealed storyworlds and evaluate cold-boot void state.',
+        '[ BACK ]': 'Return to the primary lore dashboard.',
+    }
+
+    const selection = await renderSubmenuChoice(
+        cpy,
+        bal,
+        ste,
+        'open-status-menu',
+        options,
+        descriptions,
+    )
+    if (
+        !selection &&
+        !(globalThis as any).LIBRARY &&
+        !(global as any).LIBRARY
+    ) {
+        return cpy
+    }
+
+    if (selection === EVALUATE_VOID_STATE_LABEL) {
+        await evaluateVoidStateMenuAction(cpy, bal, ste)
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        return cpy
+    }
+
+    return updateMenu(cpy, bal, ste as State)
+}
+
+export const openPortMenu = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste?: State,
+): Promise<MenuModel> => {
+    const options = [
+        VERIFY_CANON_PORT_SEAL_LABEL,
+        AUDIT_EDGE_STAGING_BUFFER_LABEL,
+        AUDIT_EDGE_SCHEMA_BUNDLE_LABEL,
+        '[ BACK ]',
+    ]
+    const descriptions: Record<string, string> = {
+        [VERIFY_CANON_PORT_SEAL_LABEL]:
+            'Verify RFC 8785 Merkle root against bible-state.json and assert recursive deepFreeze.',
+        [AUDIT_EDGE_STAGING_BUFFER_LABEL]:
+            'Audit LoreStagingDO asymmetric quarantine buffer and H_dep stale-canon barrier.',
+        [AUDIT_EDGE_SCHEMA_BUNDLE_LABEL]:
+            'Export version-pinned schemas.json bundle and verify SHA-256 parity.',
+        '[ BACK ]': 'Return to the primary lore dashboard.',
+    }
+
+    const selection = await renderSubmenuChoice(
+        cpy,
+        bal,
+        ste,
+        'open-port-menu',
+        options,
+        descriptions,
+    )
+    if (
+        !selection &&
+        !(globalThis as any).LIBRARY &&
+        !(global as any).LIBRARY
+    ) {
+        return cpy
+    }
+
+    if (selection === VERIFY_CANON_PORT_SEAL_LABEL) {
+        await verifyCanonPortSealMenuAction(cpy, bal, ste)
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        return cpy
+    }
+
+    if (selection === AUDIT_EDGE_STAGING_BUFFER_LABEL) {
+        await auditEdgeStagingBufferMenuAction(cpy, bal, ste)
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        return cpy
+    }
+
+    if (selection === AUDIT_EDGE_SCHEMA_BUNDLE_LABEL) {
+        await auditEdgeSchemaBundleMenuAction(cpy, bal, ste)
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        return cpy
+    }
+
+    return updateMenu(cpy, bal, ste as State)
+}
+
+export const openWorkerMenu = async (
+    cpy: MenuModel,
+    bal: MenuBit,
+    ste?: State,
+): Promise<MenuModel> => {
+    const options = [SIMULATE_HTTP_412_GATE_LABEL, '[ BACK ]']
+    const descriptions: Record<string, string> = {
+        [SIMULATE_HTTP_412_GATE_LABEL]:
+            'Simulate HTTP 412 DIRTY_SCENE_REJECTED precondition gate on stale scene payloads.',
+        '[ BACK ]': 'Return to the primary lore dashboard.',
+    }
+
+    const selection = await renderSubmenuChoice(
+        cpy,
+        bal,
+        ste,
+        'open-worker-menu',
+        options,
+        descriptions,
+    )
+    if (
+        !selection &&
+        !(globalThis as any).LIBRARY &&
+        !(global as any).LIBRARY
+    ) {
+        return cpy
+    }
+
+    if (selection === SIMULATE_HTTP_412_GATE_LABEL) {
+        await simulateHttp412DirtySceneGateMenuAction(cpy, bal, ste)
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
         return cpy
     }
 

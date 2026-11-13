@@ -146,6 +146,13 @@ export const reconcileReciprocalLinks = async (
                 continue
             }
 
+            if (targetId === locationId) {
+                errors.push(
+                    `[SELF_ADJACENCY_VIOLATION] Location '${locationId}' cannot link to itself`,
+                )
+                continue
+            }
+
             const targetFile = path.join(locationsDir, `${targetId}.md`)
             if (!fs.existsSync(targetFile)) {
                 errors.push(

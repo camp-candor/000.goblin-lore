@@ -19,6 +19,9 @@ export default interface Menu extends Model {
     lastLifecycleReceipt: string | null
     totalInteractions: number
     activeSeries?: string
+    activeEntityDomain?: string
+    activeEntityPrefix?: string
+    activeEntityDirectory?: string
     lastError?: string
     lastTelemetryReport: string[]
 }
