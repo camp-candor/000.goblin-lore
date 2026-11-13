@@ -19,6 +19,13 @@ export function reducer(
         case Act.POPULATE_GENESIS_SEEDS:
             return Buzz.populateGenesisSeeds(clone(model), act.bale, state)
 
+        case Act.INJECT_CUSTOM_SEED_IDENTIFIERS:
+            return Buzz.injectCustomSeedIdentifiers(
+                clone(model),
+                act.bale as any,
+                state,
+            )
+
         default:
             return model
     }

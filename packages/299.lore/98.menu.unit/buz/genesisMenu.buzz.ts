@@ -13,6 +13,7 @@ import {
     resolveLibraryBus,
     sanitizeSeriesSlug,
 } from './blessedModal.buzz.js'
+import { promptCustomSeedMenu } from './customSeedMenu.buzz.js'
 import type {
     AssembledFourTupleConfig,
     GenreClassification,
@@ -353,6 +354,17 @@ export const runSeriesGenesisMenu = async (
     }
 
     const ok = !scaffoldBit || scaffoldBit.val === 1
+    if (ok && !dat.skipCustomSeeds) {
+        await promptCustomSeedMenu(
+            cpy,
+            {
+                idx: 'genesis-custom-seed',
+                src: seriesSlug,
+                dat: { seriesSlug, repoRoot: dat.repoRoot },
+            },
+            ste,
+        )
+    }
     const receiptLine = ok
         ? `>> [GENESIS:OK] Series created: ${seriesSlug}`
         : `:: [GENESIS:FAIL] ${scaffoldBit?.dat?.error || 'Scaffolding rejected'}`

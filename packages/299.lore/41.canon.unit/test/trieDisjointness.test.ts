@@ -148,4 +148,36 @@ describe('41.canon.unit :: O(L) Proposition Trie & Clue-Lemma Disjointness Scann
         expect(report.collisions[0].collidingToken).toBe('pipe wrench')
         expect(report.collisions[0].topicId).toBe('mystery_boiler_crack')
     })
+
+    it('normalizes internal whitespace on multi-word lemmas and keeps size idempotent on duplicates', () => {
+        const trie = new PropositionTrie()
+        trie.insert('  Well   Water ', 'mystery_well', 'prop_water_02')
+        trie.insert('well water', 'mystery_well', 'prop_water_02')
+
+        expect(trie.size).toBe(1)
+        const match = trie.search('WELL   water')
+        expect(match).not.toBeNull()
+        expect(match?.lemma).toBe('well water')
+
+        const solver = new TrieClueDisjointnessSolver()
+        solver.loadForbiddenPropositions([
+            {
+                topic_id: 'mystery_well',
+                forbidden_propositions: [
+                    {
+                        id: 'prop_water_02',
+                        trigger_lemmas: ['well water', '  WELL   WATER  '],
+                    },
+                ],
+            },
+        ])
+        const report = solver.evaluateDisjointness(
+            ['  well   water '],
+            'char_bog',
+        )
+        expect(report.valid).toBe(false)
+        expect(report.totalLemmasIndexed).toBe(1)
+        expect(report.collisions).toHaveLength(1)
+        expect(report.collisions[0].collidingToken).toBe('well water')
+    })
 })

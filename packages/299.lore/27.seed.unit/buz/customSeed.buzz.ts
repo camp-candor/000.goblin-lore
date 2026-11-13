@@ -5,6 +5,15 @@ import type CustomSeedBit from '../fce/customSeed.bit.js'
 import { resolveRepoRoot } from '../../29.series.unit/buz/scaffoldSeriesTree.buzz.js'
 import { verifyByteZeroBuffer } from './seedWorldDefinitions.buzz.js'
 
+function sanitizeSeedId(raw: string | undefined, fallback: string): string {
+    const cleaned = String(raw || '')
+        .trim()
+        .toLowerCase()
+        .replace(/[^a-z0-9_]+/g, '_')
+        .replace(/^_+|_+$/g, '')
+    return cleaned.length > 0 ? cleaned : fallback
+}
+
 export const injectCustomSeedIdentifiers = async (
     cpy: any,
     bal: CustomSeedBit,
@@ -30,10 +39,10 @@ export const injectCustomSeedIdentifiers = async (
     const repoRoot = dat.repoRoot || resolveRepoRoot()
     const seriesDir = path.join(repoRoot, 'series', seriesSlug)
 
-    const charId = customIds.characterId || 'char_wonder_woman'
-    const locId = customIds.locationId || 'loc_gotham_rooftop'
-    const itemId = customIds.possessionId || 'item_lasso_of_truth'
-    const grvId = customIds.grievanceId || 'grv_gotham_standoff'
+    const charId = sanitizeSeedId(customIds.characterId, 'char_wonder_woman')
+    const locId = sanitizeSeedId(customIds.locationId, 'loc_gotham_rooftop')
+    const itemId = sanitizeSeedId(customIds.possessionId, 'item_lasso_of_truth')
+    const grvId = sanitizeSeedId(customIds.grievanceId, 'grv_gotham_standoff')
 
     const charsDir = path.join(seriesDir, 'characters')
     const locsDir = path.join(seriesDir, 'locations')

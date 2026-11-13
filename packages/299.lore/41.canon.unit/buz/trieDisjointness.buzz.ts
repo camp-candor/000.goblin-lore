@@ -13,7 +13,7 @@ export class PropositionTrie {
     private lemmaCount: number = 0
 
     public insert(lemma: string, topicId: string, propositionId: string): void {
-        const cleanLemma = lemma.toLowerCase().trim()
+        const cleanLemma = lemma.toLowerCase().trim().replace(/\s+/g, ' ')
         if (!cleanLemma) return
 
         let curr = this.root
@@ -26,17 +26,20 @@ export class PropositionTrie {
             }
             curr = curr.children.get(char)!
         }
+        const wasTerminal = curr.isTerminal
         curr.isTerminal = true
         curr.topicId = topicId
         curr.propositionId = propositionId
         curr.lemma = cleanLemma
-        this.lemmaCount++
+        if (!wasTerminal) {
+            this.lemmaCount++
+        }
     }
 
     public search(
         token: string,
     ): { topicId: string; propositionId: string; lemma: string } | null {
-        const cleanToken = token.toLowerCase().trim()
+        const cleanToken = token.toLowerCase().trim().replace(/\s+/g, ' ')
         if (!cleanToken) return null
 
         let curr = this.root
@@ -104,7 +107,7 @@ export class TrieClueDisjointnessSolver {
     ): TrieDisjointnessReport {
         const collisions: ClueDisjointnessCollision[] = []
         const evaluatedClues = permittedClues
-            .map((c) => c.toLowerCase().trim())
+            .map((c) => c.toLowerCase().trim().replace(/\s+/g, ' '))
             .filter(Boolean)
 
         for (const clue of evaluatedClues) {

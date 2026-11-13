@@ -19,4 +19,12 @@ export class PopulateGenesisSeeds implements Action {
     constructor(public bale: SeedBit) {}
 }
 
-export type Actions = InitSeed | UpdateSeed | PopulateGenesisSeeds
+export const INJECT_CUSTOM_SEED_IDENTIFIERS =
+    '[Seed action] Inject Custom Seed Identifiers'
+export class InjectCustomSeedIdentifiers implements Action {
+    readonly type = INJECT_CUSTOM_SEED_IDENTIFIERS
+    constructor(public bale: SeedBit) {}
+}
+
+export type Actions =
+    InitSeed | UpdateSeed | PopulateGenesisSeeds | InjectCustomSeedIdentifiers

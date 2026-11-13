@@ -9,3 +9,4 @@ export {
     populateGenesisSeeds,
     resolveRepoRoot,
 } from './buz/populateGenesisSeeds.buzz.js'
+export { injectCustomSeedIdentifiers } from './buz/customSeed.buzz.js'

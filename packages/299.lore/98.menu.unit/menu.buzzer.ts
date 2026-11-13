@@ -115,3 +115,4 @@ export {
 } from './buz/genesisMenu.buzz.js'
 export { promptLocomotionChoice } from './buz/locomotionMenu.buzz.js'
 export { LOCOMOTION_MENU_LABEL } from './buz/00.menu.buzz.js'
+export { promptCustomSeedMenu } from './buz/customSeedMenu.buzz.js'
