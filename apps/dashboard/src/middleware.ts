@@ -87,8 +87,8 @@ export const onRequest = defineMiddleware(async (context, next) => {
     // Access Cloudflare environment bindings safely from Astro locals / runtime
     let runtimeEnv: Record<string, string> = {}
     try {
-        // @ts-ignore
-        const cfWorkers = await import('cloudflare:workers')
+        const cfWorkersModule = 'cloudflare:workers'
+        const cfWorkers = await import(/* @vite-ignore */ cfWorkersModule)
         if (cfWorkers?.env) {
             runtimeEnv = cfWorkers.env as unknown as Record<string, string>
         }
@@ -106,9 +106,13 @@ export const onRequest = defineMiddleware(async (context, next) => {
     const auth = await authenticateEdgeRequest(request, {
         CLERK_JWKS_URL:
             runtimeEnv.PUBLIC_CLERK_JWKS_URL ||
-            import.meta.env.PUBLIC_CLERK_JWKS_URL,
-        CF_ACCESS_CLIENT_ID: runtimeEnv.CF_ACCESS_CLIENT_ID,
-        CF_ACCESS_CLIENT_SECRET: runtimeEnv.CF_ACCESS_CLIENT_SECRET,
+            import.meta.env.PUBLIC_CLERK_JWKS_URL ||
+            process.env.PUBLIC_CLERK_JWKS_URL,
+        CF_ACCESS_CLIENT_ID:
+            runtimeEnv.CF_ACCESS_CLIENT_ID || process.env.CF_ACCESS_CLIENT_ID,
+        CF_ACCESS_CLIENT_SECRET:
+            runtimeEnv.CF_ACCESS_CLIENT_SECRET ||
+            process.env.CF_ACCESS_CLIENT_SECRET,
     })
 
     const elapsedMs = (performance.now() - startTime).toFixed(2)

@@ -21,7 +21,7 @@
         "gauntlet": "node scripts/verify-ascii.mjs && vitest run"
     },
     "dependencies": {
-        "@astrojs/cloudflare": "^13.5.1",
+        "@astrojs/node": "11.1.12",
         "@astrojs/react": "7.0.1",
         "@clerk/astro": "^3.0.15",
         "@tailwindcss/vite": "^4.2.2",
