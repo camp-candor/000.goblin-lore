@@ -23,6 +23,58 @@ export function validateScalarBoundsBuzz(
     }
 }
 
+export type ThresholdCrossingKind =
+    'CROSSED_UP' | 'CROSSED_DOWN' | 'AT_THRESHOLD' | 'BELOW'
+
+export interface ThresholdCrossingResult {
+    valueBp: number
+    previousValueBp: number
+    thresholdBp: number
+    crossedUp: boolean
+    crossedDown: boolean
+    kind: ThresholdCrossingKind
+}
+
+function assertBasisPoints(value: number, fieldName: string): void {
+    assertIntegerMetric(value, fieldName)
+    if (value < 0 || value > 10000) {
+        throw new Error(
+            `[OUT_OF_BOUNDS] ${fieldName} must be an integer in [0, 10000]. Received: ${value}`,
+        )
+    }
+}
+
+export function evaluateThresholdCrossing(
+    valueBp: number,
+    previousValueBp: number,
+    thresholdBp: number,
+): ThresholdCrossingResult {
+    assertBasisPoints(valueBp, 'valueBp')
+    assertBasisPoints(previousValueBp, 'previousValueBp')
+    assertBasisPoints(thresholdBp, 'thresholdBp')
+    const crossedUp = previousValueBp < thresholdBp && valueBp >= thresholdBp
+    const crossedDown = previousValueBp >= thresholdBp && valueBp < thresholdBp
+    let kind: ThresholdCrossingKind = 'BELOW'
+    if (crossedUp) {
+        kind = 'CROSSED_UP'
+    } else if (crossedDown) {
+        kind = 'CROSSED_DOWN'
+    } else if (valueBp === thresholdBp) {
+        kind = 'AT_THRESHOLD'
+    } else {
+        kind = 'BELOW'
+    }
+    const receipt: ThresholdCrossingResult = {
+        valueBp,
+        previousValueBp,
+        thresholdBp,
+        crossedUp,
+        crossedDown,
+        kind,
+    }
+    return Object.freeze(receipt)
+}
+
 export const initThreshold = (
     cpy: ThresholdModel,
     bal: ThresholdBit,

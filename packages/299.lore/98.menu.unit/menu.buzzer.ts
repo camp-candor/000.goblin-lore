@@ -127,3 +127,10 @@ export {
     DOMAIN_ENTITY_CHOICES,
     resolveDomainEntityDescriptor,
 } from './fce/domainSelector.bit.js'
+export {
+    AUTO_SCRIPT_MENU_LABEL,
+    AUTO_SCRIPT_SUBMENU_CHOICES,
+    applyAutoScriptConfigPatch,
+    previewCharacterVoiceSample,
+    runAutoScriptMenu,
+} from './buz/autoScriptMenu.buzz.js'

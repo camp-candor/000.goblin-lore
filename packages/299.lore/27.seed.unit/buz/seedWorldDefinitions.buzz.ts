@@ -6,6 +6,10 @@ import {
     resolveChronologyConfig,
     DEFAULT_CHRONOLOGY_CONFIG,
 } from '../../38.types.unit/fce/chronology.interface.js'
+import {
+    resolveAutoScriptConfig,
+    DEFAULT_AUTO_SCRIPT_CONFIG,
+} from '../../38.types.unit/fce/autoScriptRule.interface.js'
 import { parseCalendarStart } from '../../05.clock.unit/buz/clock.buzz.js'
 
 /**
@@ -149,6 +153,35 @@ export function seedWorldDefinitions(
         // ignore
     }
 
+    // 4. world/dramatic-catalysts.md
+    try {
+        const catalystsPath = path.join(worldDir, 'dramatic-catalysts.md')
+        const catalystsContent = buildDramaticCatalystsDossier(
+            DEFAULT_AUTO_SCRIPT_CONFIG,
+            seriesSlug,
+        )
+        const normalizedCatalysts = catalystsContent
+            .replace(/\r\n/g, '\n')
+            .replace(/\r/g, '')
+        fs.writeFileSync(catalystsPath, normalizedCatalysts, {
+            encoding: 'utf8',
+        })
+        const catBytes = fs.readFileSync(catalystsPath)
+        results.push({
+            id: 'world_dramatic_catalysts',
+            domain: 'world',
+            relativePath: `series/${seriesSlug}/world/dramatic-catalysts.md`,
+            absolutePath: catalystsPath,
+            byteZeroVerified: verifyByteZeroBuffer(catBytes),
+            contentSha256: crypto
+                .createHash('sha256')
+                .update(catBytes)
+                .digest('hex'),
+        })
+    } catch {
+        // ignore
+    }
+
     return results
 }
 
@@ -182,6 +215,43 @@ export function buildChronologyWorldDossier(
     return lines.join('\n')
 }
 
+export function buildDramaticCatalystsDossier(
+    autoScript: any,
+    seriesSlug: string,
+): string {
+    const cfg = resolveAutoScriptConfig(autoScript ?? {})
+    const lines = [
+        '---',
+        'id: world_dramatic_catalysts',
+        'entity_type: world_dramatic_catalysts',
+        `series_slug: ${seriesSlug}`,
+        `enabled: ${cfg.enabled ? 'true' : 'false'}`,
+        `min_global_significance_bps: ${cfg.min_global_significance_bps}`,
+        `max_scripts_per_run: ${cfg.max_scripts_per_run}`,
+        `output_subdir: ${cfg.output_subdir}`,
+        'status: active',
+        'triggers:',
+        ...cfg.rules
+            .slice()
+            .sort((a, b) =>
+                a.category < b.category ? -1 : a.category > b.category ? 1 : 0,
+            )
+            .map(
+                (r) =>
+                    `  - category: ${r.category} | enabled: ${r.enabled ? 'true' : 'false'} | min_severity_bps: ${r.min_severity_bps} | cooldown_ticks: ${r.cooldown_ticks} | priority_weight_bps: ${r.priority_weight_bps}`,
+            ),
+        '---',
+        '',
+        '# Dramatic Catalysts',
+        '',
+        `Active trigger categories for series ${seriesSlug}.`,
+        `Global significance floor is ${cfg.min_global_significance_bps} bps.`,
+        `Generated screenplays emit to ${cfg.output_subdir}/.`,
+        '',
+    ]
+    return lines.join('\n')
+}
+
 export const buildChronologyDossier = buildChronologyWorldDossier
 
 export function seedChronologyDossier(
@@ -209,3 +279,27 @@ export function seedChronologyDossier(
 }
 
 export const seedChronologyWorldDossier = seedChronologyDossier
+
+export function seedDramaticCatalystsDossier(
+    seriesDir: string,
+    seriesSlug: string,
+    autoScriptConfig?: any,
+): CreatedSeedDossier {
+    const worldDir = path.join(seriesDir, 'world')
+    if (!fs.existsSync(worldDir)) {
+        fs.mkdirSync(worldDir, { recursive: true })
+    }
+    const content = buildDramaticCatalystsDossier(autoScriptConfig, seriesSlug)
+    const filePath = path.join(worldDir, 'dramatic-catalysts.md')
+    const normalized = content.replace(/\r\n/g, '\n').replace(/\r/g, '')
+    fs.writeFileSync(filePath, normalized, { encoding: 'utf8' })
+    const buf = fs.readFileSync(filePath)
+    return {
+        id: 'world_dramatic_catalysts',
+        domain: 'world',
+        relativePath: `series/${seriesSlug}/world/dramatic-catalysts.md`,
+        absolutePath: filePath,
+        byteZeroVerified: verifyByteZeroBuffer(buf),
+        contentSha256: crypto.createHash('sha256').update(buf).digest('hex'),
+    }
+}

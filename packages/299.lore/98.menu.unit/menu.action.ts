@@ -82,6 +82,12 @@ export class OpenChronologyMenu implements Action {
     constructor(public bale: MenuBit) {}
 }
 
+export const OPEN_AUTO_SCRIPT_MENU = '[Menu action] Open Auto-Script Menu'
+export class OpenAutoScriptMenu implements Action {
+    readonly type = OPEN_AUTO_SCRIPT_MENU
+    constructor(public bale: MenuBit) {}
+}
+
 export type Actions =
     | InitMenu
     | UpdateMenu
@@ -96,3 +102,4 @@ export type Actions =
     | ExportTopologyManifest
     | SelectDomainEntityType
     | OpenChronologyMenu
+    | OpenAutoScriptMenu

@@ -5,3 +5,11 @@ export default interface Location {
     locationBitList: LocationBit[]
     locationBits: Record<string, LocationBit>
 }
+
+export interface LocationStageProfile {
+    locationId: string
+    intExt: 'INT.' | 'EXT.'
+    sluglineBase: string
+    ambientActionCue: string
+    transitionOut: string
+}

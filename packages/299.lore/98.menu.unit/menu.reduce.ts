@@ -48,6 +48,8 @@ export function reducer(
                 act.bale as any,
                 state,
             )
+        case Act.OPEN_AUTO_SCRIPT_MENU:
+            return Buzz.runAutoScriptMenu(clone(model), act.bale, state)
         default:
             return model
     }

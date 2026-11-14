@@ -7,7 +7,12 @@ import {
     ChronologyConfigSchema,
     resolveSeriesChronology,
 } from '../../38.types.unit/fce/chronology.interface.js'
+import {
+    AutoScriptConfigSchema,
+    resolveAutoScriptConfig,
+} from '../../38.types.unit/fce/autoScriptRule.interface.js'
 export { resolveSeriesChronology } from '../../38.types.unit/fce/chronology.interface.js'
+export { resolveAutoScriptConfig } from '../../38.types.unit/fce/autoScriptRule.interface.js'
 
 /**
  * 7-bit ASCII Slug Regular Expression for Series Identifiers.
@@ -271,6 +276,7 @@ export const SeriesConfigSchema = z
         invariant_rules: InvariantRulesSchema,
         medium_projections: MediumProjectionsSchema,
         chronology: ChronologyConfigSchema.optional(),
+        auto_script: AutoScriptConfigSchema.optional(),
     })
     .strict()
 

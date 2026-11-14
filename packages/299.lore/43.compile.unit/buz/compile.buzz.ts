@@ -13,6 +13,10 @@ import type {
 } from '../fce/compile.bit'
 import type State from '../../99.core/state'
 import { resolveChronologyConfig } from '../../38.types.unit/fce/chronology.interface.js'
+import { resolveAutoScriptConfig } from '../../38.types.unit/fce/autoScriptRule.interface.js'
+import { buildCharacterVoiceProfile } from '../../02.character.unit/buz/character.buzz.js'
+import { buildLocationStageProfile } from '../../01.location.unit/buz/location.buzz.js'
+import { buildEventDramaticPalette } from '../../11.events.unit/buz/events.buzz.js'
 import { parseCalendarStart } from '../../05.clock.unit/buz/clock.buzz.js'
 import * as ActCns from '../../act/console.action'
 import { validatePass2Pardons } from '../../03.laws.unit/laws.buzzer.js'
@@ -1520,6 +1524,48 @@ export const pass3Seal = (
     }
     const chronology = resolveChronologyConfig(seriesConfig?.chronology)
     const startSnapshot = parseCalendarStart(chronology)
+    const autoScriptConfig = resolveAutoScriptConfig(
+        seriesConfig?.auto_script ?? {},
+    )
+    const voiceLexicon: Record<string, any> = {}
+    const locationStageProfiles: Record<string, any> = {}
+    for (const id of sortedIds) {
+        const doc = catalog[id] as any
+        const entityType = String(doc?.entity_type || '')
+        if (entityType === 'character' || id.startsWith('char_')) {
+            try {
+                voiceLexicon[id] = buildCharacterVoiceProfile(doc)
+            } catch {
+                // skip malformed character entities
+            }
+        } else if (entityType === 'location' || id.startsWith('loc_')) {
+            try {
+                locationStageProfiles[id] = buildLocationStageProfile(doc)
+            } catch {
+                // skip malformed location entities
+            }
+        }
+    }
+    const sortedVoiceLexicon: Record<string, any> = {}
+    for (const k of Object.keys(voiceLexicon).sort((a, b) =>
+        a < b ? -1 : a > b ? 1 : 0,
+    )) {
+        sortedVoiceLexicon[k] = voiceLexicon[k]
+    }
+    const sortedLocationStageProfiles: Record<string, any> = {}
+    for (const k of Object.keys(locationStageProfiles).sort((a, b) =>
+        a < b ? -1 : a > b ? 1 : 0,
+    )) {
+        sortedLocationStageProfiles[k] = locationStageProfiles[k]
+    }
+    const dramaticPalette = buildEventDramaticPalette()
+    const autoScriptBundle = {
+        schema_version: '1.0.0',
+        config: autoScriptConfig,
+        voice_lexicon: sortedVoiceLexicon,
+        location_stage_profiles: sortedLocationStageProfiles,
+        dramatic_palette: dramaticPalette,
+    }
 
     const summary = computeSummary(catalog)
     const preSealPayload = {
@@ -1532,6 +1578,7 @@ export const pass3Seal = (
         entity_hashes: entityHashes,
         entities: catalog,
         chronology: { ...chronology, start_snapshot: startSnapshot },
+        auto_script_bundle: autoScriptBundle,
     }
 
     // Compute universal Merkle Root SHA-256 over RFC 8785 JCS payload (excluding volatile fields)
@@ -1559,7 +1606,14 @@ export const pass3Seal = (
         entity_hashes: entityHashes,
         entities: catalog,
         chronology: { ...chronology, start_snapshot: startSnapshot },
+        auto_script_bundle: autoScriptBundle,
     }
+
+    emitTelemetry(
+        ste,
+        isTelemetryEnabled(bal),
+        `>> [COMPILE:AUTO_SCRIPT] Sealed ${Object.keys(sortedVoiceLexicon).length} voices | ${Object.keys(sortedLocationStageProfiles).length} stages | Rules=${autoScriptConfig.rules.length}`,
+    )
 
     const formattedJson =
         JSON.stringify(

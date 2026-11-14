@@ -2,6 +2,220 @@
     "_meta": {
         "applied_pardons": []
     },
+    "auto_script_bundle": {
+        "config": {
+            "enabled": true,
+            "max_scripts_per_run": 64,
+            "min_global_significance_bps": 5000,
+            "output_subdir": "drafts/auto-script",
+            "rules": [
+                {
+                    "category": "PARANOIA_TRIGGERED",
+                    "cooldown_ticks": 1,
+                    "enabled": true,
+                    "min_severity_bps": 7000,
+                    "priority_weight_bps": 9000
+                },
+                {
+                    "category": "GRIEVANCE_BREACH",
+                    "cooldown_ticks": 1,
+                    "enabled": true,
+                    "min_severity_bps": 5500,
+                    "priority_weight_bps": 8500
+                },
+                {
+                    "category": "SOMATIC_TRAUMA",
+                    "cooldown_ticks": 2,
+                    "enabled": true,
+                    "min_severity_bps": 4000,
+                    "priority_weight_bps": 8000
+                },
+                {
+                    "category": "CHRONO_MILESTONE",
+                    "cooldown_ticks": 5,
+                    "enabled": true,
+                    "min_severity_bps": 3000,
+                    "priority_weight_bps": 5000
+                }
+            ]
+        },
+        "dramatic_palette": {
+            "CHRONO_MILESTONE": {
+                "actionLines": [
+                    "Lanterns lift along the fence line.",
+                    "The bell tolls once across the basin."
+                ],
+                "characterCues": ["ORBIE", "WART"],
+                "dialogue": [
+                    "Bell marks the hour. Take your post.",
+                    "Shift change. Lamps up."
+                ],
+                "parentheticals": ["(calling out)", "(even, marking the hour)"],
+                "sceneHeading": "EXT. YARD - DUSK",
+                "transitions": ["TIME CUT: +1 HOUR"]
+            },
+            "EPISTEMIC_REVEAL": {
+                "actionLines": [
+                    "Lamplight finds the hidden margin note.",
+                    "The seal cracks; paper sighs open."
+                ],
+                "characterCues": ["JOHNNY", "WART"],
+                "dialogue": [
+                    "Read the margin. Read it aloud.",
+                    "The seal was broken at dawn. Look."
+                ],
+                "parentheticals": [
+                    "(quiet, lowering the lamp)",
+                    "(reading, voice thin)"
+                ],
+                "sceneHeading": "INT. ARCHIVE ROOM - NIGHT",
+                "transitions": ["FADE OUT."]
+            },
+            "GRIEVANCE_BREACH": {
+                "actionLines": [
+                    "A stool scrapes back from the table.",
+                    "Chalk tally squeaks across the slate."
+                ],
+                "characterCues": ["JOHNNY", "WART"],
+                "dialogue": [
+                    "Name the debt before the bell.",
+                    "You owe for the winter tally. Pay it."
+                ],
+                "parentheticals": [
+                    "(dry, counting aloud)",
+                    "(flat, holding the old debt)"
+                ],
+                "sceneHeading": "INT. LEDGER HALL - NIGHT",
+                "transitions": ["MATCH CUT TO:"]
+            },
+            "INVENTORY_TRANSFER": {
+                "actionLines": [
+                    "Brass tallies clink onto the weighing tray.",
+                    "The ledger flips to a fresh page."
+                ],
+                "characterCues": ["JOHNNY", "ORBIE"],
+                "dialogue": [
+                    "Count the brass. Sign the ledger.",
+                    "Mark it. Twice for the guild."
+                ],
+                "parentheticals": [
+                    "(careful, counting the brass)",
+                    "(even, marking the page)"
+                ],
+                "sceneHeading": "INT. STOREROOM - NIGHT",
+                "transitions": ["CUT TO:"]
+            },
+            "PARANOIA_TRIGGERED": {
+                "actionLines": [
+                    "Dust sifts from the mortar seams.",
+                    "Lamp gutters as the pipe knocks twice."
+                ],
+                "characterCues": ["JOHNNY", "ORBIE"],
+                "dialogue": [
+                    "Say it plain. Who broke the seal.",
+                    "Valve is stuck. Keep eyes on the stair."
+                ],
+                "parentheticals": [
+                    "(low, not looking up)",
+                    "(steady, watching the ledger)"
+                ],
+                "sceneHeading": "INT. CULVERT ROOM - NIGHT",
+                "transitions": ["SMASH CUT TO:"]
+            },
+            "SOMATIC_TRAUMA": {
+                "actionLines": [
+                    "Blood ticks onto the canvas sheet.",
+                    "Breath hitches; the iron bar clatters down."
+                ],
+                "characterCues": ["ORBIE", "WART"],
+                "dialogue": [
+                    "Arm is gone numb. Hand me the bar.",
+                    "Hold still. Bind it tight."
+                ],
+                "parentheticals": [
+                    "(strained, favoring the left arm)",
+                    "(through teeth)"
+                ],
+                "sceneHeading": "INT. INFIRMARY CULVERT - NIGHT",
+                "transitions": ["CUT TO:"]
+            }
+        },
+        "location_stage_profiles": {
+            "loc_cellar": {
+                "ambientActionCue": "Still air hangs over the damp root cellar; Damp mortar, low pipe knock, faint tallow smoke.",
+                "intExt": "INT.",
+                "locationId": "loc_cellar",
+                "sluglineBase": "INT. THE DAMP ROOT CELLAR - NIGHT",
+                "transitionOut": "CUT TO:"
+            },
+            "loc_hearth": {
+                "ambientActionCue": "Still air hangs over the sunken hearth; Damp mortar, low pipe knock, faint tallow smoke.",
+                "intExt": "INT.",
+                "locationId": "loc_hearth",
+                "sluglineBase": "INT. THE SUNKEN HEARTH - NIGHT",
+                "transitionOut": "CUT TO:"
+            }
+        },
+        "schema_version": "1.0.0",
+        "voice_lexicon": {
+            "char_gristle": {
+                "cue": "GRISTLE",
+                "curtnessMaxWords": 12,
+                "defaultParenthetical": "(measured, practical tone)",
+                "entityId": "char_gristle",
+                "linesByCategory": {
+                    "CHRONO_MILESTONE": [
+                        "Bell marks the hour. Take your post."
+                    ],
+                    "EPISTEMIC_REVEAL": ["The seal was broken at dawn. Look."],
+                    "GRIEVANCE_BREACH": [
+                        "You owe for the winter tally. Pay it."
+                    ],
+                    "INVENTORY_TRANSFER": ["Count the brass. Sign the ledger."],
+                    "PARANOIA_TRIGGERED": [
+                        "Valve is stuck. Keep eyes on the stair."
+                    ],
+                    "SOMATIC_TRAUMA": ["Arm is gone numb. Hand me the bar."]
+                },
+                "parentheticalsByCategory": {
+                    "CHRONO_MILESTONE": ["(even, marking the hour)"],
+                    "EPISTEMIC_REVEAL": ["(quiet, lowering the lamp)"],
+                    "GRIEVANCE_BREACH": ["(flat, holding the old debt)"],
+                    "INVENTORY_TRANSFER": ["(careful, counting the brass)"],
+                    "PARANOIA_TRIGGERED": ["(steady, watching the ledger)"],
+                    "SOMATIC_TRAUMA": ["(strained, favoring the left arm)"]
+                }
+            },
+            "char_snag": {
+                "cue": "SNAG",
+                "curtnessMaxWords": 12,
+                "defaultParenthetical": "(measured, practical tone)",
+                "entityId": "char_snag",
+                "linesByCategory": {
+                    "CHRONO_MILESTONE": [
+                        "Bell marks the hour. Take your post."
+                    ],
+                    "EPISTEMIC_REVEAL": ["The seal was broken at dawn. Look."],
+                    "GRIEVANCE_BREACH": [
+                        "You owe for the winter tally. Pay it."
+                    ],
+                    "INVENTORY_TRANSFER": ["Count the brass. Sign the ledger."],
+                    "PARANOIA_TRIGGERED": [
+                        "Valve is stuck. Keep eyes on the stair."
+                    ],
+                    "SOMATIC_TRAUMA": ["Arm is gone numb. Hand me the bar."]
+                },
+                "parentheticalsByCategory": {
+                    "CHRONO_MILESTONE": ["(even, marking the hour)"],
+                    "EPISTEMIC_REVEAL": ["(quiet, lowering the lamp)"],
+                    "GRIEVANCE_BREACH": ["(flat, holding the old debt)"],
+                    "INVENTORY_TRANSFER": ["(careful, counting the brass)"],
+                    "PARANOIA_TRIGGERED": ["(steady, watching the ledger)"],
+                    "SOMATIC_TRAUMA": ["(strained, favoring the left arm)"]
+                }
+            }
+        }
+    },
     "catalog_summary": {
         "characterCount": 2,
         "characters": 2,
@@ -45,8 +259,8 @@
         "tick_seconds": 60,
         "timezone_label": "UTC+00:00"
     },
-    "compiled_at": "2026-11-14T14:56:40.290Z",
-    "compiler_duration_ms": 22,
+    "compiled_at": "2026-11-14T15:52:35.434Z",
+    "compiler_duration_ms": 12,
     "entities": {
         "char_gristle": {
             "available_arms": 2,
@@ -130,7 +344,7 @@
         "loc_cellar": "1804ce594aeebfe09957756edb3fc7d05b8879cb768d6e1147d3386abb0b9adb",
         "loc_hearth": "2630dfd0ce39bcdfabc2b6ddf2066351136da6e0507370ae2324c5b0915a04e3"
     },
-    "root_merkle_hash": "d8f5cac4e5bc7e39d1bf96c30f77b8d8038fbd023708a95ed2876984544fa378",
+    "root_merkle_hash": "599ceb0aaccb2fbc30824d5bc0d3e4a0121b46c13f6443eccea5ef93fa74bd3b",
     "schema_version": "1.0.0",
     "series_slug": "000.sample-hearth"
 }

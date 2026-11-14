@@ -129,6 +129,7 @@ export const CAPACITY_STAT_AUDIT_LABEL =
     '[B] AUDIT BASIS-POINT CAPACITY & STATS'
 export const LOCOMOTION_MENU_LABEL = '[LOCOMOTION BASELINE]'
 export const CHRONOLOGY_MENU_LABEL = '[T] SIMULATION CHRONOLOGY CLOCK'
+export const AUTO_SCRIPT_MENU_LABEL = '[A] CONFIGURE AUTO-SCRIPT CATALYSTS'
 export const LIFECYCLE_MENU_OPTIONS: readonly string[] = Object.freeze([
     GENESIS_WIZARD_LABEL,
     ENTITY_SCAFFOLDER_LABEL,
@@ -136,6 +137,7 @@ export const LIFECYCLE_MENU_OPTIONS: readonly string[] = Object.freeze([
     CORPUS_HEALTH_LABEL,
     RECORD_ERRATA_LABEL,
     '[T] SIMULATION CHRONOLOGY CLOCK',
+    '[A] CONFIGURE AUTO-SCRIPT CATALYSTS',
 ])
 
 import { assembleDualRailDossier } from '../../09.entity.unit/buz/entityAssemble.buzz.js'
@@ -461,6 +463,8 @@ export const updateMenu = async (
             'Copy verified bible-state.json into 000.series-sower-engine and export room topology manifest into 000.goblin-spatial.',
         [CHRONOLOGY_MENU_LABEL]:
             'Inspect or update canonical series start date, start time, tick cadence, and daypart preview.',
+        [AUTO_SCRIPT_MENU_LABEL]:
+            'Inspect catalyst rules, tune global significance threshold, toggle triggers, and preview voice samples.',
         '[X] RECORD CANONICAL ERRATA ENTRY':
             'Inspect errata hash-chain lineage and seal new retcon records.',
         'ROOT MENU': 'Return to master flight deck switchboard.',
@@ -739,6 +743,19 @@ export const updateMenu = async (
     if (src === CHRONOLOGY_MENU_LABEL) {
         const { runChronologyMenu } = await import('./chronologyMenu.buzz.js')
         await runChronologyMenu(cpy, bal, ste)
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        if (bal?.slv) {
+            bal.slv({ mnuBit: bal })
+        }
+        return cpy
+    }
+    if (src === AUTO_SCRIPT_MENU_LABEL) {
+        const { runAutoScriptMenu } = await import('./autoScriptMenu.buzz.js')
+        await runAutoScriptMenu(cpy, bal, ste)
         setTimeout(async () => {
             if (ste?.hunt) {
                 await ste.hunt(ActMnu.UPDATE_MENU, {})

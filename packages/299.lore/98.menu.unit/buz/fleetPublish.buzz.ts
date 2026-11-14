@@ -1,10 +1,51 @@
 import * as fs from 'node:fs'
 import * as path from 'node:path'
+import * as crypto from 'node:crypto'
 import type State from '../../99.core/state.js'
 import type FleetPublishBit from '../fce/fleetPublish.bit.js'
 import { resolveRepoRoot } from '../../00.lore.unit/buz/lore.buzz.js'
 import { resolveLibraryBus } from './blessedModal.buzz.js'
 import { exportStaticTopologyManifest } from './topologyExport.buzz.js'
+
+export interface PublishAutoScriptReadiness {
+    ready: boolean
+    ruleCount: number
+    voiceCount: number
+    locationCount: number
+    outputSubdir: string
+}
+
+export function inspectPublishAutoScriptReadiness(
+    parsedBibleState: any,
+): PublishAutoScriptReadiness {
+    const bundle = (parsedBibleState as any)?.auto_script_bundle
+    const config = bundle?.config
+    const rules = Array.isArray(config?.rules) ? config.rules : null
+    if (!bundle || !config || !rules) {
+        return {
+            ready: false,
+            ruleCount: 0,
+            voiceCount: 0,
+            locationCount: 0,
+            outputSubdir: '',
+        }
+    }
+    const voiceCount = bundle.voice_lexicon
+        ? Object.keys(bundle.voice_lexicon).length
+        : 0
+    const locationCount = bundle.location_stage_profiles
+        ? Object.keys(bundle.location_stage_profiles).length
+        : 0
+    const outputSubdir =
+        typeof config.output_subdir === 'string' ? config.output_subdir : ''
+    return {
+        ready: true,
+        ruleCount: rules.length,
+        voiceCount,
+        locationCount,
+        outputSubdir,
+    }
+}
 
 const UPDATE_CONSOLE = '[Console action] Update Console'
 
@@ -136,6 +177,19 @@ export const publishSealedCanonToFleet = async (
         )
     }
 
+    const readiness = inspectPublishAutoScriptReadiness(parsedBibleState)
+    if (readiness.ready) {
+        emitConsole(
+            ste,
+            `>> [PUBLISH:AUTO_SCRIPT] Rules=${readiness.ruleCount} | Voices=${readiness.voiceCount} | Locations=${readiness.locationCount} | Output=${readiness.outputSubdir}`,
+        )
+    } else {
+        emitConsole(
+            ste,
+            `:: [PUBLISH:WARN] Missing auto_script_bundle -- legacy seal; recompile recommended`,
+        )
+    }
+
     emitConsole(
         ste,
         `>> [FLEET:PUBLISH] Broadcasting sealed canon '${seriesSlug}' across simulation fleet...`,
@@ -160,6 +214,19 @@ export const publishSealedCanonToFleet = async (
             )
             fs.mkdirSync(path.dirname(engineDestination), { recursive: true })
             atomicCopyFileSync(sourceManifest, engineDestination)
+            const srcHash = crypto
+                .createHash('sha256')
+                .update(fs.readFileSync(sourceManifest))
+                .digest('hex')
+            const dstHash = crypto
+                .createHash('sha256')
+                .update(fs.readFileSync(engineDestination))
+                .digest('hex')
+            if (srcHash !== dstHash) {
+                throw new Error(
+                    `[PUBLISH_PARITY_MISMATCH] Source SHA-256 ${srcHash} != destination SHA-256 ${dstHash}.`,
+                )
+            }
             emitConsole(
                 ste,
                 `>> [ENGINE:SYNC] [OK] Staged canon into 000.series-sower-engine`,
