@@ -3,9 +3,14 @@ import type ClockBit from '../fce/clock.bit.js'
 import type State from '../../99.core/state.js'
 import {
     resolveChronologyConfig,
+    sortScheduledBeatsDeterministically,
     type ChronologyConfig,
     type CalendarClockSnapshot,
     type DaypartBand,
+    type ScheduledBeat,
+    type AgendaBeatTickOffset,
+    type AgendaReserveOverlap,
+    type ChronoAgendaValidation,
     normalizeClockTimeHms,
     DEFAULT_CHRONOLOGY_CONFIG,
 } from '../../38.types.unit/fce/chronology.interface.js'
@@ -19,6 +24,13 @@ export type {
     ChronologyConfig,
     CalendarClockSnapshot,
     DaypartBand,
+} from '../../38.types.unit/fce/chronology.interface.js'
+export type {
+    ScheduledBeat,
+    ChronoAgendaRegistry,
+    AgendaBeatTickOffset,
+    AgendaReserveOverlap,
+    ChronoAgendaValidation,
 } from '../../38.types.unit/fce/chronology.interface.js'
 
 // Pure helpers
@@ -191,6 +203,123 @@ export const advanceGregorianClock = (
         eraLabel: snapshot.eraLabel,
     }
     return snap
+}
+
+export const computeGregorianEpochSeconds = (
+    isoDate: string,
+    hmsTime: string,
+): number => {
+    const dateParts = String(isoDate).split('-').map(Number)
+    const hms = normalizeClockTimeHms(hmsTime)
+    const timeParts = hms.split(':').map(Number)
+    const year = dateParts[0]
+    const month = dateParts[1]
+    const day = dateParts[2]
+    const hour = timeParts[0]
+    const minute = timeParts[1]
+    const second = timeParts[2] ?? 0
+    return Math.trunc(
+        Date.UTC(year, month - 1, day, hour, minute, second) / 1000,
+    )
+}
+
+export const computeAgendaBeatTickOffset = (
+    chronology: ChronologyConfig,
+    beat: ScheduledBeat,
+): AgendaBeatTickOffset => {
+    const originEpoch = computeGregorianEpochSeconds(
+        chronology.start_date,
+        normalizeClockTimeHms(chronology.start_time),
+    )
+    const targetEpoch = computeGregorianEpochSeconds(
+        beat.isoDate,
+        normalizeClockTimeHms(beat.startTimeHm),
+    )
+    const deltaSeconds = targetEpoch - originEpoch
+    const recurring = beat.recurringDaily === true
+    if (!recurring && deltaSeconds < 0) {
+        return Object.freeze({
+            beat_id: beat.beat_id,
+            isoDate: beat.isoDate,
+            startTimeHm: beat.startTimeHm,
+            beatCategory: String(beat.beatCategory),
+            deltaSeconds,
+            targetTick: -1,
+            reserveStartTick: 0,
+            reserveCooldownTicks: beat.reserveCooldownTicks,
+            valid: false,
+            errorCode: 'AGENDA_IN_THE_PAST',
+        })
+    }
+    const tickSeconds = Math.max(1, Math.trunc(chronology.tick_seconds))
+    const targetTick = Math.ceil(Math.max(0, deltaSeconds) / tickSeconds)
+    const reserveStartTick = Math.max(
+        0,
+        targetTick - Math.trunc(beat.reserveCooldownTicks),
+    )
+    return Object.freeze({
+        beat_id: beat.beat_id,
+        isoDate: beat.isoDate,
+        startTimeHm: beat.startTimeHm,
+        beatCategory: String(beat.beatCategory),
+        deltaSeconds,
+        targetTick,
+        reserveStartTick,
+        reserveCooldownTicks: Math.trunc(beat.reserveCooldownTicks),
+        valid: true,
+    })
+}
+
+export const validateChronoAgendaRegistry = (
+    chronology: ChronologyConfig,
+): ChronoAgendaValidation => {
+    const beats = sortScheduledBeatsDeterministically([
+        ...(chronology.scheduled_beats ?? []),
+    ])
+    const errors: string[] = []
+    const resolved: AgendaBeatTickOffset[] = []
+    for (const beat of beats) {
+        const offset = computeAgendaBeatTickOffset(chronology, beat)
+        resolved.push(offset)
+        if (!offset.valid) {
+            errors.push(
+                '[AGENDA_IN_THE_PAST] Beat ' +
+                    offset.beat_id +
+                    ' scheduled before origin',
+            )
+        }
+    }
+    resolved.sort((a, b) => {
+        if (a.targetTick !== b.targetTick) return a.targetTick - b.targetTick
+        if (a.isoDate < b.isoDate) return -1
+        if (a.isoDate > b.isoDate) return 1
+        if (a.beat_id < b.beat_id) return -1
+        if (a.beat_id > b.beat_id) return 1
+        return 0
+    })
+    const overlaps: AgendaReserveOverlap[] = []
+    for (let i = 1; i < resolved.length; i++) {
+        const prev = resolved[i - 1]
+        const next = resolved[i]
+        if (prev.valid && next.valid) {
+            if (next.reserveStartTick <= prev.targetTick) {
+                overlaps.push(
+                    Object.freeze({
+                        prevBeatId: prev.beat_id,
+                        nextBeatId: next.beat_id,
+                        prevTargetTick: prev.targetTick,
+                        nextReserveStartTick: next.reserveStartTick,
+                    }),
+                )
+            }
+        }
+    }
+    return Object.freeze({
+        valid: errors.length === 0,
+        errors: Object.freeze([...errors]) as string[],
+        resolvedBeats: Object.freeze([...resolved]) as AgendaBeatTickOffset[],
+        overlaps: Object.freeze([...overlaps]) as AgendaReserveOverlap[],
+    })
 }
 
 function emitConsole(ste: State | undefined, line: string): void {

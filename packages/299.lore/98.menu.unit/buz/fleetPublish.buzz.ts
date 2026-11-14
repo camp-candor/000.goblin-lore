@@ -154,6 +154,54 @@ export function inspectPublishPacingBudgetParity(
     return Object.freeze({ ok: true, legacy: false, pacing, bounds })
 }
 
+export interface ChronoAgendaPublishParity {
+    readonly ok: boolean
+    readonly empty: boolean
+    readonly count: number
+    readonly firstIsoDate?: string
+    readonly firstStartTimeHm?: string
+    readonly firstBeatCategory?: string
+}
+
+export function inspectPublishChronoAgendaParity(
+    parsedBibleState: unknown,
+    ste?: State,
+): ChronoAgendaPublishParity {
+    const raw = (
+        parsedBibleState as { chronology?: { scheduled_beats?: unknown } }
+    )?.chronology?.scheduled_beats
+    const beats = Array.isArray(raw)
+        ? (raw as Array<{
+              isoDate?: unknown
+              startTimeHm?: unknown
+              beatCategory?: unknown
+          }>)
+        : []
+    if (beats.length === 0) {
+        emitConsole(
+            ste,
+            '>> [PUBLISH:AGENDA_EMPTY] No scheduled story appointments configured',
+        )
+        return Object.freeze({ ok: true, empty: true, count: 0 })
+    }
+    const first = beats[0]
+    const isoDate = String(first.isoDate ?? '')
+    const startTimeHm = String(first.startTimeHm ?? '')
+    const beatCategory = String(first.beatCategory ?? '')
+    emitConsole(
+        ste,
+        `>> [PUBLISH:AGENDA] count=${beats.length} first=${isoDate} ${startTimeHm} (${beatCategory})`,
+    )
+    return Object.freeze({
+        ok: true,
+        empty: false,
+        count: beats.length,
+        firstIsoDate: isoDate,
+        firstStartTimeHm: startTimeHm,
+        firstBeatCategory: beatCategory,
+    })
+}
+
 function atomicCopyFileSync(sourcePath: string, destinationPath: string): void {
     fs.mkdirSync(path.dirname(destinationPath), { recursive: true })
     const tmpPath = path.join(
@@ -266,6 +314,12 @@ export const publishSealedCanonToFleet = async (
             ste,
             `:: [PUBLISH:WARN] Missing chronology seal -- recompile recommended`,
         )
+    }
+
+    try {
+        inspectPublishChronoAgendaParity(parsedBibleState, ste)
+    } catch {
+        // ignore agenda telemetry faults
     }
 
     const readiness = inspectPublishAutoScriptReadiness(parsedBibleState)

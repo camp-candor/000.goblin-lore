@@ -4,4 +4,5 @@ export {
     evaluateGlobalSceneCooldown,
     computeDroughtPressureBoostBps,
     normalizePacingInput,
+    evaluateAgendaReserveBlock,
 } from './buz/cooldown.buzz.js'

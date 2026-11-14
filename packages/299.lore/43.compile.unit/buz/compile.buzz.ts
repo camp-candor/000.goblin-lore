@@ -12,7 +12,12 @@ import type {
     OfflineParityReport,
 } from '../fce/compile.bit'
 import type State from '../../99.core/state'
-import { resolveChronologyConfig } from '../../38.types.unit/fce/chronology.interface.js'
+import {
+    resolveChronologyConfig,
+    sortScheduledBeatsDeterministically,
+    type ChronologyConfig,
+    type ScheduledBeat,
+} from '../../38.types.unit/fce/chronology.interface.js'
 import {
     resolveAutoScriptConfig,
     resolvePacingBudgetConfig,
@@ -20,7 +25,10 @@ import {
 import { buildCharacterVoiceProfile } from '../../02.character.unit/buz/character.buzz.js'
 import { buildLocationStageProfile } from '../../01.location.unit/buz/location.buzz.js'
 import { buildEventDramaticPalette } from '../../11.events.unit/buz/events.buzz.js'
-import { parseCalendarStart } from '../../05.clock.unit/buz/clock.buzz.js'
+import {
+    parseCalendarStart,
+    validateChronoAgendaRegistry,
+} from '../../05.clock.unit/buz/clock.buzz.js'
 import * as ActCns from '../../act/console.action'
 import { validatePass2Pardons } from '../../03.laws.unit/laws.buzzer.js'
 import type { Rule, Authorizer } from '../../03.laws.unit/fce/rule.schema.js'
@@ -1526,7 +1534,8 @@ export const pass3Seal = (
         }
     }
     const chronology = resolveChronologyConfig(seriesConfig?.chronology)
-    const startSnapshot = parseCalendarStart(chronology)
+    const sealedChronology = resolveSealedAgendaChronology(catalog, chronology)
+    const startSnapshot = parseCalendarStart(sealedChronology)
     const parsedAutoScript = resolveAutoScriptConfig(
         seriesConfig?.auto_script ?? {},
     )
@@ -1587,7 +1596,7 @@ export const pass3Seal = (
         catalog_summary: summary,
         entity_hashes: entityHashes,
         entities: catalog,
-        chronology: { ...chronology, start_snapshot: startSnapshot },
+        chronology: { ...sealedChronology, start_snapshot: startSnapshot },
         auto_script_bundle: autoScriptBundle,
     }
 
@@ -1615,7 +1624,7 @@ export const pass3Seal = (
         catalog_summary: summary,
         entity_hashes: entityHashes,
         entities: catalog,
-        chronology: { ...chronology, start_snapshot: startSnapshot },
+        chronology: { ...sealedChronology, start_snapshot: startSnapshot },
         auto_script_bundle: autoScriptBundle,
     }
 
@@ -2284,4 +2293,67 @@ export const gate0Verify = (
     )
 
     return cpy
+}
+
+export function resolveSealedAgendaChronology(
+    catalog: Record<string, unknown>,
+    chronology: ChronologyConfig,
+): ChronologyConfig {
+    const scheduledBeats = sortScheduledBeatsDeterministically([
+        ...((chronology as { scheduled_beats?: ScheduledBeat[] })
+            .scheduled_beats ?? []),
+    ])
+    const validation = validateChronoAgendaRegistry({
+        ...(chronology as Record<string, unknown>),
+        scheduled_beats: scheduledBeats,
+    } as unknown as ChronologyConfig)
+    if (!validation.valid) {
+        throw new Error(
+            `[AGENDA_IN_THE_PAST] Scheduled beat precedes series origin: ${validation.errors.join('; ')}`,
+        )
+    }
+    const locationIds = new Set(
+        Object.keys(catalog).filter(
+            (id) =>
+                (catalog[id] as { entity_type?: string })?.entity_type ===
+                    'location' || id.startsWith('loc_'),
+        ),
+    )
+    const characterIds = new Set(
+        Object.keys(catalog).filter(
+            (id) =>
+                (catalog[id] as { entity_type?: string })?.entity_type ===
+                    'character' || id.startsWith('char_'),
+        ),
+    )
+    for (const beat of scheduledBeats) {
+        const loc = (beat as { locationId?: string }).locationId
+        if (typeof loc === 'string' && loc.length > 0) {
+            if (
+                !locationIds.has(loc) &&
+                !(catalog as Record<string, unknown>)[loc]
+            ) {
+                throw new Error(
+                    `[AGENDA_UNKNOWN_ENTITY_REF] Beat '${beat.beat_id}' references missing location '${loc}'.`,
+                )
+            }
+        }
+        const pids = (beat as { participantIds?: string[] }).participantIds
+        if (Array.isArray(pids)) {
+            for (const pid of pids) {
+                if (
+                    !characterIds.has(pid) &&
+                    !(catalog as Record<string, unknown>)[pid]
+                ) {
+                    throw new Error(
+                        `[AGENDA_UNKNOWN_ENTITY_REF] Beat '${beat.beat_id}' references missing character '${pid}'.`,
+                    )
+                }
+            }
+        }
+    }
+    return {
+        ...(chronology as Record<string, unknown>),
+        scheduled_beats: scheduledBeats,
+    } as unknown as ChronologyConfig
 }

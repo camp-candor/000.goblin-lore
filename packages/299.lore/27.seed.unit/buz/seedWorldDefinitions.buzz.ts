@@ -4,14 +4,19 @@ import * as crypto from 'node:crypto'
 import type { CreatedSeedDossier } from '../fce/seed.bit.js'
 import {
     resolveChronologyConfig,
+    sortScheduledBeatsDeterministically,
     DEFAULT_CHRONOLOGY_CONFIG,
+    type ScheduledBeat,
 } from '../../38.types.unit/fce/chronology.interface.js'
 import {
     resolveAutoScriptConfig,
     resolvePacingBudgetConfig,
     DEFAULT_AUTO_SCRIPT_CONFIG,
 } from '../../38.types.unit/fce/autoScriptRule.interface.js'
-import { parseCalendarStart } from '../../05.clock.unit/buz/clock.buzz.js'
+import {
+    parseCalendarStart,
+    computeAgendaBeatTickOffset,
+} from '../../05.clock.unit/buz/clock.buzz.js'
 
 /**
  * Asserts that a byte buffer opens with '---' at byte 0.
@@ -183,6 +188,18 @@ export function seedWorldDefinitions(
         // ignore
     }
 
+    try {
+        seedChronoAgendaDossier(
+            seriesDir,
+            seriesSlug,
+            { series_slug: seriesSlug },
+            DEFAULT_CHRONOLOGY_CONFIG,
+            [],
+        )
+    } catch {
+        // ignore
+    }
+
     return results
 }
 
@@ -326,6 +343,128 @@ export function seedDramaticCatalystsDossier(
         id: 'world_dramatic_catalysts',
         domain: 'world',
         relativePath: `series/${seriesSlug}/world/dramatic-catalysts.md`,
+        absolutePath: filePath,
+        byteZeroVerified: verifyByteZeroBuffer(buf),
+        contentSha256: crypto.createHash('sha256').update(buf).digest('hex'),
+    }
+}
+
+export interface AgendaDossierOffset {
+    beat_id: string
+    isoDate: string
+    startTimeHm: string
+    beatCategory: string
+    targetTick: number
+    reserveStartTick: number
+    reserveCooldownTicks: number
+    valid: boolean
+}
+
+export function buildChronoAgendaDossier(
+    seriesConfig: unknown,
+    chronology: unknown,
+    resolvedOffsets?: AgendaDossierOffset[],
+): string {
+    const cfg = resolveChronologyConfig(
+        (chronology as Record<string, unknown>) ??
+            (seriesConfig as Record<string, unknown>)?.chronology ??
+            {},
+    )
+    const slug = String(
+        (seriesConfig as Record<string, unknown>)?.series_slug ?? 'unknown',
+    ).replace(/[^\x00-\x7F]/g, '')
+    const offsets = Array.isArray(resolvedOffsets) ? [...resolvedOffsets] : []
+    offsets.sort((a, b) => {
+        if (a.targetTick !== b.targetTick) return a.targetTick - b.targetTick
+        if (a.isoDate < b.isoDate) return -1
+        if (a.isoDate > b.isoDate) return 1
+        if (a.beat_id < b.beat_id) return -1
+        if (a.beat_id > b.beat_id) return 1
+        return 0
+    })
+    const lines: string[] = [
+        '---',
+        'id: world_chrono_agenda',
+        'entity_type: world_chrono_agenda',
+        `series_slug: ${slug}`,
+        'calendar_system: GREGORIAN_24H',
+        `start_date: ${cfg.start_date}`,
+        `start_time: ${cfg.start_time}`,
+        `tick_seconds: ${cfg.tick_seconds}`,
+        `count: ${offsets.length}`,
+        'status: active',
+        '---',
+        '',
+        '# Chrono Agenda Schedule Dossier',
+        '',
+        `Series ${slug} opens at ${cfg.start_date} ${cfg.start_time} with ${offsets.length} scheduled story appointments.`,
+        '',
+    ]
+    if (offsets.length === 0) {
+        lines.push('No scheduled story appointments configured.')
+        lines.push('')
+    } else {
+        lines.push(
+            '| # | beat_id | date | time | category | T+tick | reserve window |',
+        )
+        lines.push(
+            '|---|---------|------|------|----------|--------|----------------|',
+        )
+        offsets.forEach((o, i) => {
+            const cat = String(o.beatCategory).replace(/[^\x00-\x7F]/g, '')
+            const bid = String(o.beat_id).replace(/[^\x00-\x7F]/g, '')
+            lines.push(
+                `| ${i + 1} | ${bid} | ${o.isoDate} | ${o.startTimeHm} | ${cat} | T+${o.targetTick} | RES:${o.reserveStartTick}..${o.targetTick} |`,
+            )
+        })
+        lines.push('')
+    }
+    const raw = lines.join('\n')
+    const ascii = raw.replace(/[^\x00-\x7F]/g, '')
+    return ascii.replace(/\r\n/g, '\n').replace(/\r/g, '')
+}
+
+export function seedChronoAgendaDossier(
+    seriesDir: string,
+    seriesSlug: string,
+    seriesConfig?: unknown,
+    chronology?: unknown,
+    resolvedOffsets?: AgendaDossierOffset[],
+): CreatedSeedDossier {
+    const worldDir = path.join(seriesDir, 'world')
+    if (!fs.existsSync(worldDir)) {
+        fs.mkdirSync(worldDir, { recursive: true })
+    }
+    let offsets = Array.isArray(resolvedOffsets) ? resolvedOffsets : undefined
+    if (!offsets) {
+        try {
+            const cfg = resolveChronologyConfig(
+                (chronology as Record<string, unknown>) ??
+                    (seriesConfig as Record<string, unknown>)?.chronology ??
+                    {},
+            )
+            const beats = sortScheduledBeatsDeterministically([
+                ...((cfg as { scheduled_beats?: ScheduledBeat[] })
+                    .scheduled_beats ?? []),
+            ])
+            offsets = beats.map((b) => computeAgendaBeatTickOffset(cfg, b))
+        } catch {
+            offsets = []
+        }
+    }
+    const content = buildChronoAgendaDossier(
+        seriesConfig ?? { series_slug: seriesSlug },
+        chronology ?? {},
+        offsets,
+    )
+    const filePath = path.join(worldDir, 'chrono-agenda.md')
+    const normalized = content.replace(/\r\n/g, '\n').replace(/\r/g, '')
+    fs.writeFileSync(filePath, normalized, { encoding: 'utf8' })
+    const buf = fs.readFileSync(filePath)
+    return {
+        id: 'world_chrono_agenda',
+        domain: 'world',
+        relativePath: `series/${seriesSlug}/world/chrono-agenda.md`,
         absolutePath: filePath,
         byteZeroVerified: verifyByteZeroBuffer(buf),
         contentSha256: crypto.createHash('sha256').update(buf).digest('hex'),

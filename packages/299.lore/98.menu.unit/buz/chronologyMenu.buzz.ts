@@ -7,13 +7,18 @@ import { resolveRepoRoot } from '../../29.series.unit/buz/scaffoldSeriesTree.buz
 import {
     resolveChronologyConfig,
     DEFAULT_CHRONOLOGY_CONFIG,
+    ScheduledBeatSchema,
+    sortScheduledBeatsDeterministically,
+    type ScheduledBeat,
 } from '../../38.types.unit/fce/chronology.interface.js'
 import {
     parseCalendarStart,
     advanceGregorianClock,
+    validateChronoAgendaRegistry,
 } from '../../05.clock.unit/buz/clock.buzz.js'
 import {
     buildChronologyWorldDossier,
+    buildChronoAgendaDossier,
     verifyByteZeroBuffer,
 } from '../../27.seed.unit/buz/seedWorldDefinitions.buzz.js'
 
@@ -64,6 +69,425 @@ export function previewChronologyHorizon(cfg: any, ticks: number = 5): any[] {
         current = advanceGregorianClock(current, resolved.tick_seconds)
     }
     return out
+}
+
+export const AGENDA_MENU_CHOICE = '[6] SCHEDULED STORY APPOINTMENTS (AGENDA)'
+
+export const AGENDA_SUBMENU_CHOICES: readonly string[] = Object.freeze([
+    '[1] LIST SCHEDULED APPOINTMENTS',
+    '[2] ADD SCHEDULED STORY BEAT',
+    '[3] REMOVE SCHEDULED BEAT BY ID',
+    '[4] PREVIEW RESERVE COUNTDOWN TIMELINE',
+    '[<] BACK TO CHRONOLOGY MENU',
+])
+
+const AGENDA_CATEGORY_CHOICES: readonly string[] = Object.freeze([
+    'PARANOIA_TRIGGERED',
+    'GRIEVANCE_BREACH',
+    'SOMATIC_TRAUMA',
+    'INVENTORY_TRANSFER',
+    'EPISTEMIC_REVEAL',
+    'CHRONO_MILESTONE',
+])
+
+function sanitizeAgendaAscii(raw: string): string {
+    return String(raw || '')
+        .replace(/[^\x20-\x7E]/g, '')
+        .trim()
+}
+
+function refreshAgendaDossier(
+    seriesDir: string,
+    slug: string,
+    chronology: Record<string, unknown>,
+    offsets: Array<{
+        beat_id: string
+        isoDate: string
+        startTimeHm: string
+        beatCategory: string
+        targetTick: number
+        reserveStartTick: number
+        reserveCooldownTicks: number
+        valid: boolean
+    }>,
+): void {
+    const worldDir = path.join(seriesDir, 'world')
+    if (!fs.existsSync(worldDir)) {
+        fs.mkdirSync(worldDir, { recursive: true })
+    }
+    const content = buildChronoAgendaDossier(
+        { series_slug: slug },
+        chronology,
+        offsets,
+    ).replace(/\r/g, '')
+    const filePath = path.join(worldDir, 'chrono-agenda.md')
+    fs.writeFileSync(filePath, content, { encoding: 'utf8' })
+    const buf = fs.readFileSync(filePath)
+    if (!verifyByteZeroBuffer(buf)) {
+        throw new Error(
+            `[BYTE_ZERO_BREACH] chrono-agenda.md failed Byte-0 verification at ${filePath}`,
+        )
+    }
+}
+
+function readSeriesConfig(seriesDir: string): Record<string, unknown> {
+    const configPath = path.join(seriesDir, 'series.config.json')
+    if (!fs.existsSync(configPath)) {
+        return {}
+    }
+    return JSON.parse(fs.readFileSync(configPath, 'utf8')) as Record<
+        string,
+        unknown
+    >
+}
+
+function writeSeriesConfig(
+    seriesDir: string,
+    existing: Record<string, unknown>,
+): void {
+    const configPath = path.join(seriesDir, 'series.config.json')
+    fs.writeFileSync(configPath, JSON.stringify(existing, null, 2) + '\n', {
+        encoding: 'utf8',
+    })
+}
+
+export function upsertScheduledAgendaBeat(
+    seriesDir: string,
+    beat: unknown,
+): ScheduledBeat[] {
+    const parsed = ScheduledBeatSchema.parse(beat)
+    const existing = readSeriesConfig(seriesDir)
+    const baseChronology = (
+        typeof (existing as { chronology?: unknown }).chronology === 'object' &&
+        (existing as { chronology?: unknown }).chronology !== null
+            ? (existing as { chronology?: Record<string, unknown> }).chronology
+            : {}
+    ) as Record<string, unknown>
+    const currentBeats = Array.isArray(
+        (baseChronology as { scheduled_beats?: unknown }).scheduled_beats,
+    )
+        ? [
+              ...((baseChronology as { scheduled_beats?: ScheduledBeat[] })
+                  .scheduled_beats as ScheduledBeat[]),
+          ]
+        : []
+    const nextBeats = sortScheduledBeatsDeterministically([
+        ...currentBeats.filter(
+            (b) => (b as ScheduledBeat)?.beat_id !== parsed.beat_id,
+        ),
+        parsed,
+    ])
+    const candidate = resolveChronologyConfig({
+        ...(baseChronology as Record<string, unknown>),
+        scheduled_beats: nextBeats,
+    })
+    const validation = validateChronoAgendaRegistry(candidate)
+    if (!validation.valid) {
+        throw new Error(`[AGENDA_IN_THE_PAST] ${validation.errors.join('; ')}`)
+    }
+    ;(existing as Record<string, unknown>).chronology = candidate
+    if (!(existing as Record<string, unknown>).series_slug) {
+        ;(existing as Record<string, unknown>).series_slug =
+            path.basename(seriesDir)
+    }
+    writeSeriesConfig(seriesDir, existing)
+    refreshAgendaDossier(
+        seriesDir,
+        String(
+            (existing as Record<string, unknown>).series_slug ||
+                path.basename(seriesDir),
+        ),
+        candidate as unknown as Record<string, unknown>,
+        validation.resolvedBeats,
+    )
+    return nextBeats
+}
+
+export function removeScheduledAgendaBeat(
+    seriesDir: string,
+    beatId: string,
+): ScheduledBeat[] {
+    const id = String(beatId || '').trim()
+    if (id.length === 0) {
+        throw new Error('[AGENDA_BEAT_NOT_FOUND] beatId cannot be empty.')
+    }
+    const existing = readSeriesConfig(seriesDir)
+    const baseChronology = (
+        typeof (existing as { chronology?: unknown }).chronology === 'object' &&
+        (existing as { chronology?: unknown }).chronology !== null
+            ? (existing as { chronology?: Record<string, unknown> }).chronology
+            : {}
+    ) as Record<string, unknown>
+    const currentBeats = Array.isArray(
+        (baseChronology as { scheduled_beats?: unknown }).scheduled_beats,
+    )
+        ? [
+              ...((baseChronology as { scheduled_beats?: ScheduledBeat[] })
+                  .scheduled_beats as ScheduledBeat[]),
+          ]
+        : []
+    const filtered = currentBeats.filter(
+        (b) => (b as ScheduledBeat)?.beat_id !== id,
+    )
+    if (filtered.length === currentBeats.length) {
+        throw new Error(
+            `[AGENDA_BEAT_NOT_FOUND] No scheduled beat with beat_id: ${id}`,
+        )
+    }
+    const nextBeats = sortScheduledBeatsDeterministically(filtered)
+    const candidate = resolveChronologyConfig({
+        ...(baseChronology as Record<string, unknown>),
+        scheduled_beats: nextBeats,
+    })
+    const validation = validateChronoAgendaRegistry(candidate)
+    if (!validation.valid) {
+        throw new Error(`[AGENDA_IN_THE_PAST] ${validation.errors.join('; ')}`)
+    }
+    ;(existing as Record<string, unknown>).chronology = candidate
+    if (!(existing as Record<string, unknown>).series_slug) {
+        ;(existing as Record<string, unknown>).series_slug =
+            path.basename(seriesDir)
+    }
+    writeSeriesConfig(seriesDir, existing)
+    refreshAgendaDossier(
+        seriesDir,
+        String(
+            (existing as Record<string, unknown>).series_slug ||
+                path.basename(seriesDir),
+        ),
+        candidate as unknown as Record<string, unknown>,
+        validation.resolvedBeats,
+    )
+    return nextBeats
+}
+
+export function previewChronoAgendaTimeline(
+    chronology: unknown,
+    ste?: State,
+): string[] {
+    const cfg = resolveChronologyConfig(
+        ((chronology as Record<string, unknown>) ?? {}) as never,
+    )
+    const beats = sortScheduledBeatsDeterministically([
+        ...(((cfg as unknown as { scheduled_beats?: ScheduledBeat[] })
+            .scheduled_beats ?? []) as ScheduledBeat[]),
+    ])
+    const lines: string[] = []
+    if (beats.length === 0) {
+        const empty =
+            '>> [AGENDA:EMPTY] No scheduled story appointments configured'
+        lines.push(empty)
+        emitConsole(ste, empty)
+        return lines
+    }
+    const validation = validateChronoAgendaRegistry(cfg)
+    const offsetById = new Map(
+        validation.resolvedBeats.map((o) => [o.beat_id, o]),
+    )
+    beats.forEach((b, i) => {
+        const o = offsetById.get(b.beat_id)
+        const tickLabel =
+            o && o.valid
+                ? `T+${o.targetTick} (RES:${o.reserveStartTick}..${o.targetTick})`
+                : 'T+PAST (RES:0..0)'
+        const line = sanitizeAgendaAscii(
+            `>> [AGENDA:BEAT] #${i + 1} | ${b.isoDate} ${b.startTimeHm} | ${tickLabel} | ${String(b.beatCategory)} | ${b.title}`,
+        )
+        lines.push(line)
+        emitConsole(ste, line)
+    })
+    for (const ov of validation.overlaps) {
+        const warn = sanitizeAgendaAscii(
+            `:: [AGENDA:OVERLAP] ${ov.prevBeatId} T+${ov.prevTargetTick} overlaps ${ov.nextBeatId} RES:${ov.nextReserveStartTick}`,
+        )
+        lines.push(warn)
+        emitConsole(ste, warn)
+    }
+    for (const err of validation.errors) {
+        const past = sanitizeAgendaAscii(`:: [AGENDA:PAST] ${err}`)
+        lines.push(past)
+        emitConsole(ste, past)
+    }
+    return lines
+}
+
+async function promptAgendaInput(
+    lib: any,
+    net: any,
+    txt: string,
+    initialValue: string,
+): Promise<string | null> {
+    const inputRes = await lib.hunt('[Open action] Open Input', {
+        txt,
+        src: initialValue,
+        dat: { clr0: 0, clr1: 3 },
+        net,
+    })
+    const rawStr = String(
+        inputRes?.putBit?.src ?? inputRes?.inpBit?.src ?? '',
+    ).trim()
+    if (inputRes?.putBit?.val === -1 || rawStr.length === 0) {
+        return null
+    }
+    return rawStr
+}
+
+export async function runChronoAgendaSubmenu(
+    seriesDir: string,
+    chronology: unknown,
+    lib: any,
+    net: any,
+    ste?: State,
+): Promise<void> {
+    let activeChrono = chronology
+    while (true) {
+        try {
+            const current = readSeriesConfig(seriesDir)
+            if (
+                current &&
+                typeof current === 'object' &&
+                (current as { chronology?: unknown }).chronology
+            ) {
+                activeChrono = (current as { chronology?: unknown }).chronology
+            }
+        } catch {
+            // Keep provided chronology if series.config.json is absent in headless tests
+        }
+        previewChronoAgendaTimeline(activeChrono, ste)
+        let choiceRes: any = null
+        try {
+            choiceRes = await lib.hunt('[Open action] Open Choice', {
+                dat: { clr0: 0, clr1: 3 },
+                src: 'VERTICAL',
+                lst: [...AGENDA_SUBMENU_CHOICES],
+                net,
+            })
+        } catch (err: any) {
+            emitConsole(ste, `:: [AGENDA:ERR] ${err?.message || String(err)}`)
+            return
+        }
+        const picked = String(choiceRes?.chcBit?.src || '')
+        if (!picked || picked === AGENDA_SUBMENU_CHOICES[4]) {
+            return
+        }
+        try {
+            if (picked === AGENDA_SUBMENU_CHOICES[0]) {
+                const current = readSeriesConfig(seriesDir)
+                previewChronoAgendaTimeline(
+                    (current as { chronology?: unknown }).chronology ??
+                        activeChrono,
+                    ste,
+                )
+            } else if (picked === AGENDA_SUBMENU_CHOICES[1]) {
+                const beatId = await promptAgendaInput(
+                    lib,
+                    net,
+                    'BEAT_ID (a-z0-9_):',
+                    'curfew_one',
+                )
+                if (beatId === null) {
+                    emitConsole(ste, ':: [AGENDA:CANCEL] Add beat cancelled.')
+                    continue
+                }
+                const title =
+                    (await promptAgendaInput(
+                        lib,
+                        net,
+                        'TITLE:',
+                        'Midnight Curfew',
+                    )) ?? 'Scheduled Beat'
+                const isoDate = await promptAgendaInput(
+                    lib,
+                    net,
+                    'ISO DATE (YYYY-MM-DD):',
+                    String(
+                        (activeChrono as { start_date?: string })?.start_date ||
+                            '2026-10-31',
+                    ),
+                )
+                if (isoDate === null) {
+                    emitConsole(ste, ':: [AGENDA:CANCEL] Add beat cancelled.')
+                    continue
+                }
+                const startTimeHm = await promptAgendaInput(
+                    lib,
+                    net,
+                    'START TIME (HH:MM):',
+                    '23:30',
+                )
+                if (startTimeHm === null) {
+                    emitConsole(ste, ':: [AGENDA:CANCEL] Add beat cancelled.')
+                    continue
+                }
+                const catRes = await lib.hunt('[Open action] Open Choice', {
+                    dat: { clr0: 0, clr1: 3 },
+                    src: 'VERTICAL',
+                    lst: [...AGENDA_CATEGORY_CHOICES],
+                    net,
+                })
+                const beatCategory = String(
+                    catRes?.chcBit?.src || 'GRIEVANCE_BREACH',
+                )
+                const reserveRaw =
+                    (await promptAgendaInput(
+                        lib,
+                        net,
+                        'RESERVE COOLDOWN TICKS (0-1000):',
+                        '2',
+                    )) ?? '2'
+                const saved = upsertScheduledAgendaBeat(seriesDir, {
+                    beat_id: beatId,
+                    title,
+                    isoDate,
+                    startTimeHm,
+                    beatCategory,
+                    reserveCooldownTicks: Number(reserveRaw),
+                })
+                const added = saved.find((b) => b.beat_id === beatId)
+                emitConsole(
+                    ste,
+                    sanitizeAgendaAscii(
+                        `>> [AGENDA:SAVED] ${beatId} ${isoDate} ${startTimeHm} (${beatCategory}) count=${saved.length} reserve=${added?.reserveCooldownTicks ?? 2}`,
+                    ),
+                )
+            } else if (picked === AGENDA_SUBMENU_CHOICES[2]) {
+                const beatId = await promptAgendaInput(
+                    lib,
+                    net,
+                    'BEAT_ID TO REMOVE:',
+                    '',
+                )
+                if (beatId === null) {
+                    emitConsole(
+                        ste,
+                        ':: [AGENDA:CANCEL] Remove beat cancelled.',
+                    )
+                    continue
+                }
+                const remaining = removeScheduledAgendaBeat(seriesDir, beatId)
+                emitConsole(
+                    ste,
+                    sanitizeAgendaAscii(
+                        `>> [AGENDA:REMOVED] ${beatId} remaining=${remaining.length}`,
+                    ),
+                )
+            } else if (picked === AGENDA_SUBMENU_CHOICES[3]) {
+                const current = readSeriesConfig(seriesDir)
+                previewChronoAgendaTimeline(
+                    (current as { chronology?: unknown }).chronology ??
+                        activeChrono,
+                    ste,
+                )
+            }
+        } catch (err: any) {
+            emitConsole(
+                ste,
+                sanitizeAgendaAscii(
+                    `:: [AGENDA:ERR] ${err?.message || String(err)}`,
+                ),
+            )
+        }
+    }
 }
 
 function emitConsole(ste: State | undefined, line: string): void {
@@ -151,6 +575,108 @@ export const runChronologyMenu = async (
         return cpy
     }
 
+    // Headless Chrono Agenda management (non-blocking, no Blessed I/O)
+    if (
+        (dat as any).action === 'MANAGE_CHRONO_AGENDA' ||
+        (dat as any).agendaBeat ||
+        (dat as any).removeBeatId ||
+        (dat as any).previewAgenda
+    ) {
+        try {
+            if ((dat as any).agendaBeat && (dat as any).seriesDir) {
+                const beats = upsertScheduledAgendaBeat(
+                    (dat as any).seriesDir,
+                    (dat as any).agendaBeat,
+                )
+                emitConsole(
+                    ste,
+                    '>> [AGENDA:SAVED] count=' +
+                        beats.length +
+                        ' series=' +
+                        path.basename((dat as any).seriesDir),
+                )
+                if (bal?.slv) {
+                    bal.slv({
+                        mnuBit: {
+                            idx: bal.idx || 'chronology-menu',
+                            val: 1,
+                            dat: { beats },
+                        },
+                    })
+                }
+                return cpy
+            }
+            if ((dat as any).removeBeatId && (dat as any).seriesDir) {
+                const beats = removeScheduledAgendaBeat(
+                    (dat as any).seriesDir,
+                    (dat as any).removeBeatId,
+                )
+                emitConsole(
+                    ste,
+                    '>> [AGENDA:REMOVED] ' +
+                        (dat as any).removeBeatId +
+                        ' remaining=' +
+                        beats.length,
+                )
+                if (bal?.slv) {
+                    bal.slv({
+                        mnuBit: {
+                            idx: bal.idx || 'chronology-menu',
+                            val: 1,
+                            dat: { beats },
+                        },
+                    })
+                }
+                return cpy
+            }
+            if ((dat as any).previewAgenda) {
+                let previewChronology = (dat as any).chronology
+                if (!previewChronology && (dat as any).seriesDir) {
+                    try {
+                        const cfg = JSON.parse(
+                            fs.readFileSync(
+                                path.join(
+                                    (dat as any).seriesDir,
+                                    'series.config.json',
+                                ),
+                                'utf8',
+                            ),
+                        )
+                        previewChronology = cfg?.chronology
+                    } catch {
+                        previewChronology = DEFAULT_CHRONOLOGY_CONFIG
+                    }
+                }
+                const lines = previewChronoAgendaTimeline(
+                    previewChronology,
+                    ste,
+                )
+                if (bal?.slv) {
+                    bal.slv({
+                        mnuBit: {
+                            idx: bal.idx || 'chronology-menu',
+                            val: 1,
+                            dat: { preview: lines },
+                        },
+                    })
+                }
+                return cpy
+            }
+        } catch (err: any) {
+            emitConsole(ste, ':: [AGENDA:ERR] ' + (err?.message || String(err)))
+            if (bal?.slv) {
+                bal.slv({
+                    mnuBit: {
+                        idx: bal.idx || 'chronology-menu',
+                        val: -1,
+                        dat: { error: err?.message || String(err) },
+                    },
+                })
+            }
+            return cpy
+        }
+    }
+
     // Inspect active series
     const repoRoot = dat.repoRoot || resolveRepoRoot()
     const seriesSlug =
@@ -178,6 +704,7 @@ export const runChronologyMenu = async (
         '[3] SET START TIME (HH:MM:SS)',
         '[4] SET TICK CADENCE (SECONDS)',
         '[5] PREVIEW +5 TICK HORIZON',
+        AGENDA_MENU_CHOICE,
         '[<] RETURN TO LORE MENU',
     ]
 
@@ -190,10 +717,28 @@ export const runChronologyMenu = async (
                 ySpan: 8,
             })
             const net = grid?.grdBit?.dat
-            await lib.hunt('[Open action] Open Choice', {
+            const choiceRes = await lib.hunt('[Open action] Open Choice', {
                 lst: choices,
                 net,
             })
+            const pickedAgenda = String((choiceRes as any)?.chcBit?.src || '')
+            if (pickedAgenda === AGENDA_MENU_CHOICE) {
+                await runChronoAgendaSubmenu(
+                    seriesDir,
+                    chronology,
+                    lib,
+                    net,
+                    ste,
+                )
+                try {
+                    const refreshed = JSON.parse(
+                        fs.readFileSync(configPath, 'utf8'),
+                    )
+                    chronology = resolveChronologyConfig(refreshed?.chronology)
+                } catch {
+                    // keep in-memory chronology on refresh failure
+                }
+            }
         } catch {}
     }
 

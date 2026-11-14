@@ -132,3 +132,65 @@ export function computeDroughtPressureBoostBps(
     const raw = excessTicks * pacing.drought_boost_bps_per_tick
     return Math.min(pacing.max_drought_boost_bps, raw)
 }
+
+export interface AgendaReserveHold {
+    readonly heldByReserve: boolean
+    readonly beatId?: string
+    readonly beatCategory?: string
+    readonly ticksUntilBeat: number
+}
+
+export function evaluateAgendaReserveBlock(
+    currentTick: number,
+    resolvedBeatsOrTicks: unknown,
+    maybeOffsets?: unknown,
+): AgendaReserveHold {
+    let list: Array<{
+        beat_id?: string
+        beatId?: string
+        beatCategory?: string
+        targetTick: number
+        reserveStartTick: number
+    }> = []
+    if (
+        typeof resolvedBeatsOrTicks === 'number' &&
+        Array.isArray(maybeOffsets)
+    ) {
+        list = maybeOffsets as typeof list
+    } else if (Array.isArray(resolvedBeatsOrTicks)) {
+        list = resolvedBeatsOrTicks as typeof list
+    }
+    const tick = Math.trunc(Number(currentTick))
+    let best:
+        | {
+              beat_id?: string
+              beatId?: string
+              beatCategory?: string
+              targetTick: number
+              reserveStartTick: number
+          }
+        | undefined = undefined
+    for (const entry of list) {
+        if (!entry || typeof entry.targetTick !== 'number') continue
+        const start = Math.trunc(entry.reserveStartTick)
+        const target = Math.trunc(entry.targetTick)
+        if (tick >= start && tick < target) {
+            if (!best || target - tick < best.targetTick - tick) {
+                best = entry
+            }
+        }
+    }
+    if (!best) {
+        return Object.freeze({
+            heldByReserve: false,
+            ticksUntilBeat: 0,
+        }) as AgendaReserveHold
+    }
+    const id = String(best.beat_id ?? best.beatId ?? '')
+    return Object.freeze({
+        heldByReserve: true,
+        beatId: id,
+        beatCategory: best.beatCategory ? String(best.beatCategory) : undefined,
+        ticksUntilBeat: Math.max(0, Math.trunc(best.targetTick) - tick),
+    }) as AgendaReserveHold
+}

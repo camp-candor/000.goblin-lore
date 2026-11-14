@@ -11,4 +11,7 @@ export {
     formatSmpteTimecode,
     advanceGregorianClock,
     formatClockTimecode,
+    computeGregorianEpochSeconds,
+    computeAgendaBeatTickOffset,
+    validateChronoAgendaRegistry,
 } from './buz/clock.buzz.js'

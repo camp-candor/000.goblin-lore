@@ -82,6 +82,12 @@ export class OpenChronologyMenu implements Action {
     constructor(public bale: MenuBit) {}
 }
 
+export const MANAGE_CHRONO_AGENDA = '[Menu action] Manage Chrono Agenda'
+export class ManageChronoAgenda implements Action {
+    readonly type = MANAGE_CHRONO_AGENDA
+    constructor(public bale: MenuBit) {}
+}
+
 export const OPEN_AUTO_SCRIPT_MENU = '[Menu action] Open Auto-Script Menu'
 export class OpenAutoScriptMenu implements Action {
     readonly type = OPEN_AUTO_SCRIPT_MENU
@@ -108,5 +114,6 @@ export type Actions =
     | ExportTopologyManifest
     | SelectDomainEntityType
     | OpenChronologyMenu
+    | ManageChronoAgenda
     | OpenAutoScriptMenu
     | ConfigurePacingBudget

@@ -14,6 +14,17 @@ import {
     resolvePacingBudgetConfig,
 } from '../../38.types.unit/fce/autoScriptRule.interface.js'
 export { resolveSeriesChronology } from '../../38.types.unit/fce/chronology.interface.js'
+export {
+    ScheduledBeatSchema,
+    ChronoAgendaRegistrySchema,
+    sortScheduledBeatsDeterministically,
+    isValidGregorianIsoDate,
+} from '../../38.types.unit/fce/chronology.interface.js'
+export type {
+    ScheduledBeat,
+    ChronoAgendaRegistry,
+    ChronologyConfig,
+} from '../../38.types.unit/fce/chronology.interface.js'
 export { resolveAutoScriptConfig } from '../../38.types.unit/fce/autoScriptRule.interface.js'
 export {
     PacingBudgetConfigSchema,
