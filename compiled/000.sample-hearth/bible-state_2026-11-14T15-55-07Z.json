@@ -141,28 +141,28 @@
             }
         },
         "location_stage_profiles": {
-            "loc_dixie_starlight_diner": {
-                "ambientActionCue": "Still air hangs over dixiestarlight diner booth seven; Damp mortar, low pipe knock, faint tallow smoke.",
+            "loc_cellar": {
+                "ambientActionCue": "Still air hangs over the damp root cellar; Damp mortar, low pipe knock, faint tallow smoke.",
                 "intExt": "INT.",
-                "locationId": "loc_dixie_starlight_diner",
-                "sluglineBase": "INT. DIXIESTARLIGHT DINER BOOTH SEVEN - NIGHT",
+                "locationId": "loc_cellar",
+                "sluglineBase": "INT. THE DAMP ROOT CELLAR - NIGHT",
                 "transitionOut": "CUT TO:"
             },
-            "loc_dixie_starlight_lot": {
-                "ambientActionCue": "Still air hangs over dixiestarlight truck stop asphalt lot; Damp mortar, low pipe knock, faint tallow smoke.",
+            "loc_hearth": {
+                "ambientActionCue": "Still air hangs over the sunken hearth; Damp mortar, low pipe knock, faint tallow smoke.",
                 "intExt": "INT.",
-                "locationId": "loc_dixie_starlight_lot",
-                "sluglineBase": "INT. DIXIESTARLIGHT TRUCK STOP ASPHALT LOT - NIGHT",
+                "locationId": "loc_hearth",
+                "sluglineBase": "INT. THE SUNKEN HEARTH - NIGHT",
                 "transitionOut": "CUT TO:"
             }
         },
         "schema_version": "1.0.0",
         "voice_lexicon": {
-            "char_johnny_walkman": {
-                "cue": "JOHNNY",
+            "char_gristle": {
+                "cue": "GRISTLE",
                 "curtnessMaxWords": 12,
                 "defaultParenthetical": "(measured, practical tone)",
-                "entityId": "char_johnny_walkman",
+                "entityId": "char_gristle",
                 "linesByCategory": {
                     "CHRONO_MILESTONE": [
                         "Bell marks the hour. Take your post."
@@ -186,39 +186,11 @@
                     "SOMATIC_TRAUMA": ["(strained, favoring the left arm)"]
                 }
             },
-            "char_miss_beverly": {
-                "cue": "MISS",
+            "char_snag": {
+                "cue": "SNAG",
                 "curtnessMaxWords": 12,
                 "defaultParenthetical": "(measured, practical tone)",
-                "entityId": "char_miss_beverly",
-                "linesByCategory": {
-                    "CHRONO_MILESTONE": [
-                        "Bell marks the hour. Take your post."
-                    ],
-                    "EPISTEMIC_REVEAL": ["The seal was broken at dawn. Look."],
-                    "GRIEVANCE_BREACH": [
-                        "You owe for the winter tally. Pay it."
-                    ],
-                    "INVENTORY_TRANSFER": ["Count the brass. Sign the ledger."],
-                    "PARANOIA_TRIGGERED": [
-                        "Valve is stuck. Keep eyes on the stair."
-                    ],
-                    "SOMATIC_TRAUMA": ["Arm is gone numb. Hand me the bar."]
-                },
-                "parentheticalsByCategory": {
-                    "CHRONO_MILESTONE": ["(even, marking the hour)"],
-                    "EPISTEMIC_REVEAL": ["(quiet, lowering the lamp)"],
-                    "GRIEVANCE_BREACH": ["(flat, holding the old debt)"],
-                    "INVENTORY_TRANSFER": ["(careful, counting the brass)"],
-                    "PARANOIA_TRIGGERED": ["(steady, watching the ledger)"],
-                    "SOMATIC_TRAUMA": ["(strained, favoring the left arm)"]
-                }
-            },
-            "char_orbie_mayhaw": {
-                "cue": "DR",
-                "curtnessMaxWords": 12,
-                "defaultParenthetical": "(measured, practical tone)",
-                "entityId": "char_orbie_mayhaw",
+                "entityId": "char_snag",
                 "linesByCategory": {
                     "CHRONO_MILESTONE": [
                         "Bell marks the hour. Take your post."
@@ -245,17 +217,17 @@
         }
     },
     "catalog_summary": {
-        "characterCount": 3,
-        "characters": 3,
+        "characterCount": 2,
+        "characters": 2,
         "grievanceCount": 1,
         "grievances": 1,
-        "items": 3,
+        "items": 1,
         "locationCount": 2,
         "locations": 2,
         "mysteries": 0,
         "mysteryCount": 0,
-        "possessionCount": 3,
-        "totalEntities": 9
+        "possessionCount": 1,
+        "totalEntities": 6
     },
     "chronology": {
         "calendar_system": "GREGORIAN_24H",
@@ -287,136 +259,92 @@
         "tick_seconds": 60,
         "timezone_label": "UTC+00:00"
     },
-    "compiled_at": "2026-11-14T15:52:35.842Z",
-    "compiler_duration_ms": 2,
+    "compiled_at": "2026-11-14T15:55:07.070Z",
+    "compiler_duration_ms": 47,
     "entities": {
-        "char_johnny_walkman": {
+        "char_gristle": {
             "available_arms": 2,
             "available_legs": 2,
-            "banned_kinetic_verbs": ["sit_still", "freeze_posture"],
-            "baseline_actions": ["sway", "broadcast", "adjust_boom_mic"],
+            "banned_kinetic_verbs": ["sprint"],
+            "baseline_actions": ["stir", "guard"],
             "entity_type": "character",
-            "held_items": ["item_walkman_headset"],
-            "id": "char_johnny_walkman",
-            "locomotion_tier": "BIPEDAL_STANDARD",
-            "paranoia": 2800,
-            "prose_body": "Johnny Walkman stands six-foot-four in a faded hibiscus shirt, swaying from heel\nto toe while speaking into the foam-tipped boom microphone wired to his belt\ncassette deck.",
-            "somatic_strain": 1500,
-            "title": "Johnny Walkman",
-            "trust": 4500,
-            "voice_callbacks": ["folks across the basin", "dead reckoning"]
+            "held_items": [],
+            "id": "char_gristle",
+            "locomotion_tier": "BIPEDAL_HUNCHED",
+            "paranoia": 3200,
+            "prose_body": "Gristle tapped the brass skimmer against the rim of the iron kettle.",
+            "somatic_strain": 1800,
+            "title": "Gristle the Kettle-Keeper",
+            "trust": 3500,
+            "voice_callbacks": ["rust take your boots"]
         },
-        "char_miss_beverly": {
-            "available_arms": 2,
-            "available_legs": 1,
-            "banned_kinetic_verbs": [
-                "sprint",
-                "leap",
-                "jump",
-                "climb",
-                "vault",
-                "dash"
-            ],
-            "baseline_actions": ["pour_coffee", "drop_menus", "limp"],
-            "entity_type": "character",
-            "held_items": ["item_glass_carafe"],
-            "id": "char_miss_beverly",
-            "locomotion_tier": "BIPEDAL_LIMPING",
-            "paranoia": 1800,
-            "prose_body": "Miss Beverly navigates the waxed linoleum aisle of the Dixie-Starlight Diner,\nfavoring her swollen right ankle while carrying a fresh pot of decaf and lemon\nwedges.",
-            "somatic_strain": 5200,
-            "title": "Miss Beverly",
-            "trust": 5000,
-            "voice_callbacks": ["hot water and lemon", "check on booth seven"]
-        },
-        "char_orbie_mayhaw": {
+        "char_snag": {
             "available_arms": 2,
             "available_legs": 2,
-            "banned_kinetic_verbs": ["nod", "head_tilt", "slouch"],
-            "baseline_actions": ["inspect", "sanitize_frame", "rotate_torso"],
+            "banned_kinetic_verbs": ["vault"],
+            "baseline_actions": ["crouch", "listen"],
             "entity_type": "character",
-            "held_items": ["item_brass_loupe"],
-            "id": "char_orbie_mayhaw",
-            "locomotion_tier": "BIPEDAL_RIGID",
-            "paranoia": 3600,
-            "prose_body": "Dr. Orbie Mayhaw sits upright in a pressed beige linen optometrist coat and\nwhite cotton gloves, rotating her upper torso as a single rigid block whenever\nshe addresses the booth.",
+            "held_items": ["item_rusty_ladle"],
+            "id": "char_snag",
+            "locomotion_tier": "BIPEDAL_NIMBLE",
+            "paranoia": 2500,
+            "prose_body": "Snag crouched beside the iron grate and listened to the draft inside the flue.",
             "somatic_strain": 1200,
-            "title": "Dr. Orbie Mayhaw",
-            "trust": 3000,
-            "voice_callbacks": ["progressive lenses", "optical parallax"]
+            "title": "Snag the Cinder-Watcher",
+            "trust": 4000,
+            "voice_callbacks": ["by the damp soot"]
         },
-        "grv_parallax_alignment": {
+        "grv_stolen_broth": {
             "entity_type": "grievance",
-            "escalation_ceiling_bp": 8000,
-            "id": "grv_parallax_alignment",
-            "intensity_bp": 3200,
+            "escalation_ceiling_bp": 7500,
+            "id": "grv_stolen_broth",
+            "intensity_bp": 2500,
             "max_intensity": 4,
             "min_intensity": 1,
-            "participants": ["char_johnny_walkman", "char_orbie_mayhaw"],
-            "prose_body": "Dr. Orbie Mayhaw insists that Johnny Walkman nocturnal radio monologue distorts\nthe true optical geometry of the Wiregrass highway corridor.",
+            "participants": ["char_snag", "char_gristle"],
+            "prose_body": "Gristle accuses Snag of skimming the marrow fat from the kettle before dawn.",
             "spawns_on_max_escalation": [],
-            "title": "Dispute Over Uncalibrated Horizon Sightlines"
+            "title": "Dispute Over Midnight Broth Skimming"
         },
-        "item_brass_loupe": {
+        "item_rusty_ladle": {
             "entity_type": "item",
-            "id": "item_brass_loupe",
+            "id": "item_rusty_ladle",
             "occupies_hands": 1,
-            "owner_id": "char_orbie_mayhaw",
-            "prose_body": "A precision-ground monocular diopter loupe kept wrapped in alcohol-sterilized\nlinen inside Dr. Mayhaw coat pocket.",
-            "title": "Calibrated Brass Optometrist Loupe",
-            "weight_class": "LIGHT"
+            "owner_id": "char_snag",
+            "prose_body": "A heavy iron soup ladle with a bent handle and soot-blackened bowl.",
+            "title": "Rusty Iron Ladle",
+            "weight_class": "SCRAP"
         },
-        "item_glass_carafe": {
-            "entity_type": "item",
-            "id": "item_glass_carafe",
-            "occupies_hands": 1,
-            "owner_id": "char_miss_beverly",
-            "prose_body": "A heat-tempered glass diner coffee pot with a scorched orange handle for\nlate-night counter refills.",
-            "title": "Diner Glass Coffee Carafe",
-            "weight_class": "LIGHT"
-        },
-        "item_walkman_headset": {
-            "entity_type": "item",
-            "id": "item_walkman_headset",
-            "occupies_hands": 1,
-            "owner_id": "char_johnny_walkman",
-            "prose_body": "A modified portable cassette headset with bright yellow ear pads and a\ngoose-neck condenser microphone clipped to a coiled black cord.",
-            "title": "Yellow Foam Walkman Boom Headset",
-            "weight_class": "LIGHT"
-        },
-        "loc_dixie_starlight_diner": {
-            "acoustic_dampening_cdb": 1400,
-            "adjacent_to": ["loc_dixie_starlight_lot"],
+        "loc_cellar": {
+            "acoustic_dampening_cdb": 1800,
+            "adjacent_to": ["loc_hearth"],
             "entity_type": "location",
-            "id": "loc_dixie_starlight_diner",
-            "occupancy_limit": 8,
-            "prose_body": "Fluorescent tubes hum at sixty hertz above green-checkered vinyl booths, chrome\nnapkin dispensers, and rain-streaked plate glass windows.",
-            "temperature_bp": 6600,
-            "title": "Dixie-Starlight Diner Booth Seven"
+            "id": "loc_cellar",
+            "occupancy_limit": 3,
+            "prose_body": "Low stone arches drip with condensation above stacked turnip crates.",
+            "temperature_bp": 3400,
+            "title": "The Damp Root Cellar"
         },
-        "loc_dixie_starlight_lot": {
-            "acoustic_dampening_cdb": 800,
-            "adjacent_to": ["loc_dixie_starlight_diner"],
+        "loc_hearth": {
+            "acoustic_dampening_cdb": 1200,
+            "adjacent_to": ["loc_cellar"],
             "entity_type": "location",
-            "id": "loc_dixie_starlight_lot",
-            "occupancy_limit": 12,
-            "prose_body": "Rain sheets across the cracked blacktop outside the truck stop where\neighteen-wheelers idle beneath amber sodium floodlights.",
-            "temperature_bp": 7400,
-            "title": "Dixie-Starlight Truck Stop Asphalt Lot"
+            "id": "loc_hearth",
+            "occupancy_limit": 4,
+            "prose_body": "Warm flagstones surround the sunken iron firepit where the kettle simmers.",
+            "temperature_bp": 6800,
+            "title": "The Sunken Hearth"
         }
     },
     "entity_hashes": {
-        "char_johnny_walkman": "6cfefad4d3081bb9280336f1b11ccd3ed0bea7fb4940b7fba284bfe76922cfe2",
-        "char_miss_beverly": "79d4eec955bed11e711fd5e1b4d7fd54d538c32fb0ab9248c94d8376a8e1fb43",
-        "char_orbie_mayhaw": "8a2ffb95e7916271dfab6d60de440ed182026c5261379b9dfa9b2266d9dde778",
-        "grv_parallax_alignment": "b08ec64310058cd6b42ffcd44500a1754dc19e5e8075ca8cd595ff9ff95c0120",
-        "item_brass_loupe": "8830d3ff7f2ecba9533dabadeacd7894b3bbe8df0fd13c46c7698ab18c2e1bc9",
-        "item_glass_carafe": "07bca2ab3825fbf202c1eb8ed3a4fac06617c12c396346e025fc287b7ee25ce0",
-        "item_walkman_headset": "455e52ec62dab93fe4bfa947300e4b51726f5bfcbf4e147a583be5b31fe9e04a",
-        "loc_dixie_starlight_diner": "809719bf375ab383d0f50853a864360bd0545776eda72fe38417377b4c81bf6b",
-        "loc_dixie_starlight_lot": "5dcfca6bf1d90b77d843b1eae9ebc0f4386a8cf041d178cd0ef16d43b223d20b"
+        "char_gristle": "0c126471f4bd4fca7291e4cfe41582b8bd7049975079542980e98110a1ad4a66",
+        "char_snag": "f07459fd88476e4bd32422606d5d90e664d157538ba04f3405518147aaee9a14",
+        "grv_stolen_broth": "ce6289756cbd4466e631af7bed893d53764fb13b6be0d217ca3cec1c981295b5",
+        "item_rusty_ladle": "8fd5d132da2d354cecdf00bc5d9eee72f6b9151b860e2d31bf0c1067a1f6831a",
+        "loc_cellar": "1804ce594aeebfe09957756edb3fc7d05b8879cb768d6e1147d3386abb0b9adb",
+        "loc_hearth": "2630dfd0ce39bcdfabc2b6ddf2066351136da6e0507370ae2324c5b0915a04e3"
     },
-    "root_merkle_hash": "8a54463b0700c90026ec3680f2c12412d37d7dfce0b03b58823014933d0dd2d8",
+    "root_merkle_hash": "599ceb0aaccb2fbc30824d5bc0d3e4a0121b46c13f6443eccea5ef93fa74bd3b",
     "schema_version": "1.0.0",
-    "series_slug": "wiregrass-basin"
+    "series_slug": "000.sample-hearth"
 }

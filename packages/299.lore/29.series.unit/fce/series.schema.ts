@@ -10,9 +10,15 @@ import {
 import {
     AutoScriptConfigSchema,
     resolveAutoScriptConfig,
+    PacingBudgetConfigSchema,
+    resolvePacingBudgetConfig,
 } from '../../38.types.unit/fce/autoScriptRule.interface.js'
 export { resolveSeriesChronology } from '../../38.types.unit/fce/chronology.interface.js'
 export { resolveAutoScriptConfig } from '../../38.types.unit/fce/autoScriptRule.interface.js'
+export {
+    PacingBudgetConfigSchema,
+    resolvePacingBudgetConfig,
+} from '../../38.types.unit/fce/autoScriptRule.interface.js'
 
 /**
  * 7-bit ASCII Slug Regular Expression for Series Identifiers.

@@ -13,7 +13,10 @@ import type {
 } from '../fce/compile.bit'
 import type State from '../../99.core/state'
 import { resolveChronologyConfig } from '../../38.types.unit/fce/chronology.interface.js'
-import { resolveAutoScriptConfig } from '../../38.types.unit/fce/autoScriptRule.interface.js'
+import {
+    resolveAutoScriptConfig,
+    resolvePacingBudgetConfig,
+} from '../../38.types.unit/fce/autoScriptRule.interface.js'
 import { buildCharacterVoiceProfile } from '../../02.character.unit/buz/character.buzz.js'
 import { buildLocationStageProfile } from '../../01.location.unit/buz/location.buzz.js'
 import { buildEventDramaticPalette } from '../../11.events.unit/buz/events.buzz.js'
@@ -1524,9 +1527,16 @@ export const pass3Seal = (
     }
     const chronology = resolveChronologyConfig(seriesConfig?.chronology)
     const startSnapshot = parseCalendarStart(chronology)
-    const autoScriptConfig = resolveAutoScriptConfig(
+    const parsedAutoScript = resolveAutoScriptConfig(
         seriesConfig?.auto_script ?? {},
     )
+    const resolvedPacing = resolvePacingBudgetConfig(
+        (parsedAutoScript as any).pacing_budget ?? {},
+    )
+    const autoScriptConfig = {
+        ...parsedAutoScript,
+        pacing_budget: resolvedPacing,
+    }
     const voiceLexicon: Record<string, any> = {}
     const locationStageProfiles: Record<string, any> = {}
     for (const id of sortedIds) {

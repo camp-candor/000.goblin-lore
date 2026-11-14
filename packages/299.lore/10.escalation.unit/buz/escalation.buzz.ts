@@ -5,7 +5,13 @@ import type {
     EscalationGraphAdjacency,
     NodeColor,
 } from '../fce/escalation.schema'
-import type State from '../../99.core/state'
+import type State from '../../99.core/state.js'
+import {
+    resolvePacingBudgetConfig,
+    type ActStage,
+    type PacingBudgetConfig,
+} from '../../38.types.unit/fce/autoScriptRule.interface.js'
+import type { DaypartBand } from '../../38.types.unit/fce/chronology.interface.js'
 
 /**
  * Three-Color Depth-First Search Cycle Detector.
@@ -157,4 +163,90 @@ export const updateEscalation = (
         bal.slv({ idx: 'update-escalation', val: 0 })
     }
     return cpy
+}
+
+export type NarrativeProgressInput =
+    | number
+    | {
+          progressBps?: number
+          tick?: number
+          totalTicks?: number
+          elapsedSolarMinutes?: number
+          act_window_mode?: string
+      }
+
+export function computeProgressBps(input: NarrativeProgressInput): number {
+    if (typeof input === 'number') {
+        return Math.trunc(input)
+    }
+    if (typeof input.progressBps === 'number') {
+        return Math.trunc(input.progressBps)
+    }
+    if (
+        typeof input.tick === 'number' &&
+        typeof input.totalTicks === 'number' &&
+        input.totalTicks > 0
+    ) {
+        return Math.trunc(
+            (Math.trunc(input.tick) * 10000) / Math.trunc(input.totalTicks),
+        )
+    }
+    if (typeof input.elapsedSolarMinutes === 'number') {
+        return Math.trunc(
+            (Math.trunc(input.elapsedSolarMinutes) * 10000) / 1440,
+        )
+    }
+    return 0
+}
+
+export function resolveNarrativeActStage(
+    progressInput: NarrativeProgressInput,
+    pacingInput?: unknown,
+): ActStage {
+    const pacing = normalizeEscalationPacing(pacingInput)
+    const progressBps = computeProgressBps(progressInput)
+    if (progressBps <= pacing.act_i_end_bps) return 'ACT_I'
+    if (progressBps <= pacing.act_ii_end_bps) return 'ACT_II'
+    return 'ACT_III'
+}
+
+function normalizeEscalationPacing(pacingInput?: unknown): PacingBudgetConfig {
+    if (
+        pacingInput !== null &&
+        typeof pacingInput === 'object' &&
+        (pacingInput as any).act_i_end_bps !== undefined
+    ) {
+        return resolvePacingBudgetConfig(pacingInput)
+    }
+    if (
+        pacingInput !== null &&
+        typeof pacingInput === 'object' &&
+        (pacingInput as any).pacing_budget !== undefined
+    ) {
+        return resolvePacingBudgetConfig((pacingInput as any).pacing_budget)
+    }
+    if (pacingInput === undefined || pacingInput === null) {
+        return resolvePacingBudgetConfig({})
+    }
+    try {
+        return resolvePacingBudgetConfig(pacingInput)
+    } catch {
+        return resolvePacingBudgetConfig({})
+    }
+}
+
+export function computeThreeActPacingMultiplierBps(
+    stage: ActStage,
+    daypart: DaypartBand,
+    pacingInput?: unknown,
+): number {
+    const pacing = normalizeEscalationPacing(pacingInput)
+    const actMult =
+        stage === 'ACT_I'
+            ? pacing.act_i_multiplier_bps
+            : stage === 'ACT_II'
+              ? pacing.act_ii_multiplier_bps
+              : pacing.act_iii_multiplier_bps
+    const diurnalMult = pacing.diurnal_tension_weights_bps[daypart] ?? 10000
+    return Number((BigInt(actMult) * BigInt(diurnalMult)) / 10000n)
 }

@@ -8,6 +8,28 @@
             "max_scripts_per_run": 64,
             "min_global_significance_bps": 5000,
             "output_subdir": "drafts/auto-script",
+            "pacing_budget": {
+                "act_i_end_bps": 3333,
+                "act_i_multiplier_bps": 8500,
+                "act_ii_end_bps": 7500,
+                "act_ii_multiplier_bps": 11500,
+                "act_iii_multiplier_bps": 14500,
+                "act_window_mode": "HORIZON_PERCENT",
+                "critical_override_bps": 9400,
+                "diurnal_tension_weights_bps": {
+                    "AFTERNOON": 10000,
+                    "DAWN": 9500,
+                    "DUSK": 11500,
+                    "MORNING": 8500,
+                    "NIGHT": 12500
+                },
+                "drought_boost_bps_per_tick": 650,
+                "enabled": true,
+                "max_drought_boost_bps": 5500,
+                "max_dry_spell_ticks": 6,
+                "min_minutes_between_scenes": 15,
+                "min_ticks_between_scenes": 2
+            },
             "rules": [
                 {
                     "category": "PARANOIA_TRIGGERED",
@@ -287,7 +309,7 @@
         "tick_seconds": 60,
         "timezone_label": "UTC+00:00"
     },
-    "compiled_at": "2026-11-14T15:52:35.842Z",
+    "compiled_at": "2026-11-14T17:20:49.908Z",
     "compiler_duration_ms": 2,
     "entities": {
         "char_johnny_walkman": {
@@ -416,7 +438,7 @@
         "loc_dixie_starlight_diner": "809719bf375ab383d0f50853a864360bd0545776eda72fe38417377b4c81bf6b",
         "loc_dixie_starlight_lot": "5dcfca6bf1d90b77d843b1eae9ebc0f4386a8cf041d178cd0ef16d43b223d20b"
     },
-    "root_merkle_hash": "8a54463b0700c90026ec3680f2c12412d37d7dfce0b03b58823014933d0dd2d8",
+    "root_merkle_hash": "bb4b01412d539136a90bdf4c88d25a423b5a32658d553b48b0e8dff06db477e6",
     "schema_version": "1.0.0",
     "series_slug": "wiregrass-basin"
 }

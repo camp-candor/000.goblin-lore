@@ -766,6 +766,32 @@ export const updateMenu = async (
         }
         return cpy
     }
+    if (
+        (bal as any)?.type === ActMnu.CONFIGURE_PACING_BUDGET ||
+        (bal as any)?.dat?.action === 'CONFIGURE_PACING_BUDGET'
+    ) {
+        const { runAutoScriptMenu } = await import('./autoScriptMenu.buzz.js')
+        await runAutoScriptMenu(
+            cpy,
+            {
+                ...bal,
+                dat: {
+                    ...(bal as any)?.dat,
+                    action: 'CONFIGURE_PACING_BUDGET',
+                },
+            } as any,
+            ste,
+        )
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        if (bal?.slv) {
+            bal.slv({ mnuBit: bal })
+        }
+        return cpy
+    }
 
     const somaticItem = getChoiceById(src || '')
     if (somaticItem && somaticItem.id !== 'CHOICE_ROOT_RETURN') {

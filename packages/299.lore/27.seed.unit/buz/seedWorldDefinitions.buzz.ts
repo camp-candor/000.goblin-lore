@@ -8,6 +8,7 @@ import {
 } from '../../38.types.unit/fce/chronology.interface.js'
 import {
     resolveAutoScriptConfig,
+    resolvePacingBudgetConfig,
     DEFAULT_AUTO_SCRIPT_CONFIG,
 } from '../../38.types.unit/fce/autoScriptRule.interface.js'
 import { parseCalendarStart } from '../../05.clock.unit/buz/clock.buzz.js'
@@ -220,6 +221,7 @@ export function buildDramaticCatalystsDossier(
     seriesSlug: string,
 ): string {
     const cfg = resolveAutoScriptConfig(autoScript ?? {})
+    const pacing = resolvePacingBudgetConfig((cfg as any).pacing_budget ?? {})
     const lines = [
         '---',
         'id: world_dramatic_catalysts',
@@ -230,6 +232,24 @@ export function buildDramaticCatalystsDossier(
         `max_scripts_per_run: ${cfg.max_scripts_per_run}`,
         `output_subdir: ${cfg.output_subdir}`,
         'status: active',
+        `pacing_enabled: ${pacing.enabled ? 'true' : 'false'}`,
+        `min_ticks_between_scenes: ${pacing.min_ticks_between_scenes}`,
+        `min_minutes_between_scenes: ${pacing.min_minutes_between_scenes}`,
+        `max_dry_spell_ticks: ${pacing.max_dry_spell_ticks}`,
+        `drought_boost_bps_per_tick: ${pacing.drought_boost_bps_per_tick}`,
+        `max_drought_boost_bps: ${pacing.max_drought_boost_bps}`,
+        `act_window_mode: ${pacing.act_window_mode}`,
+        `act_i_end_bps: ${pacing.act_i_end_bps}`,
+        `act_ii_end_bps: ${pacing.act_ii_end_bps}`,
+        `act_i_multiplier_bps: ${pacing.act_i_multiplier_bps}`,
+        `act_ii_multiplier_bps: ${pacing.act_ii_multiplier_bps}`,
+        `act_iii_multiplier_bps: ${pacing.act_iii_multiplier_bps}`,
+        `critical_override_bps: ${pacing.critical_override_bps}`,
+        `diurnal_DAWN_bps: ${pacing.diurnal_tension_weights_bps.DAWN}`,
+        `diurnal_MORNING_bps: ${pacing.diurnal_tension_weights_bps.MORNING}`,
+        `diurnal_AFTERNOON_bps: ${pacing.diurnal_tension_weights_bps.AFTERNOON}`,
+        `diurnal_DUSK_bps: ${pacing.diurnal_tension_weights_bps.DUSK}`,
+        `diurnal_NIGHT_bps: ${pacing.diurnal_tension_weights_bps.NIGHT}`,
         'triggers:',
         ...cfg.rules
             .slice()
@@ -247,6 +267,14 @@ export function buildDramaticCatalystsDossier(
         `Active trigger categories for series ${seriesSlug}.`,
         `Global significance floor is ${cfg.min_global_significance_bps} bps.`,
         `Generated screenplays emit to ${cfg.output_subdir}/.`,
+        '',
+        '## Three-Act Pacing Budget',
+        '',
+        `Cooldown window requires ${pacing.min_ticks_between_scenes} ticks and ${pacing.min_minutes_between_scenes} minutes between scenes.`,
+        `Dry-spell cap triggers drought pressure after ${pacing.max_dry_spell_ticks} silent ticks (+${pacing.drought_boost_bps_per_tick} bps per tick, max ${pacing.max_drought_boost_bps} bps).`,
+        `Act curve uses mode ${pacing.act_window_mode} with boundaries ${pacing.act_i_end_bps}/${pacing.act_ii_end_bps} bps.`,
+        `Act multipliers are I=${pacing.act_i_multiplier_bps} II=${pacing.act_ii_multiplier_bps} III=${pacing.act_iii_multiplier_bps} bps with critical override ${pacing.critical_override_bps} bps.`,
+        `Diurnal tension weights are DAWN=${pacing.diurnal_tension_weights_bps.DAWN} MORNING=${pacing.diurnal_tension_weights_bps.MORNING} AFTERNOON=${pacing.diurnal_tension_weights_bps.AFTERNOON} DUSK=${pacing.diurnal_tension_weights_bps.DUSK} NIGHT=${pacing.diurnal_tension_weights_bps.NIGHT}.`,
         '',
     ]
     return lines.join('\n')

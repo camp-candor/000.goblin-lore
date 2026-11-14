@@ -88,6 +88,12 @@ export class OpenAutoScriptMenu implements Action {
     constructor(public bale: MenuBit) {}
 }
 
+export const CONFIGURE_PACING_BUDGET = '[Menu action] Configure Pacing Budget'
+export class ConfigurePacingBudget implements Action {
+    readonly type = CONFIGURE_PACING_BUDGET
+    constructor(public bale: MenuBit) {}
+}
+
 export type Actions =
     | InitMenu
     | UpdateMenu
@@ -103,3 +109,4 @@ export type Actions =
     | SelectDomainEntityType
     | OpenChronologyMenu
     | OpenAutoScriptMenu
+    | ConfigurePacingBudget

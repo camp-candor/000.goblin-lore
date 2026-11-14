@@ -1,0 +1,372 @@
+{
+    "_meta": {
+        "applied_pardons": []
+    },
+    "auto_script_bundle": {
+        "config": {
+            "enabled": true,
+            "max_scripts_per_run": 64,
+            "min_global_significance_bps": 5000,
+            "output_subdir": "drafts/auto-script",
+            "pacing_budget": {
+                "act_i_end_bps": 3333,
+                "act_i_multiplier_bps": 8500,
+                "act_ii_end_bps": 7500,
+                "act_ii_multiplier_bps": 11500,
+                "act_iii_multiplier_bps": 14500,
+                "act_window_mode": "HORIZON_PERCENT",
+                "critical_override_bps": 9400,
+                "diurnal_tension_weights_bps": {
+                    "AFTERNOON": 10000,
+                    "DAWN": 9500,
+                    "DUSK": 11500,
+                    "MORNING": 8500,
+                    "NIGHT": 12500
+                },
+                "drought_boost_bps_per_tick": 650,
+                "enabled": true,
+                "max_drought_boost_bps": 5500,
+                "max_dry_spell_ticks": 6,
+                "min_minutes_between_scenes": 15,
+                "min_ticks_between_scenes": 2
+            },
+            "rules": [
+                {
+                    "category": "PARANOIA_TRIGGERED",
+                    "cooldown_ticks": 1,
+                    "enabled": true,
+                    "min_severity_bps": 7000,
+                    "priority_weight_bps": 9000
+                },
+                {
+                    "category": "GRIEVANCE_BREACH",
+                    "cooldown_ticks": 1,
+                    "enabled": true,
+                    "min_severity_bps": 5500,
+                    "priority_weight_bps": 8500
+                },
+                {
+                    "category": "SOMATIC_TRAUMA",
+                    "cooldown_ticks": 2,
+                    "enabled": true,
+                    "min_severity_bps": 4000,
+                    "priority_weight_bps": 8000
+                },
+                {
+                    "category": "CHRONO_MILESTONE",
+                    "cooldown_ticks": 5,
+                    "enabled": true,
+                    "min_severity_bps": 3000,
+                    "priority_weight_bps": 5000
+                }
+            ]
+        },
+        "dramatic_palette": {
+            "CHRONO_MILESTONE": {
+                "actionLines": [
+                    "Lanterns lift along the fence line.",
+                    "The bell tolls once across the basin."
+                ],
+                "characterCues": ["ORBIE", "WART"],
+                "dialogue": [
+                    "Bell marks the hour. Take your post.",
+                    "Shift change. Lamps up."
+                ],
+                "parentheticals": ["(calling out)", "(even, marking the hour)"],
+                "sceneHeading": "EXT. YARD - DUSK",
+                "transitions": ["TIME CUT: +1 HOUR"]
+            },
+            "EPISTEMIC_REVEAL": {
+                "actionLines": [
+                    "Lamplight finds the hidden margin note.",
+                    "The seal cracks; paper sighs open."
+                ],
+                "characterCues": ["JOHNNY", "WART"],
+                "dialogue": [
+                    "Read the margin. Read it aloud.",
+                    "The seal was broken at dawn. Look."
+                ],
+                "parentheticals": [
+                    "(quiet, lowering the lamp)",
+                    "(reading, voice thin)"
+                ],
+                "sceneHeading": "INT. ARCHIVE ROOM - NIGHT",
+                "transitions": ["FADE OUT."]
+            },
+            "GRIEVANCE_BREACH": {
+                "actionLines": [
+                    "A stool scrapes back from the table.",
+                    "Chalk tally squeaks across the slate."
+                ],
+                "characterCues": ["JOHNNY", "WART"],
+                "dialogue": [
+                    "Name the debt before the bell.",
+                    "You owe for the winter tally. Pay it."
+                ],
+                "parentheticals": [
+                    "(dry, counting aloud)",
+                    "(flat, holding the old debt)"
+                ],
+                "sceneHeading": "INT. LEDGER HALL - NIGHT",
+                "transitions": ["MATCH CUT TO:"]
+            },
+            "INVENTORY_TRANSFER": {
+                "actionLines": [
+                    "Brass tallies clink onto the weighing tray.",
+                    "The ledger flips to a fresh page."
+                ],
+                "characterCues": ["JOHNNY", "ORBIE"],
+                "dialogue": [
+                    "Count the brass. Sign the ledger.",
+                    "Mark it. Twice for the guild."
+                ],
+                "parentheticals": [
+                    "(careful, counting the brass)",
+                    "(even, marking the page)"
+                ],
+                "sceneHeading": "INT. STOREROOM - NIGHT",
+                "transitions": ["CUT TO:"]
+            },
+            "PARANOIA_TRIGGERED": {
+                "actionLines": [
+                    "Dust sifts from the mortar seams.",
+                    "Lamp gutters as the pipe knocks twice."
+                ],
+                "characterCues": ["JOHNNY", "ORBIE"],
+                "dialogue": [
+                    "Say it plain. Who broke the seal.",
+                    "Valve is stuck. Keep eyes on the stair."
+                ],
+                "parentheticals": [
+                    "(low, not looking up)",
+                    "(steady, watching the ledger)"
+                ],
+                "sceneHeading": "INT. CULVERT ROOM - NIGHT",
+                "transitions": ["SMASH CUT TO:"]
+            },
+            "SOMATIC_TRAUMA": {
+                "actionLines": [
+                    "Blood ticks onto the canvas sheet.",
+                    "Breath hitches; the iron bar clatters down."
+                ],
+                "characterCues": ["ORBIE", "WART"],
+                "dialogue": [
+                    "Arm is gone numb. Hand me the bar.",
+                    "Hold still. Bind it tight."
+                ],
+                "parentheticals": [
+                    "(strained, favoring the left arm)",
+                    "(through teeth)"
+                ],
+                "sceneHeading": "INT. INFIRMARY CULVERT - NIGHT",
+                "transitions": ["CUT TO:"]
+            }
+        },
+        "location_stage_profiles": {
+            "loc_cellar": {
+                "ambientActionCue": "Still air hangs over the damp root cellar; Damp mortar, low pipe knock, faint tallow smoke.",
+                "intExt": "INT.",
+                "locationId": "loc_cellar",
+                "sluglineBase": "INT. THE DAMP ROOT CELLAR - NIGHT",
+                "transitionOut": "CUT TO:"
+            },
+            "loc_hearth": {
+                "ambientActionCue": "Still air hangs over the sunken hearth; Damp mortar, low pipe knock, faint tallow smoke.",
+                "intExt": "INT.",
+                "locationId": "loc_hearth",
+                "sluglineBase": "INT. THE SUNKEN HEARTH - NIGHT",
+                "transitionOut": "CUT TO:"
+            }
+        },
+        "schema_version": "1.0.0",
+        "voice_lexicon": {
+            "char_gristle": {
+                "cue": "GRISTLE",
+                "curtnessMaxWords": 12,
+                "defaultParenthetical": "(measured, practical tone)",
+                "entityId": "char_gristle",
+                "linesByCategory": {
+                    "CHRONO_MILESTONE": [
+                        "Bell marks the hour. Take your post."
+                    ],
+                    "EPISTEMIC_REVEAL": ["The seal was broken at dawn. Look."],
+                    "GRIEVANCE_BREACH": [
+                        "You owe for the winter tally. Pay it."
+                    ],
+                    "INVENTORY_TRANSFER": ["Count the brass. Sign the ledger."],
+                    "PARANOIA_TRIGGERED": [
+                        "Valve is stuck. Keep eyes on the stair."
+                    ],
+                    "SOMATIC_TRAUMA": ["Arm is gone numb. Hand me the bar."]
+                },
+                "parentheticalsByCategory": {
+                    "CHRONO_MILESTONE": ["(even, marking the hour)"],
+                    "EPISTEMIC_REVEAL": ["(quiet, lowering the lamp)"],
+                    "GRIEVANCE_BREACH": ["(flat, holding the old debt)"],
+                    "INVENTORY_TRANSFER": ["(careful, counting the brass)"],
+                    "PARANOIA_TRIGGERED": ["(steady, watching the ledger)"],
+                    "SOMATIC_TRAUMA": ["(strained, favoring the left arm)"]
+                }
+            },
+            "char_snag": {
+                "cue": "SNAG",
+                "curtnessMaxWords": 12,
+                "defaultParenthetical": "(measured, practical tone)",
+                "entityId": "char_snag",
+                "linesByCategory": {
+                    "CHRONO_MILESTONE": [
+                        "Bell marks the hour. Take your post."
+                    ],
+                    "EPISTEMIC_REVEAL": ["The seal was broken at dawn. Look."],
+                    "GRIEVANCE_BREACH": [
+                        "You owe for the winter tally. Pay it."
+                    ],
+                    "INVENTORY_TRANSFER": ["Count the brass. Sign the ledger."],
+                    "PARANOIA_TRIGGERED": [
+                        "Valve is stuck. Keep eyes on the stair."
+                    ],
+                    "SOMATIC_TRAUMA": ["Arm is gone numb. Hand me the bar."]
+                },
+                "parentheticalsByCategory": {
+                    "CHRONO_MILESTONE": ["(even, marking the hour)"],
+                    "EPISTEMIC_REVEAL": ["(quiet, lowering the lamp)"],
+                    "GRIEVANCE_BREACH": ["(flat, holding the old debt)"],
+                    "INVENTORY_TRANSFER": ["(careful, counting the brass)"],
+                    "PARANOIA_TRIGGERED": ["(steady, watching the ledger)"],
+                    "SOMATIC_TRAUMA": ["(strained, favoring the left arm)"]
+                }
+            }
+        }
+    },
+    "catalog_summary": {
+        "characterCount": 2,
+        "characters": 2,
+        "grievanceCount": 1,
+        "grievances": 1,
+        "items": 1,
+        "locationCount": 2,
+        "locations": 2,
+        "mysteries": 0,
+        "mysteryCount": 0,
+        "possessionCount": 1,
+        "totalEntities": 6
+    },
+    "chronology": {
+        "calendar_system": "GREGORIAN_24H",
+        "era_label": "CANON_PRESENT",
+        "frames_per_second": 24,
+        "start_date": "2026-10-31",
+        "start_snapshot": {
+            "centisecond": 0,
+            "clockTimeHm": "21:00",
+            "clockTimeHms": "21:00:00",
+            "day": 31,
+            "daypart": "NIGHT",
+            "eraLabel": "CANON_PRESENT",
+            "framesPerSecond": 24,
+            "hour": 21,
+            "isoDate": "2026-10-31",
+            "minute": 0,
+            "month": 10,
+            "second": 0,
+            "tickCount": 0,
+            "tickSeconds": 60,
+            "timecodeSmpte": "21:00:00:00",
+            "timezoneLabel": "UTC+00:00",
+            "totalElapsedSeconds": 0,
+            "totalFrames": 0,
+            "year": 2026
+        },
+        "start_time": "21:00:00",
+        "tick_seconds": 60,
+        "timezone_label": "UTC+00:00"
+    },
+    "compiled_at": "2026-11-14T16:28:09.541Z",
+    "compiler_duration_ms": 38,
+    "entities": {
+        "char_gristle": {
+            "available_arms": 2,
+            "available_legs": 2,
+            "banned_kinetic_verbs": ["sprint"],
+            "baseline_actions": ["stir", "guard"],
+            "entity_type": "character",
+            "held_items": [],
+            "id": "char_gristle",
+            "locomotion_tier": "BIPEDAL_HUNCHED",
+            "paranoia": 3200,
+            "prose_body": "Gristle tapped the brass skimmer against the rim of the iron kettle.",
+            "somatic_strain": 1800,
+            "title": "Gristle the Kettle-Keeper",
+            "trust": 3500,
+            "voice_callbacks": ["rust take your boots"]
+        },
+        "char_snag": {
+            "available_arms": 2,
+            "available_legs": 2,
+            "banned_kinetic_verbs": ["vault"],
+            "baseline_actions": ["crouch", "listen"],
+            "entity_type": "character",
+            "held_items": ["item_rusty_ladle"],
+            "id": "char_snag",
+            "locomotion_tier": "BIPEDAL_NIMBLE",
+            "paranoia": 2500,
+            "prose_body": "Snag crouched beside the iron grate and listened to the draft inside the flue.",
+            "somatic_strain": 1200,
+            "title": "Snag the Cinder-Watcher",
+            "trust": 4000,
+            "voice_callbacks": ["by the damp soot"]
+        },
+        "grv_stolen_broth": {
+            "entity_type": "grievance",
+            "escalation_ceiling_bp": 7500,
+            "id": "grv_stolen_broth",
+            "intensity_bp": 2500,
+            "max_intensity": 4,
+            "min_intensity": 1,
+            "participants": ["char_snag", "char_gristle"],
+            "prose_body": "Gristle accuses Snag of skimming the marrow fat from the kettle before dawn.",
+            "spawns_on_max_escalation": [],
+            "title": "Dispute Over Midnight Broth Skimming"
+        },
+        "item_rusty_ladle": {
+            "entity_type": "item",
+            "id": "item_rusty_ladle",
+            "occupies_hands": 1,
+            "owner_id": "char_snag",
+            "prose_body": "A heavy iron soup ladle with a bent handle and soot-blackened bowl.",
+            "title": "Rusty Iron Ladle",
+            "weight_class": "SCRAP"
+        },
+        "loc_cellar": {
+            "acoustic_dampening_cdb": 1800,
+            "adjacent_to": ["loc_hearth"],
+            "entity_type": "location",
+            "id": "loc_cellar",
+            "occupancy_limit": 3,
+            "prose_body": "Low stone arches drip with condensation above stacked turnip crates.",
+            "temperature_bp": 3400,
+            "title": "The Damp Root Cellar"
+        },
+        "loc_hearth": {
+            "acoustic_dampening_cdb": 1200,
+            "adjacent_to": ["loc_cellar"],
+            "entity_type": "location",
+            "id": "loc_hearth",
+            "occupancy_limit": 4,
+            "prose_body": "Warm flagstones surround the sunken iron firepit where the kettle simmers.",
+            "temperature_bp": 6800,
+            "title": "The Sunken Hearth"
+        }
+    },
+    "entity_hashes": {
+        "char_gristle": "0c126471f4bd4fca7291e4cfe41582b8bd7049975079542980e98110a1ad4a66",
+        "char_snag": "f07459fd88476e4bd32422606d5d90e664d157538ba04f3405518147aaee9a14",
+        "grv_stolen_broth": "ce6289756cbd4466e631af7bed893d53764fb13b6be0d217ca3cec1c981295b5",
+        "item_rusty_ladle": "8fd5d132da2d354cecdf00bc5d9eee72f6b9151b860e2d31bf0c1067a1f6831a",
+        "loc_cellar": "1804ce594aeebfe09957756edb3fc7d05b8879cb768d6e1147d3386abb0b9adb",
+        "loc_hearth": "2630dfd0ce39bcdfabc2b6ddf2066351136da6e0507370ae2324c5b0915a04e3"
+    },
+    "root_merkle_hash": "4d0903e90e22bc16734d03712fa72223575b4685e55fa20a77c79ca45aebd2f7",
+    "schema_version": "1.0.0",
+    "series_slug": "000.sample-hearth"
+}

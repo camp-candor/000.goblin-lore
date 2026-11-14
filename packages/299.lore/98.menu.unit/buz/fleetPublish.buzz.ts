@@ -6,6 +6,11 @@ import type FleetPublishBit from '../fce/fleetPublish.bit.js'
 import { resolveRepoRoot } from '../../00.lore.unit/buz/lore.buzz.js'
 import { resolveLibraryBus } from './blessedModal.buzz.js'
 import { exportStaticTopologyManifest } from './topologyExport.buzz.js'
+import {
+    PacingBudgetConfigSchema,
+    resolvePacingBudgetConfig,
+    type PacingBudgetConfig,
+} from '../../38.types.unit/fce/autoScriptRule.interface.js'
 
 export interface PublishAutoScriptReadiness {
     ready: boolean
@@ -13,6 +18,47 @@ export interface PublishAutoScriptReadiness {
     voiceCount: number
     locationCount: number
     outputSubdir: string
+}
+
+export interface CadenceBounds24h {
+    ticksPer24h: number
+    maxCooldownLimitedScenes: number
+    droughtGuaranteedFloorScenes: number
+    actCurveSkewRatioPct: number
+}
+
+export function estimate24HourCadenceBounds(
+    pacingBudget: PacingBudgetConfig,
+    tickSeconds: number = 900,
+): CadenceBounds24h {
+    const safeTick = Math.max(1, Math.trunc(tickSeconds))
+    const ticksPer24h = Math.max(1, Math.floor(86400 / safeTick))
+    const maxCooldownLimitedScenes =
+        Math.floor(
+            ticksPer24h /
+                Math.max(1, pacingBudget.min_ticks_between_scenes + 1),
+        ) + 1
+    const droughtGuaranteedFloorScenes = Math.floor(
+        ticksPer24h / Math.max(1, pacingBudget.max_dry_spell_ticks + 1),
+    )
+    const spread =
+        pacingBudget.act_iii_multiplier_bps - pacingBudget.act_i_multiplier_bps
+    const actCurveSkewRatioPct = Math.trunc(
+        (spread * 100) / Math.max(1, pacingBudget.act_i_multiplier_bps),
+    )
+    return Object.freeze({
+        ticksPer24h,
+        maxCooldownLimitedScenes,
+        droughtGuaranteedFloorScenes,
+        actCurveSkewRatioPct,
+    })
+}
+
+export interface PacingParityInspection {
+    ok: boolean
+    legacy: boolean
+    pacing: PacingBudgetConfig | null
+    bounds: CadenceBounds24h | null
 }
 
 export function inspectPublishAutoScriptReadiness(
@@ -61,6 +107,51 @@ function emitConsole(ste: State | undefined, line: string): void {
     if (ste && typeof ste.hunt === 'function') {
         ste.hunt(UPDATE_CONSOLE, { idx: 'cns00', src: cleanLine })
     }
+}
+
+export function inspectPublishPacingBudgetParity(
+    parsedBibleState: any,
+    tickSeconds: number = 900,
+    ste?: State,
+): PacingParityInspection {
+    const raw = (parsedBibleState as any)?.auto_script_bundle?.config
+        ?.pacing_budget
+    if (raw === undefined || raw === null) {
+        const fallback = resolvePacingBudgetConfig({})
+        const bounds = estimate24HourCadenceBounds(fallback, tickSeconds)
+        emitConsole(
+            ste,
+            ':: [PUBLISH:PACING_WARN] Legacy manifest omits pacing_budget; engine uses canonical defaults',
+        )
+        return Object.freeze({
+            ok: true,
+            legacy: true,
+            pacing: fallback,
+            bounds,
+        })
+    }
+    const parsed = PacingBudgetConfigSchema.safeParse(raw)
+    if (!parsed.success) {
+        const fallback = resolvePacingBudgetConfig({})
+        const bounds = estimate24HourCadenceBounds(fallback, tickSeconds)
+        emitConsole(
+            ste,
+            ':: [PUBLISH:PACING_WARN] Legacy manifest omits pacing_budget; engine uses canonical defaults',
+        )
+        return Object.freeze({
+            ok: true,
+            legacy: true,
+            pacing: fallback,
+            bounds,
+        })
+    }
+    const pacing = parsed.data
+    const bounds = estimate24HourCadenceBounds(pacing, tickSeconds)
+    emitConsole(
+        ste,
+        `>> [PUBLISH:PACING] mode=${pacing.act_window_mode} cooldown=${pacing.min_ticks_between_scenes}t dryMax=${pacing.max_dry_spell_ticks}t floor24h=${bounds.droughtGuaranteedFloorScenes}`,
+    )
+    return Object.freeze({ ok: true, legacy: false, pacing, bounds })
 }
 
 function atomicCopyFileSync(sourcePath: string, destinationPath: string): void {
@@ -187,6 +278,19 @@ export const publishSealedCanonToFleet = async (
         emitConsole(
             ste,
             `:: [PUBLISH:WARN] Missing auto_script_bundle -- legacy seal; recompile recommended`,
+        )
+    }
+
+    try {
+        const tickSeconds =
+            typeof parsedBibleState?.chronology?.tick_seconds === 'number'
+                ? parsedBibleState.chronology.tick_seconds
+                : 900
+        inspectPublishPacingBudgetParity(parsedBibleState, tickSeconds, ste)
+    } catch {
+        emitConsole(
+            ste,
+            ':: [PUBLISH:PACING_WARN] Legacy manifest omits pacing_budget; engine uses canonical defaults',
         )
     }
 

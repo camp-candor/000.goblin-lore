@@ -1,0 +1,444 @@
+{
+    "_meta": {
+        "applied_pardons": []
+    },
+    "auto_script_bundle": {
+        "config": {
+            "enabled": true,
+            "max_scripts_per_run": 64,
+            "min_global_significance_bps": 5000,
+            "output_subdir": "drafts/auto-script",
+            "pacing_budget": {
+                "act_i_end_bps": 3333,
+                "act_i_multiplier_bps": 8500,
+                "act_ii_end_bps": 7500,
+                "act_ii_multiplier_bps": 11500,
+                "act_iii_multiplier_bps": 14500,
+                "act_window_mode": "HORIZON_PERCENT",
+                "critical_override_bps": 9400,
+                "diurnal_tension_weights_bps": {
+                    "AFTERNOON": 10000,
+                    "DAWN": 9500,
+                    "DUSK": 11500,
+                    "MORNING": 8500,
+                    "NIGHT": 12500
+                },
+                "drought_boost_bps_per_tick": 650,
+                "enabled": true,
+                "max_drought_boost_bps": 5500,
+                "max_dry_spell_ticks": 6,
+                "min_minutes_between_scenes": 15,
+                "min_ticks_between_scenes": 2
+            },
+            "rules": [
+                {
+                    "category": "PARANOIA_TRIGGERED",
+                    "cooldown_ticks": 1,
+                    "enabled": true,
+                    "min_severity_bps": 7000,
+                    "priority_weight_bps": 9000
+                },
+                {
+                    "category": "GRIEVANCE_BREACH",
+                    "cooldown_ticks": 1,
+                    "enabled": true,
+                    "min_severity_bps": 5500,
+                    "priority_weight_bps": 8500
+                },
+                {
+                    "category": "SOMATIC_TRAUMA",
+                    "cooldown_ticks": 2,
+                    "enabled": true,
+                    "min_severity_bps": 4000,
+                    "priority_weight_bps": 8000
+                },
+                {
+                    "category": "CHRONO_MILESTONE",
+                    "cooldown_ticks": 5,
+                    "enabled": true,
+                    "min_severity_bps": 3000,
+                    "priority_weight_bps": 5000
+                }
+            ]
+        },
+        "dramatic_palette": {
+            "CHRONO_MILESTONE": {
+                "actionLines": [
+                    "Lanterns lift along the fence line.",
+                    "The bell tolls once across the basin."
+                ],
+                "characterCues": ["ORBIE", "WART"],
+                "dialogue": [
+                    "Bell marks the hour. Take your post.",
+                    "Shift change. Lamps up."
+                ],
+                "parentheticals": ["(calling out)", "(even, marking the hour)"],
+                "sceneHeading": "EXT. YARD - DUSK",
+                "transitions": ["TIME CUT: +1 HOUR"]
+            },
+            "EPISTEMIC_REVEAL": {
+                "actionLines": [
+                    "Lamplight finds the hidden margin note.",
+                    "The seal cracks; paper sighs open."
+                ],
+                "characterCues": ["JOHNNY", "WART"],
+                "dialogue": [
+                    "Read the margin. Read it aloud.",
+                    "The seal was broken at dawn. Look."
+                ],
+                "parentheticals": [
+                    "(quiet, lowering the lamp)",
+                    "(reading, voice thin)"
+                ],
+                "sceneHeading": "INT. ARCHIVE ROOM - NIGHT",
+                "transitions": ["FADE OUT."]
+            },
+            "GRIEVANCE_BREACH": {
+                "actionLines": [
+                    "A stool scrapes back from the table.",
+                    "Chalk tally squeaks across the slate."
+                ],
+                "characterCues": ["JOHNNY", "WART"],
+                "dialogue": [
+                    "Name the debt before the bell.",
+                    "You owe for the winter tally. Pay it."
+                ],
+                "parentheticals": [
+                    "(dry, counting aloud)",
+                    "(flat, holding the old debt)"
+                ],
+                "sceneHeading": "INT. LEDGER HALL - NIGHT",
+                "transitions": ["MATCH CUT TO:"]
+            },
+            "INVENTORY_TRANSFER": {
+                "actionLines": [
+                    "Brass tallies clink onto the weighing tray.",
+                    "The ledger flips to a fresh page."
+                ],
+                "characterCues": ["JOHNNY", "ORBIE"],
+                "dialogue": [
+                    "Count the brass. Sign the ledger.",
+                    "Mark it. Twice for the guild."
+                ],
+                "parentheticals": [
+                    "(careful, counting the brass)",
+                    "(even, marking the page)"
+                ],
+                "sceneHeading": "INT. STOREROOM - NIGHT",
+                "transitions": ["CUT TO:"]
+            },
+            "PARANOIA_TRIGGERED": {
+                "actionLines": [
+                    "Dust sifts from the mortar seams.",
+                    "Lamp gutters as the pipe knocks twice."
+                ],
+                "characterCues": ["JOHNNY", "ORBIE"],
+                "dialogue": [
+                    "Say it plain. Who broke the seal.",
+                    "Valve is stuck. Keep eyes on the stair."
+                ],
+                "parentheticals": [
+                    "(low, not looking up)",
+                    "(steady, watching the ledger)"
+                ],
+                "sceneHeading": "INT. CULVERT ROOM - NIGHT",
+                "transitions": ["SMASH CUT TO:"]
+            },
+            "SOMATIC_TRAUMA": {
+                "actionLines": [
+                    "Blood ticks onto the canvas sheet.",
+                    "Breath hitches; the iron bar clatters down."
+                ],
+                "characterCues": ["ORBIE", "WART"],
+                "dialogue": [
+                    "Arm is gone numb. Hand me the bar.",
+                    "Hold still. Bind it tight."
+                ],
+                "parentheticals": [
+                    "(strained, favoring the left arm)",
+                    "(through teeth)"
+                ],
+                "sceneHeading": "INT. INFIRMARY CULVERT - NIGHT",
+                "transitions": ["CUT TO:"]
+            }
+        },
+        "location_stage_profiles": {
+            "loc_dixie_starlight_diner": {
+                "ambientActionCue": "Still air hangs over dixiestarlight diner booth seven; Damp mortar, low pipe knock, faint tallow smoke.",
+                "intExt": "INT.",
+                "locationId": "loc_dixie_starlight_diner",
+                "sluglineBase": "INT. DIXIESTARLIGHT DINER BOOTH SEVEN - NIGHT",
+                "transitionOut": "CUT TO:"
+            },
+            "loc_dixie_starlight_lot": {
+                "ambientActionCue": "Still air hangs over dixiestarlight truck stop asphalt lot; Damp mortar, low pipe knock, faint tallow smoke.",
+                "intExt": "INT.",
+                "locationId": "loc_dixie_starlight_lot",
+                "sluglineBase": "INT. DIXIESTARLIGHT TRUCK STOP ASPHALT LOT - NIGHT",
+                "transitionOut": "CUT TO:"
+            }
+        },
+        "schema_version": "1.0.0",
+        "voice_lexicon": {
+            "char_johnny_walkman": {
+                "cue": "JOHNNY",
+                "curtnessMaxWords": 12,
+                "defaultParenthetical": "(measured, practical tone)",
+                "entityId": "char_johnny_walkman",
+                "linesByCategory": {
+                    "CHRONO_MILESTONE": [
+                        "Bell marks the hour. Take your post."
+                    ],
+                    "EPISTEMIC_REVEAL": ["The seal was broken at dawn. Look."],
+                    "GRIEVANCE_BREACH": [
+                        "You owe for the winter tally. Pay it."
+                    ],
+                    "INVENTORY_TRANSFER": ["Count the brass. Sign the ledger."],
+                    "PARANOIA_TRIGGERED": [
+                        "Valve is stuck. Keep eyes on the stair."
+                    ],
+                    "SOMATIC_TRAUMA": ["Arm is gone numb. Hand me the bar."]
+                },
+                "parentheticalsByCategory": {
+                    "CHRONO_MILESTONE": ["(even, marking the hour)"],
+                    "EPISTEMIC_REVEAL": ["(quiet, lowering the lamp)"],
+                    "GRIEVANCE_BREACH": ["(flat, holding the old debt)"],
+                    "INVENTORY_TRANSFER": ["(careful, counting the brass)"],
+                    "PARANOIA_TRIGGERED": ["(steady, watching the ledger)"],
+                    "SOMATIC_TRAUMA": ["(strained, favoring the left arm)"]
+                }
+            },
+            "char_miss_beverly": {
+                "cue": "MISS",
+                "curtnessMaxWords": 12,
+                "defaultParenthetical": "(measured, practical tone)",
+                "entityId": "char_miss_beverly",
+                "linesByCategory": {
+                    "CHRONO_MILESTONE": [
+                        "Bell marks the hour. Take your post."
+                    ],
+                    "EPISTEMIC_REVEAL": ["The seal was broken at dawn. Look."],
+                    "GRIEVANCE_BREACH": [
+                        "You owe for the winter tally. Pay it."
+                    ],
+                    "INVENTORY_TRANSFER": ["Count the brass. Sign the ledger."],
+                    "PARANOIA_TRIGGERED": [
+                        "Valve is stuck. Keep eyes on the stair."
+                    ],
+                    "SOMATIC_TRAUMA": ["Arm is gone numb. Hand me the bar."]
+                },
+                "parentheticalsByCategory": {
+                    "CHRONO_MILESTONE": ["(even, marking the hour)"],
+                    "EPISTEMIC_REVEAL": ["(quiet, lowering the lamp)"],
+                    "GRIEVANCE_BREACH": ["(flat, holding the old debt)"],
+                    "INVENTORY_TRANSFER": ["(careful, counting the brass)"],
+                    "PARANOIA_TRIGGERED": ["(steady, watching the ledger)"],
+                    "SOMATIC_TRAUMA": ["(strained, favoring the left arm)"]
+                }
+            },
+            "char_orbie_mayhaw": {
+                "cue": "DR",
+                "curtnessMaxWords": 12,
+                "defaultParenthetical": "(measured, practical tone)",
+                "entityId": "char_orbie_mayhaw",
+                "linesByCategory": {
+                    "CHRONO_MILESTONE": [
+                        "Bell marks the hour. Take your post."
+                    ],
+                    "EPISTEMIC_REVEAL": ["The seal was broken at dawn. Look."],
+                    "GRIEVANCE_BREACH": [
+                        "You owe for the winter tally. Pay it."
+                    ],
+                    "INVENTORY_TRANSFER": ["Count the brass. Sign the ledger."],
+                    "PARANOIA_TRIGGERED": [
+                        "Valve is stuck. Keep eyes on the stair."
+                    ],
+                    "SOMATIC_TRAUMA": ["Arm is gone numb. Hand me the bar."]
+                },
+                "parentheticalsByCategory": {
+                    "CHRONO_MILESTONE": ["(even, marking the hour)"],
+                    "EPISTEMIC_REVEAL": ["(quiet, lowering the lamp)"],
+                    "GRIEVANCE_BREACH": ["(flat, holding the old debt)"],
+                    "INVENTORY_TRANSFER": ["(careful, counting the brass)"],
+                    "PARANOIA_TRIGGERED": ["(steady, watching the ledger)"],
+                    "SOMATIC_TRAUMA": ["(strained, favoring the left arm)"]
+                }
+            }
+        }
+    },
+    "catalog_summary": {
+        "characterCount": 3,
+        "characters": 3,
+        "grievanceCount": 1,
+        "grievances": 1,
+        "items": 3,
+        "locationCount": 2,
+        "locations": 2,
+        "mysteries": 0,
+        "mysteryCount": 0,
+        "possessionCount": 3,
+        "totalEntities": 9
+    },
+    "chronology": {
+        "calendar_system": "GREGORIAN_24H",
+        "era_label": "CANON_PRESENT",
+        "frames_per_second": 24,
+        "start_date": "2026-10-31",
+        "start_snapshot": {
+            "centisecond": 0,
+            "clockTimeHm": "21:00",
+            "clockTimeHms": "21:00:00",
+            "day": 31,
+            "daypart": "NIGHT",
+            "eraLabel": "CANON_PRESENT",
+            "framesPerSecond": 24,
+            "hour": 21,
+            "isoDate": "2026-10-31",
+            "minute": 0,
+            "month": 10,
+            "second": 0,
+            "tickCount": 0,
+            "tickSeconds": 60,
+            "timecodeSmpte": "21:00:00:00",
+            "timezoneLabel": "UTC+00:00",
+            "totalElapsedSeconds": 0,
+            "totalFrames": 0,
+            "year": 2026
+        },
+        "start_time": "21:00:00",
+        "tick_seconds": 60,
+        "timezone_label": "UTC+00:00"
+    },
+    "compiled_at": "2026-11-14T17:20:49.908Z",
+    "compiler_duration_ms": 2,
+    "entities": {
+        "char_johnny_walkman": {
+            "available_arms": 2,
+            "available_legs": 2,
+            "banned_kinetic_verbs": ["sit_still", "freeze_posture"],
+            "baseline_actions": ["sway", "broadcast", "adjust_boom_mic"],
+            "entity_type": "character",
+            "held_items": ["item_walkman_headset"],
+            "id": "char_johnny_walkman",
+            "locomotion_tier": "BIPEDAL_STANDARD",
+            "paranoia": 2800,
+            "prose_body": "Johnny Walkman stands six-foot-four in a faded hibiscus shirt, swaying from heel\nto toe while speaking into the foam-tipped boom microphone wired to his belt\ncassette deck.",
+            "somatic_strain": 1500,
+            "title": "Johnny Walkman",
+            "trust": 4500,
+            "voice_callbacks": ["folks across the basin", "dead reckoning"]
+        },
+        "char_miss_beverly": {
+            "available_arms": 2,
+            "available_legs": 1,
+            "banned_kinetic_verbs": [
+                "sprint",
+                "leap",
+                "jump",
+                "climb",
+                "vault",
+                "dash"
+            ],
+            "baseline_actions": ["pour_coffee", "drop_menus", "limp"],
+            "entity_type": "character",
+            "held_items": ["item_glass_carafe"],
+            "id": "char_miss_beverly",
+            "locomotion_tier": "BIPEDAL_LIMPING",
+            "paranoia": 1800,
+            "prose_body": "Miss Beverly navigates the waxed linoleum aisle of the Dixie-Starlight Diner,\nfavoring her swollen right ankle while carrying a fresh pot of decaf and lemon\nwedges.",
+            "somatic_strain": 5200,
+            "title": "Miss Beverly",
+            "trust": 5000,
+            "voice_callbacks": ["hot water and lemon", "check on booth seven"]
+        },
+        "char_orbie_mayhaw": {
+            "available_arms": 2,
+            "available_legs": 2,
+            "banned_kinetic_verbs": ["nod", "head_tilt", "slouch"],
+            "baseline_actions": ["inspect", "sanitize_frame", "rotate_torso"],
+            "entity_type": "character",
+            "held_items": ["item_brass_loupe"],
+            "id": "char_orbie_mayhaw",
+            "locomotion_tier": "BIPEDAL_RIGID",
+            "paranoia": 3600,
+            "prose_body": "Dr. Orbie Mayhaw sits upright in a pressed beige linen optometrist coat and\nwhite cotton gloves, rotating her upper torso as a single rigid block whenever\nshe addresses the booth.",
+            "somatic_strain": 1200,
+            "title": "Dr. Orbie Mayhaw",
+            "trust": 3000,
+            "voice_callbacks": ["progressive lenses", "optical parallax"]
+        },
+        "grv_parallax_alignment": {
+            "entity_type": "grievance",
+            "escalation_ceiling_bp": 8000,
+            "id": "grv_parallax_alignment",
+            "intensity_bp": 3200,
+            "max_intensity": 4,
+            "min_intensity": 1,
+            "participants": ["char_johnny_walkman", "char_orbie_mayhaw"],
+            "prose_body": "Dr. Orbie Mayhaw insists that Johnny Walkman nocturnal radio monologue distorts\nthe true optical geometry of the Wiregrass highway corridor.",
+            "spawns_on_max_escalation": [],
+            "title": "Dispute Over Uncalibrated Horizon Sightlines"
+        },
+        "item_brass_loupe": {
+            "entity_type": "item",
+            "id": "item_brass_loupe",
+            "occupies_hands": 1,
+            "owner_id": "char_orbie_mayhaw",
+            "prose_body": "A precision-ground monocular diopter loupe kept wrapped in alcohol-sterilized\nlinen inside Dr. Mayhaw coat pocket.",
+            "title": "Calibrated Brass Optometrist Loupe",
+            "weight_class": "LIGHT"
+        },
+        "item_glass_carafe": {
+            "entity_type": "item",
+            "id": "item_glass_carafe",
+            "occupies_hands": 1,
+            "owner_id": "char_miss_beverly",
+            "prose_body": "A heat-tempered glass diner coffee pot with a scorched orange handle for\nlate-night counter refills.",
+            "title": "Diner Glass Coffee Carafe",
+            "weight_class": "LIGHT"
+        },
+        "item_walkman_headset": {
+            "entity_type": "item",
+            "id": "item_walkman_headset",
+            "occupies_hands": 1,
+            "owner_id": "char_johnny_walkman",
+            "prose_body": "A modified portable cassette headset with bright yellow ear pads and a\ngoose-neck condenser microphone clipped to a coiled black cord.",
+            "title": "Yellow Foam Walkman Boom Headset",
+            "weight_class": "LIGHT"
+        },
+        "loc_dixie_starlight_diner": {
+            "acoustic_dampening_cdb": 1400,
+            "adjacent_to": ["loc_dixie_starlight_lot"],
+            "entity_type": "location",
+            "id": "loc_dixie_starlight_diner",
+            "occupancy_limit": 8,
+            "prose_body": "Fluorescent tubes hum at sixty hertz above green-checkered vinyl booths, chrome\nnapkin dispensers, and rain-streaked plate glass windows.",
+            "temperature_bp": 6600,
+            "title": "Dixie-Starlight Diner Booth Seven"
+        },
+        "loc_dixie_starlight_lot": {
+            "acoustic_dampening_cdb": 800,
+            "adjacent_to": ["loc_dixie_starlight_diner"],
+            "entity_type": "location",
+            "id": "loc_dixie_starlight_lot",
+            "occupancy_limit": 12,
+            "prose_body": "Rain sheets across the cracked blacktop outside the truck stop where\neighteen-wheelers idle beneath amber sodium floodlights.",
+            "temperature_bp": 7400,
+            "title": "Dixie-Starlight Truck Stop Asphalt Lot"
+        }
+    },
+    "entity_hashes": {
+        "char_johnny_walkman": "6cfefad4d3081bb9280336f1b11ccd3ed0bea7fb4940b7fba284bfe76922cfe2",
+        "char_miss_beverly": "79d4eec955bed11e711fd5e1b4d7fd54d538c32fb0ab9248c94d8376a8e1fb43",
+        "char_orbie_mayhaw": "8a2ffb95e7916271dfab6d60de440ed182026c5261379b9dfa9b2266d9dde778",
+        "grv_parallax_alignment": "b08ec64310058cd6b42ffcd44500a1754dc19e5e8075ca8cd595ff9ff95c0120",
+        "item_brass_loupe": "8830d3ff7f2ecba9533dabadeacd7894b3bbe8df0fd13c46c7698ab18c2e1bc9",
+        "item_glass_carafe": "07bca2ab3825fbf202c1eb8ed3a4fac06617c12c396346e025fc287b7ee25ce0",
+        "item_walkman_headset": "455e52ec62dab93fe4bfa947300e4b51726f5bfcbf4e147a583be5b31fe9e04a",
+        "loc_dixie_starlight_diner": "809719bf375ab383d0f50853a864360bd0545776eda72fe38417377b4c81bf6b",
+        "loc_dixie_starlight_lot": "5dcfca6bf1d90b77d843b1eae9ebc0f4386a8cf041d178cd0ef16d43b223d20b"
+    },
+    "root_merkle_hash": "bb4b01412d539136a90bdf4c88d25a423b5a32658d553b48b0e8dff06db477e6",
+    "schema_version": "1.0.0",
+    "series_slug": "wiregrass-basin"
+}

@@ -8,6 +8,28 @@
             "max_scripts_per_run": 64,
             "min_global_significance_bps": 5000,
             "output_subdir": "drafts/auto-script",
+            "pacing_budget": {
+                "act_i_end_bps": 3333,
+                "act_i_multiplier_bps": 8500,
+                "act_ii_end_bps": 7500,
+                "act_ii_multiplier_bps": 11500,
+                "act_iii_multiplier_bps": 14500,
+                "act_window_mode": "HORIZON_PERCENT",
+                "critical_override_bps": 9400,
+                "diurnal_tension_weights_bps": {
+                    "AFTERNOON": 10000,
+                    "DAWN": 9500,
+                    "DUSK": 11500,
+                    "MORNING": 8500,
+                    "NIGHT": 12500
+                },
+                "drought_boost_bps_per_tick": 650,
+                "enabled": true,
+                "max_drought_boost_bps": 5500,
+                "max_dry_spell_ticks": 6,
+                "min_minutes_between_scenes": 15,
+                "min_ticks_between_scenes": 2
+            },
             "rules": [
                 {
                     "category": "PARANOIA_TRIGGERED",
@@ -259,8 +281,8 @@
         "tick_seconds": 60,
         "timezone_label": "UTC+00:00"
     },
-    "compiled_at": "2026-11-14T15:52:35.434Z",
-    "compiler_duration_ms": 12,
+    "compiled_at": "2026-11-14T17:20:49.473Z",
+    "compiler_duration_ms": 15,
     "entities": {
         "char_gristle": {
             "available_arms": 2,
@@ -344,7 +366,7 @@
         "loc_cellar": "1804ce594aeebfe09957756edb3fc7d05b8879cb768d6e1147d3386abb0b9adb",
         "loc_hearth": "2630dfd0ce39bcdfabc2b6ddf2066351136da6e0507370ae2324c5b0915a04e3"
     },
-    "root_merkle_hash": "599ceb0aaccb2fbc30824d5bc0d3e4a0121b46c13f6443eccea5ef93fa74bd3b",
+    "root_merkle_hash": "4d0903e90e22bc16734d03712fa72223575b4685e55fa20a77c79ca45aebd2f7",
     "schema_version": "1.0.0",
     "series_slug": "000.sample-hearth"
 }
