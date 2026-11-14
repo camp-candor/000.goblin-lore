@@ -87,7 +87,7 @@ describe('Phase 2 - Somatic Biomechanical State Vector System', () => {
                     severity_bp: 100,
                     impairment_penalty_arms: 0,
                     impairment_penalty_legs: 0,
-                    added_banned_verbs: ['FLY' as any],
+                    added_banned_verbs: ['WALL_PHASE' as any],
                 }),
             ).toThrow()
 

@@ -254,7 +254,7 @@ describe('299.lore - Compile Menu Flight Deck & Telemetry Suite', () => {
                     choicesPresented.push(payload.lst)
                     if (choiceCount === 1) {
                         // First choice dialog: Series selection prompt
-                        return { chcBit: { src: '[S] lving-treee' } }
+                        return { chcBit: { src: '[S] wiregrass-basin' } }
                     }
                     if (choiceCount === 2) {
                         // Second choice dialog: Compile options 1-5
@@ -283,13 +283,13 @@ describe('299.lore - Compile Menu Flight Deck & Telemetry Suite', () => {
             // Assert that the first choice dialog was series selection
             expect(choicesPresented.length).toBe(2)
             expect(
-                choicesPresented[0].some((c) => c.includes('lving-treee')),
+                choicesPresented[0].some((c) => c.includes('wiregrass-basin')),
             ).toBe(true)
             expect(choicesPresented[0]).toContain('[ CUSTOM SERIES SLUG ]')
             expect(choicesPresented[0]).toContain('[<] CANCEL')
 
             // Assert that model.activeSeries was updated
-            expect(model.activeSeries).toBe('lving-treee')
+            expect(model.activeSeries).toBe('wiregrass-basin')
 
             // Assert that the second choice dialog presented the 1-5 compile options
             expect(choicesPresented[1].length).toBe(COMPILE_MENU_OPTIONS.length)
@@ -298,7 +298,7 @@ describe('299.lore - Compile Menu Flight Deck & Telemetry Suite', () => {
             // Assert console logged target series locked
             expect(
                 consoleMessages.some((msg) =>
-                    msg.includes('Target series selected: lving-treee'),
+                    msg.includes('Target series selected: wiregrass-basin'),
                 ),
             ).toBe(true)
         } finally {

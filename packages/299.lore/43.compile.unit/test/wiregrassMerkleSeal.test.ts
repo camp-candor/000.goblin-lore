@@ -53,6 +53,7 @@ describe('43.compile.unit :: Wiregrass Basin Merkle Seal & Hermetic Parity', () 
             entity_hashes: onDisk.entity_hashes,
             entities: onDisk.entities,
             chronology: onDisk.chronology,
+            auto_script_bundle: onDisk.auto_script_bundle,
         }
         const recomputedHash = crypto
             .createHash('sha256')

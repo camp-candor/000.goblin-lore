@@ -61,15 +61,21 @@ describe('Task 4.3 Series Genesis Seed Population Gauntlet', () => {
 
         expect(result).toBeDefined()
         expect(result.seedBit.val).toBe(1)
-        expect(result.seedBit.dat.totalSeeded).toBe(4)
+        expect(result.seedBit.dat.totalSeeded).toBe(5)
 
         const seriesDir = path.join(tempRepoRoot, 'series', seriesSlug)
         const conditionsPath = path.join(seriesDir, 'world', 'conditions.md')
         const economyPath = path.join(seriesDir, 'world', 'economy.md')
+        const catalystsPath = path.join(
+            seriesDir,
+            'world',
+            'dramatic-catalysts.md',
+        )
         const hubPath = path.join(seriesDir, 'locations', 'loc_origin_hub.md')
 
         expect(fs.existsSync(conditionsPath)).toBe(true)
         expect(fs.existsSync(economyPath)).toBe(true)
+        expect(fs.existsSync(catalystsPath)).toBe(true)
         expect(fs.existsSync(hubPath)).toBe(true)
 
         const condBytes = fs.readFileSync(conditionsPath)

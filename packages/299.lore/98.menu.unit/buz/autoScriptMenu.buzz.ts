@@ -274,11 +274,12 @@ export const runAutoScriptMenu = async (
         dat.activeSeries || cpy?.activeSeries || '000.sample-hearth'
     const seriesDir = dat.seriesDir || path.join(repoRoot, 'series', seriesSlug)
     const config = loadSeriesAutoScriptConfig(seriesDir)
-    const activeCount = config.rules.filter((r) => r.enabled).length
+    let activeConfig = config
+    const activeCount = activeConfig.rules.filter((r) => r.enabled).length
 
     emitConsole(
         ste,
-        `>> [AUTO_SCRIPT:CONFIG] Series=${seriesSlug} | Enabled=${config.enabled} | GlobalMin=${config.min_global_significance_bps}bps | ActiveRules=${activeCount}/${config.rules.length} | Output=${config.output_subdir}`,
+        `>> [AUTO_SCRIPT:CONFIG] Series=${seriesSlug} | Enabled=${activeConfig.enabled} | GlobalMin=${activeConfig.min_global_significance_bps}bps | ActiveRules=${activeCount}/${activeConfig.rules.length} | Output=${activeConfig.output_subdir}`,
     )
 
     // 4. Interactive Blessed Curses Submenu with strict net mesh binding
@@ -292,13 +293,15 @@ export const runAutoScriptMenu = async (
             })
             const net = gridBit?.grdBit?.dat
             const choiceRes = await lib.hunt('[Open action] Open Choice', {
+                dat: { clr0: 0, clr1: 3 },
+                src: 'VERTICAL',
                 lst: [...AUTO_SCRIPT_SUBMENU_CHOICES],
                 net,
             })
             const picked = String(choiceRes?.chcBit?.src || '')
 
             if (picked === AUTO_SCRIPT_SUBMENU_CHOICES[0]) {
-                for (const rule of config.rules) {
+                for (const rule of activeConfig.rules) {
                     emitConsole(
                         ste,
                         `>> [AUTO_SCRIPT:RULE] ${rule.category} enabled=${rule.enabled} min=${rule.min_severity_bps}bps cooldown=${rule.cooldown_ticks} weight=${rule.priority_weight_bps}bps`,
@@ -306,33 +309,47 @@ export const runAutoScriptMenu = async (
                 }
             } else if (picked === AUTO_SCRIPT_SUBMENU_CHOICES[1]) {
                 const inputRes = await lib.hunt('[Open action] Open Input', {
-                    src: 'GLOBAL_MIN_SIGNIFICANCE_BPS (0-10000):',
+                    txt: 'GLOBAL_MIN_SIGNIFICANCE_BPS (0-10000):',
+                    src: String(activeConfig.min_global_significance_bps),
+                    dat: { clr0: 0, clr1: 3 },
                     net,
                 })
-                const rawVal = Number(inputRes?.inpBit?.src ?? '')
-                const updated = applyAutoScriptConfigPatch(seriesDir, {
-                    min_global_significance_bps: rawVal,
-                })
-                emitConsole(
-                    ste,
-                    `>> [AUTO_SCRIPT:CONFIG] Updated min_global_significance_bps=${updated.min_global_significance_bps}`,
-                )
+                const rawStr = String(
+                    inputRes?.putBit?.src ?? inputRes?.inpBit?.src ?? '',
+                ).trim()
+                if (inputRes?.putBit?.val !== -1 && rawStr.length > 0) {
+                    const rawVal = Number(rawStr)
+                    activeConfig = applyAutoScriptConfigPatch(seriesDir, {
+                        min_global_significance_bps: rawVal,
+                    })
+                    emitConsole(
+                        ste,
+                        `>> [AUTO_SCRIPT:CONFIG] Updated min_global_significance_bps=${activeConfig.min_global_significance_bps}`,
+                    )
+                } else {
+                    emitConsole(
+                        ste,
+                        ':: [AUTO_SCRIPT:CANCEL] Threshold update cancelled.',
+                    )
+                }
             } else if (picked === AUTO_SCRIPT_SUBMENU_CHOICES[2]) {
                 const catRes = await lib.hunt('[Open action] Open Choice', {
-                    lst: config.rules.map((r) => r.category),
+                    dat: { clr0: 0, clr1: 3 },
+                    src: 'VERTICAL',
+                    lst: activeConfig.rules.map((r) => r.category),
                     net,
                 })
                 const cat = String(catRes?.chcBit?.src || '')
                 if (cat) {
-                    const nextRules = config.rules.map((r) =>
+                    const nextRules = activeConfig.rules.map((r) =>
                         r.category === cat ? { ...r, enabled: !r.enabled } : r,
                     )
-                    const updated = applyAutoScriptConfigPatch(seriesDir, {
+                    activeConfig = applyAutoScriptConfigPatch(seriesDir, {
                         rules: nextRules,
                     })
                     emitConsole(
                         ste,
-                        `>> [AUTO_SCRIPT:CONFIG] Toggled ${cat} (${updated.rules.filter((r) => r.enabled).length} active)`,
+                        `>> [AUTO_SCRIPT:CONFIG] Toggled ${cat} (${activeConfig.rules.filter((r) => r.enabled).length} active)`,
                     )
                 }
             } else if (picked === AUTO_SCRIPT_SUBMENU_CHOICES[3]) {
@@ -361,7 +378,7 @@ export const runAutoScriptMenu = async (
                 idx: bal.idx || 'auto-script-menu',
                 val: 1,
                 lst: [...AUTO_SCRIPT_SUBMENU_CHOICES],
-                dat: { autoScript: config },
+                dat: { autoScript: activeConfig },
             },
         })
     }

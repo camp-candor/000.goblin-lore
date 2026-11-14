@@ -102,7 +102,7 @@ export function verifyWiregrassCanonSealForTts(
         }
     }
 
-    const preSealPayload = {
+    const preSealPayload: Record<string, unknown> = {
         schema_version: parsed.schema_version,
         series_slug: parsed.series_slug,
         _meta: parsed._meta,
@@ -110,6 +110,9 @@ export function verifyWiregrassCanonSealForTts(
         entity_hashes: entityHashes,
         entities,
         chronology: parsed.chronology,
+    }
+    if (parsed.auto_script_bundle !== undefined) {
+        preSealPayload.auto_script_bundle = parsed.auto_script_bundle
     }
     const recomputedRoot = sha256Hex(canonicalizeJson(preSealPayload))
     if (recomputedRoot !== parsed.root_merkle_hash) {

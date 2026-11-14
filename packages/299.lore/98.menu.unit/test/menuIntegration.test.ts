@@ -28,6 +28,7 @@ describe('Phase 10 Blessed Terminal Flight Deck Menu Integration Suite', () => {
             '[H] STATIC CORPUS HEALTH TELEMETRY',
             '[X] RECORD CANONICAL ERRATA ENTRY',
             '[T] SIMULATION CHRONOLOGY CLOCK',
+            '[A] CONFIGURE AUTO-SCRIPT CATALYSTS',
         ])
     })
 

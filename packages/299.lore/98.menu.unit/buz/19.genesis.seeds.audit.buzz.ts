@@ -46,6 +46,7 @@ const EXPECTED_SEED_IDS = [
     'world_conditions_registry',
     'world_economy_registry',
     'world_chronology',
+    'world_dramatic_catalysts',
     'loc_origin_hub',
 ]
 
@@ -79,7 +80,7 @@ export async function auditGenesisSeeds(): Promise<GenesisSeedsAudit> {
         const seriesBase = path.join(tempRepo, 'series', PROBE_SLUG)
         fs.mkdirSync(seriesBase, { recursive: true })
 
-        // [SEED:INIT] Real population must return val: 1 with 3 dossiers.
+        // [SEED:INIT] Real population must return val: 1 with 5 dossiers.
         const model = new SeedModel()
         let result: any = null
         await populateGenesisSeeds(model, {
@@ -92,10 +93,10 @@ export async function auditGenesisSeeds(): Promise<GenesisSeedsAudit> {
 
         initSealed =
             result?.seedBit?.val === 1 &&
-            result?.seedBit?.dat?.totalSeeded === 4
+            result?.seedBit?.dat?.totalSeeded === 5
         if (!initSealed) {
             errors.push(
-                '[SEED:BREACH] populateGenesisSeeds failed val: 1 with 3 dossiers.',
+                '[SEED:BREACH] populateGenesisSeeds failed val: 1 with 5 dossiers.',
             )
         }
 
@@ -107,6 +108,7 @@ export async function auditGenesisSeeds(): Promise<GenesisSeedsAudit> {
             path.join(seriesBase, 'world', 'conditions.md'),
             path.join(seriesBase, 'world', 'economy.md'),
             path.join(seriesBase, 'world', 'chronology.md'),
+            path.join(seriesBase, 'world', 'dramatic-catalysts.md'),
             path.join(seriesBase, 'locations', 'loc_origin_hub.md'),
         ]
         triadSealed =

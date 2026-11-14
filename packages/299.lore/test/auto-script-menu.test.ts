@@ -191,4 +191,79 @@ describe('Lore Auto-Script Catalyst Authoring Menu', () => {
 
         fs.rmSync(tmpDir, { recursive: true, force: true })
     })
+
+    it('interactive Blessed threshold prompt reads putBit.src, anchors net, and ignores cancel', async () => {
+        const tmpDir = fs.mkdtempSync(
+            path.join(os.tmpdir(), 'auto-script-input-'),
+        )
+        const configPath = path.join(tmpDir, 'series.config.json')
+        fs.writeFileSync(
+            configPath,
+            JSON.stringify(
+                {
+                    series_slug: 'input-series',
+                    auto_script: { min_global_significance_bps: 5000 },
+                },
+                null,
+                2,
+            ) + '\n',
+            'utf8',
+        )
+
+        const prevLib = (globalThis as any).LIBRARY
+        const inputPayloads: any[] = []
+        let inputReply: any = { putBit: { src: '7400' } }
+
+        ;(globalThis as any).LIBRARY = {
+            hunt: async (act: string, bal: any) => {
+                if (act === '[Grid action] Update Grid') {
+                    return { grdBit: { dat: { mesh: 'left-4-col' } } }
+                }
+                if (act === '[Open action] Open Choice') {
+                    return {
+                        chcBit: {
+                            src: '[2] SET GLOBAL SIGNIFICANCE THRESHOLD (BPS)',
+                        },
+                    }
+                }
+                if (act === '[Open action] Open Input') {
+                    inputPayloads.push(bal)
+                    return inputReply
+                }
+                return {}
+            },
+        }
+
+        try {
+            let resolved: any = null
+            await runAutoScriptMenu(new MenuModel(), {
+                idx: 'test-putbit-update',
+                dat: { seriesDir: tmpDir },
+                slv: (res: any) => {
+                    resolved = res
+                },
+            })
+            expect(inputPayloads.length).toBe(1)
+            expect(inputPayloads[0].net).toEqual({ mesh: 'left-4-col' })
+            expect(
+                resolved?.mnuBit?.dat?.autoScript?.min_global_significance_bps,
+            ).toBe(7400)
+
+            // Now simulate operator cancel (val: -1, empty src) -> must NOT overwrite to 0
+            inputReply = { putBit: { val: -1, src: '' } }
+            await runAutoScriptMenu(new MenuModel(), {
+                idx: 'test-putbit-cancel',
+                dat: { seriesDir: tmpDir },
+                slv: (res: any) => {
+                    resolved = res
+                },
+            })
+            expect(
+                resolved?.mnuBit?.dat?.autoScript?.min_global_significance_bps,
+            ).toBe(7400)
+        } finally {
+            ;(globalThis as any).LIBRARY = prevLib
+            fs.rmSync(tmpDir, { recursive: true, force: true })
+        }
+    })
 })
