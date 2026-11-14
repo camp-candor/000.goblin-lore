@@ -793,6 +793,32 @@ export const updateMenu = async (
         return cpy
     }
     if (
+        (bal as any)?.type === ActMnu.CONFIGURE_RECURRENCE_GRAMMAR ||
+        (bal as any)?.dat?.action === 'CONFIGURE_RECURRENCE_GRAMMAR'
+    ) {
+        const { runChronologyMenu } = await import('./chronologyMenu.buzz.js')
+        await runChronologyMenu(
+            cpy,
+            {
+                ...bal,
+                dat: {
+                    ...(bal as any)?.dat,
+                    action: 'CONFIGURE_RECURRENCE_GRAMMAR',
+                },
+            } as any,
+            ste,
+        )
+        setTimeout(async () => {
+            if (ste?.hunt) {
+                await ste.hunt(ActMnu.UPDATE_MENU, {})
+            }
+        }, 333)
+        if (bal?.slv) {
+            bal.slv({ mnuBit: bal })
+        }
+        return cpy
+    }
+    if (
         (bal as any)?.type === ActMnu.CONFIGURE_PACING_BUDGET ||
         (bal as any)?.dat?.action === 'CONFIGURE_PACING_BUDGET'
     ) {

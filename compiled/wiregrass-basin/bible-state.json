@@ -371,6 +371,7 @@
     "era_label": "CANON_PRESENT",
     "frames_per_second": 24,
     "scheduled_beats": [],
+    "series_blackout_dates": [],
     "start_date": "2026-10-31",
     "start_snapshot": {
       "centisecond": 0,
@@ -397,8 +398,8 @@
     "tick_seconds": 60,
     "timezone_label": "UTC+00:00"
   },
-  "compiled_at": "2026-11-14T18:05:32.858Z",
-  "compiler_duration_ms": 1,
+  "compiled_at": "2026-11-14T19:08:03.177Z",
+  "compiler_duration_ms": 5,
   "entities": {
     "char_johnny_walkman": {
       "available_arms": 2,
@@ -567,7 +568,7 @@
     "loc_dixie_starlight_diner": "809719bf375ab383d0f50853a864360bd0545776eda72fe38417377b4c81bf6b",
     "loc_dixie_starlight_lot": "5dcfca6bf1d90b77d843b1eae9ebc0f4386a8cf041d178cd0ef16d43b223d20b"
   },
-  "root_merkle_hash": "57c307983b3e5205bc2ba4506097e707aafa2fc34e0061e4e9e24880a190dbe7",
+  "root_merkle_hash": "baa7b366c12085d0a6bd47820ac44f0304adcdc02ee4a3c8a772e98aff4c0686",
   "schema_version": "1.0.0",
   "series_slug": "wiregrass-basin"
 }

@@ -6,6 +6,7 @@ import {
     type PacingBudgetConfig,
 } from '../../38.types.unit/fce/autoScriptRule.interface.js'
 import type { GlobalCooldownEvaluation } from '../fce/cooldown.interface.js'
+import { expandRecurrenceOccurrencesInHorizon } from '../../05.clock.unit/buz/clock.buzz.js'
 
 export const initCooldown = (
     cpy: CooldownModel,
@@ -140,11 +141,45 @@ export interface AgendaReserveHold {
     readonly ticksUntilBeat: number
 }
 
+function isChronologyLike(value: unknown): boolean {
+    if (value === null || typeof value !== 'object' || Array.isArray(value))
+        return false
+    const rec = value as Record<string, unknown>
+    return (
+        typeof rec['start_date'] === 'string' ||
+        Array.isArray(rec['scheduled_beats'])
+    )
+}
+
 export function evaluateAgendaReserveBlock(
     currentTick: number,
     resolvedBeatsOrTicks: unknown,
     maybeOffsets?: unknown,
 ): AgendaReserveHold {
+    if (isChronologyLike(resolvedBeatsOrTicks)) {
+        const horizon =
+            typeof maybeOffsets === 'number' ? Math.trunc(maybeOffsets) : 14
+        const safeHorizon =
+            Number.isInteger(horizon) && horizon >= 1 && horizon <= 365
+                ? horizon
+                : 14
+        let expanded: Array<{
+            beat_id?: string
+            beatId?: string
+            beatCategory?: string
+            targetTick: number
+            reserveStartTick: number
+        }> = []
+        try {
+            expanded = expandRecurrenceOccurrencesInHorizon(
+                resolvedBeatsOrTicks as never,
+                safeHorizon,
+            ) as unknown as typeof expanded
+        } catch {
+            expanded = []
+        }
+        return evaluateAgendaReserveBlock(currentTick, expanded as unknown)
+    }
     let list: Array<{
         beat_id?: string
         beatId?: string

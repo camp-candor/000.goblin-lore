@@ -68,6 +68,7 @@ describe('chrono agenda menu', () => {
             '[2] ADD SCHEDULED STORY BEAT',
             '[3] REMOVE SCHEDULED BEAT BY ID',
             '[4] PREVIEW RESERVE COUNTDOWN TIMELINE',
+            '[5] CONFIGURE RECURRENCE & BLACKOUTS',
             '[<] BACK TO CHRONOLOGY MENU',
         ])
         const prevLib = (globalThis as any).LIBRARY

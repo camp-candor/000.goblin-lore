@@ -13,9 +13,11 @@ import type {
 } from '../fce/compile.bit'
 import type State from '../../99.core/state'
 import {
+    normalizeBeatRecurrenceRule,
     resolveChronologyConfig,
     sortScheduledBeatsDeterministically,
     type ChronologyConfig,
+    type RecurrenceRule,
     type ScheduledBeat,
 } from '../../38.types.unit/fce/chronology.interface.js'
 import {
@@ -26,6 +28,7 @@ import { buildCharacterVoiceProfile } from '../../02.character.unit/buz/characte
 import { buildLocationStageProfile } from '../../01.location.unit/buz/location.buzz.js'
 import { buildEventDramaticPalette } from '../../11.events.unit/buz/events.buzz.js'
 import {
+    expandRecurrenceOccurrencesInHorizon,
     parseCalendarStart,
     validateChronoAgendaRegistry,
 } from '../../05.clock.unit/buz/clock.buzz.js'
@@ -2295,6 +2298,125 @@ export const gate0Verify = (
     return cpy
 }
 
+export const WEEKDAY_CANONICAL_ORDER: readonly string[] = Object.freeze([
+    'MON',
+    'TUE',
+    'WED',
+    'THU',
+    'FRI',
+    'SAT',
+    'SUN',
+])
+
+export const SOLAR_CANONICAL_ORDER: readonly string[] = Object.freeze([
+    'VERNAL_EQUINOX',
+    'SUMMER_SOLSTICE',
+    'AUTUMN_EQUINOX',
+    'WINTER_SOLSTICE',
+])
+
+export function canonicalizeRecurrenceRule(
+    rule: RecurrenceRule,
+): RecurrenceRule {
+    const weekdayRank = (w: string): number => {
+        const i = WEEKDAY_CANONICAL_ORDER.indexOf(w)
+        return i === -1 ? 99 : i
+    }
+    const solarRank = (s: string): number => {
+        const i = SOLAR_CANONICAL_ORDER.indexOf(s)
+        return i === -1 ? 99 : i
+    }
+    const dedupSorted = (arr: string[]): string[] => [...new Set(arr)].sort()
+    const out: Record<string, unknown> = {
+        ...(rule as Record<string, unknown>),
+    }
+    if (Array.isArray(rule.weekdayMask)) {
+        out['weekdayMask'] = [...new Set(rule.weekdayMask)].sort(
+            (a, b) => weekdayRank(a) - weekdayRank(b),
+        )
+    }
+    if (Array.isArray(rule.solarMarkers)) {
+        out['solarMarkers'] = [...new Set(rule.solarMarkers)].sort(
+            (a, b) => solarRank(a) - solarRank(b),
+        )
+    }
+    if (Array.isArray(rule.blackoutDates)) {
+        out['blackoutDates'] = dedupSorted([...rule.blackoutDates])
+    }
+    if (Array.isArray(rule.blackoutWeekdays)) {
+        out['blackoutWeekdays'] = [...new Set(rule.blackoutWeekdays)].sort(
+            (a, b) => weekdayRank(a) - weekdayRank(b),
+        )
+    }
+    return out as unknown as RecurrenceRule
+}
+
+export function canonicalizeSealedChronology(
+    chronology: ChronologyConfig,
+): ChronologyConfig {
+    const raw = { ...(chronology as Record<string, unknown>) }
+    const seriesBlackouts: string[] = Array.isArray(
+        (raw as { series_blackout_dates?: unknown }).series_blackout_dates,
+    )
+        ? [
+              ...((raw as { series_blackout_dates?: string[] })
+                  .series_blackout_dates as string[]),
+          ]
+        : []
+    ;(raw as Record<string, unknown>)['series_blackout_dates'] = [
+        ...new Set(seriesBlackouts),
+    ].sort()
+    const beats = sortScheduledBeatsDeterministically([
+        ...(((raw as { scheduled_beats?: ScheduledBeat[] }).scheduled_beats ??
+            []) as ScheduledBeat[]),
+    ])
+    ;(raw as Record<string, unknown>)['scheduled_beats'] = beats.map((b) => {
+        const rec = { ...(b as Record<string, unknown>) }
+        const rule = normalizeBeatRecurrenceRule(b) as RecurrenceRule
+        if ((b as Record<string, unknown>)['recurrenceRule'] !== undefined) {
+            rec['recurrenceRule'] = canonicalizeRecurrenceRule(rule)
+        }
+        return rec
+    })
+    return raw as unknown as ChronologyConfig
+}
+
+function diffIsoDays(fromIso: string, toIso: string): number {
+    const pa = String(fromIso).split('-').map(Number)
+    const pb = String(toIso).split('-').map(Number)
+    const da = Date.UTC(pa[0], pa[1] - 1, pa[2]) / 86400000
+    const db = Date.UTC(pb[0], pb[1] - 1, pb[2]) / 86400000
+    return Math.trunc(db - da)
+}
+
+export function assertNoDeadEndRecurrence(chronology: ChronologyConfig): void {
+    const beats = ((chronology as { scheduled_beats?: ScheduledBeat[] })
+        .scheduled_beats ?? []) as ScheduledBeat[]
+    for (const beat of beats) {
+        const rule = normalizeBeatRecurrenceRule(beat) as RecurrenceRule
+        if (rule.untilIsoDate === undefined) continue
+        const horizon = diffIsoDays(
+            (chronology as ChronologyConfig).start_date,
+            rule.untilIsoDate,
+        )
+        if (horizon < 0) {
+            throw new Error(
+                `[RECURRENCE_ZERO_MATCH_IN_HORIZON] Beat ${beat.beat_id} has zero valid occurrences before untilIsoDate`,
+            )
+        }
+        const clamped = Math.min(365, Math.max(1, horizon))
+        const occ = expandRecurrenceOccurrencesInHorizon(
+            chronology,
+            clamped,
+        ).filter((o) => o.beat_id === beat.beat_id)
+        if (occ.length === 0) {
+            throw new Error(
+                `[RECURRENCE_ZERO_MATCH_IN_HORIZON] Beat ${beat.beat_id} has zero valid occurrences before untilIsoDate`,
+            )
+        }
+    }
+}
+
 export function resolveSealedAgendaChronology(
     catalog: Record<string, unknown>,
     chronology: ChronologyConfig,
@@ -2352,8 +2474,12 @@ export function resolveSealedAgendaChronology(
             }
         }
     }
-    return {
+    assertNoDeadEndRecurrence({
         ...(chronology as Record<string, unknown>),
         scheduled_beats: scheduledBeats,
-    } as unknown as ChronologyConfig
+    } as unknown as ChronologyConfig)
+    return canonicalizeSealedChronology({
+        ...(chronology as Record<string, unknown>),
+        scheduled_beats: scheduledBeats,
+    } as unknown as ChronologyConfig)
 }

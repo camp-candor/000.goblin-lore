@@ -36,6 +36,164 @@ export const isValidGregorianIsoDate = (isoDate: string): boolean => {
     return true
 }
 
+export const WeekdayTokenSchema = z.enum([
+    'MON',
+    'TUE',
+    'WED',
+    'THU',
+    'FRI',
+    'SAT',
+    'SUN',
+])
+export type WeekdayToken = z.infer<typeof WeekdayTokenSchema>
+
+export const LunarPhaseTokenSchema = z.enum([
+    'NEW_MOON',
+    'FIRST_QUARTER',
+    'FULL_MOON',
+    'LAST_QUARTER',
+])
+export type LunarPhaseToken = z.infer<typeof LunarPhaseTokenSchema>
+
+export const SolarMarkerTokenSchema = z.enum([
+    'VERNAL_EQUINOX',
+    'SUMMER_SOLSTICE',
+    'AUTUMN_EQUINOX',
+    'WINTER_SOLSTICE',
+])
+export type SolarMarkerToken = z.infer<typeof SolarMarkerTokenSchema>
+
+export const BlackoutShiftPolicySchema = z.enum([
+    'SKIP',
+    'DEFER_NEXT_VALID_DAY',
+])
+export type BlackoutShiftPolicy = z.infer<typeof BlackoutShiftPolicySchema>
+
+export const RecurrenceFrequencySchema = z.enum([
+    'ONCE',
+    'DAILY',
+    'WEEKLY_MASK',
+    'INTERVAL_DAYS',
+    'LUNAR_PHASE',
+    'SOLAR_SOLSTICE_EQUINOX',
+])
+export type RecurrenceFrequency = z.infer<typeof RecurrenceFrequencySchema>
+
+export const RecurrenceRuleSchema = z
+    .object({
+        frequency: RecurrenceFrequencySchema,
+        weekdayMask: z.array(WeekdayTokenSchema).min(1).max(7).optional(),
+        intervalDays: z.number().int().min(1).max(365).optional(),
+        lunarPhase: LunarPhaseTokenSchema.optional(),
+        solarMarkers: z.array(SolarMarkerTokenSchema).min(1).max(4).optional(),
+        blackoutDates: z
+            .array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/))
+            .max(128)
+            .default([]),
+        blackoutWeekdays: z.array(WeekdayTokenSchema).max(6).default([]),
+        blackoutShiftPolicy: BlackoutShiftPolicySchema.default('SKIP'),
+        untilIsoDate: z
+            .string()
+            .regex(/^\d{4}-\d{2}-\d{2}$/)
+            .optional(),
+        maxOccurrences: z.number().int().min(1).max(1000).optional(),
+    })
+    .strict()
+    .superRefine((rule, ctx) => {
+        if (
+            rule.frequency === 'WEEKLY_MASK' &&
+            (!rule.weekdayMask || rule.weekdayMask.length === 0)
+        ) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message:
+                    '[RECURRENCE_MISSING_WEEKDAY_MASK] WEEKLY_MASK requires non-empty weekdayMask',
+                path: ['weekdayMask'],
+            })
+        }
+        if (
+            rule.frequency === 'INTERVAL_DAYS' &&
+            (rule.intervalDays === undefined || rule.intervalDays === null)
+        ) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message:
+                    '[RECURRENCE_MISSING_INTERVAL_DAYS] INTERVAL_DAYS requires intervalDays',
+                path: ['intervalDays'],
+            })
+        }
+        if (
+            rule.frequency === 'LUNAR_PHASE' &&
+            (rule.lunarPhase === undefined || rule.lunarPhase === null)
+        ) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message:
+                    '[RECURRENCE_MISSING_LUNAR_PHASE] LUNAR_PHASE requires lunarPhase',
+                path: ['lunarPhase'],
+            })
+        }
+        if (
+            rule.frequency === 'SOLAR_SOLSTICE_EQUINOX' &&
+            (!rule.solarMarkers || rule.solarMarkers.length === 0)
+        ) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message:
+                    '[RECURRENCE_MISSING_SOLAR_MARKERS] SOLAR_SOLSTICE_EQUINOX requires non-empty solarMarkers',
+                path: ['solarMarkers'],
+            })
+        }
+        for (let i = 0; i < (rule.blackoutDates ?? []).length; i++) {
+            const d = (rule.blackoutDates ?? [])[i]
+            if (!isValidGregorianIsoDate(d)) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: `[INVALID_BLACKOUT_DATE] Invalid blackout date: ${d}`,
+                    path: ['blackoutDates', i],
+                })
+            }
+        }
+        if (
+            rule.untilIsoDate !== undefined &&
+            !isValidGregorianIsoDate(rule.untilIsoDate)
+        ) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: `[INVALID_UNTIL_DATE] Invalid untilIsoDate: ${rule.untilIsoDate}`,
+                path: ['untilIsoDate'],
+            })
+        }
+    })
+
+export type RecurrenceRule = z.infer<typeof RecurrenceRuleSchema>
+
+export const normalizeBeatRecurrenceRule = (
+    beat: ScheduledBeat | Record<string, unknown>,
+): RecurrenceRule => {
+    const candidate = (beat as Record<string, unknown>)?.['recurrenceRule'] as
+        RecurrenceRule | undefined
+    if (candidate !== undefined && candidate !== null) {
+        return candidate
+    }
+    const recurringDaily =
+        (beat as Record<string, unknown>)?.['recurringDaily'] === true
+    if (recurringDaily) {
+        return {
+            frequency: 'DAILY',
+            blackoutDates: [],
+            blackoutWeekdays: [],
+            blackoutShiftPolicy: 'SKIP',
+        }
+    }
+    return {
+        frequency: 'ONCE',
+        blackoutDates: [],
+        blackoutWeekdays: [],
+        blackoutShiftPolicy: 'SKIP',
+    }
+}
+
 export const ScheduledBeatSchema = z
     .object({
         beat_id: z.string().regex(/^[a-z0-9_]+$/),
@@ -55,6 +213,7 @@ export const ScheduledBeatSchema = z
             .optional(),
         recurringDaily: z.boolean().default(false),
         toleranceTicks: z.number().int().min(0).max(10).default(0),
+        recurrenceRule: RecurrenceRuleSchema.optional(),
     })
     .strict()
     .superRefine((beat, ctx) => {
@@ -63,6 +222,15 @@ export const ScheduledBeatSchema = z
                 code: z.ZodIssueCode.custom,
                 message: `[INVALID_AGENDA_DATE] Invalid calendar date: ${beat.isoDate}`,
                 path: ['isoDate'],
+            })
+        }
+        const until = (beat as { recurrenceRule?: { untilIsoDate?: string } })
+            ?.recurrenceRule?.untilIsoDate
+        if (typeof until === 'string' && until < beat.isoDate) {
+            ctx.addIssue({
+                code: z.ZodIssueCode.custom,
+                message: `[RECURRENCE_UNTIL_BEFORE_START] untilIsoDate ${until} precedes beat isoDate ${beat.isoDate}`,
+                path: ['recurrenceRule', 'untilIsoDate'],
             })
         }
     })
@@ -107,6 +275,10 @@ export const ChronologyConfigSchema = z
         timezone_label: z.string().min(1).max(32).default('UTC+00:00'),
         era_label: z.string().min(1).max(64).default('CANON_PRESENT'),
         scheduled_beats: z.array(ScheduledBeatSchema).max(256).optional(),
+        series_blackout_dates: z
+            .array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/))
+            .max(256)
+            .optional(),
     })
     .strict()
     .superRefine((val, ctx) => {
@@ -116,6 +288,25 @@ export const ChronologyConfigSchema = z
                 message: `[INVALID_CALENDAR_DATE] Invalid calendar start_date: ${val.start_date}`,
                 path: ['start_date'],
             })
+        }
+        for (
+            let i = 0;
+            i <
+            (
+                (val as { series_blackout_dates?: string[] })
+                    .series_blackout_dates ?? []
+            ).length;
+            i++
+        ) {
+            const d = ((val as { series_blackout_dates?: string[] })
+                .series_blackout_dates ?? [])[i]
+            if (!isValidGregorianIsoDate(d)) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: `[INVALID_BLACKOUT_DATE] Invalid series_blackout_dates entry: ${d}`,
+                    path: ['series_blackout_dates', i],
+                })
+            }
         }
         const beats = val.scheduled_beats ?? []
         const seen = new Set<string>()

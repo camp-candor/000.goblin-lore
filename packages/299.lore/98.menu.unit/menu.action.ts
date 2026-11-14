@@ -88,6 +88,13 @@ export class ManageChronoAgenda implements Action {
     constructor(public bale: MenuBit) {}
 }
 
+export const CONFIGURE_RECURRENCE_GRAMMAR =
+    '[Menu action] Configure Recurrence Grammar'
+export class ConfigureRecurrenceGrammar implements Action {
+    readonly type = CONFIGURE_RECURRENCE_GRAMMAR
+    constructor(public bale: MenuBit) {}
+}
+
 export const OPEN_AUTO_SCRIPT_MENU = '[Menu action] Open Auto-Script Menu'
 export class OpenAutoScriptMenu implements Action {
     readonly type = OPEN_AUTO_SCRIPT_MENU
@@ -115,5 +122,6 @@ export type Actions =
     | SelectDomainEntityType
     | OpenChronologyMenu
     | ManageChronoAgenda
+    | ConfigureRecurrenceGrammar
     | OpenAutoScriptMenu
     | ConfigurePacingBudget

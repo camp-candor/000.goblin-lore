@@ -16,7 +16,12 @@ import {
 import {
     parseCalendarStart,
     computeAgendaBeatTickOffset,
+    expandRecurrenceOccurrencesInHorizon,
 } from '../../05.clock.unit/buz/clock.buzz.js'
+import {
+    normalizeBeatRecurrenceRule,
+    type RecurrenceRule,
+} from '../../38.types.unit/fce/chronology.interface.js'
 
 /**
  * Asserts that a byte buffer opens with '---' at byte 0.
@@ -373,6 +378,15 @@ export function buildChronoAgendaDossier(
     const slug = String(
         (seriesConfig as Record<string, unknown>)?.series_slug ?? 'unknown',
     ).replace(/[^\x00-\x7F]/g, '')
+    const seriesBlackouts: string[] = Array.isArray(
+        (cfg as { series_blackout_dates?: unknown }).series_blackout_dates,
+    )
+        ? [
+              ...((cfg as { series_blackout_dates?: string[] })
+                  .series_blackout_dates as string[]),
+          ]
+        : []
+    seriesBlackouts.sort()
     const offsets = Array.isArray(resolvedOffsets) ? [...resolvedOffsets] : []
     offsets.sort((a, b) => {
         if (a.targetTick !== b.targetTick) return a.targetTick - b.targetTick
@@ -382,6 +396,39 @@ export function buildChronoAgendaDossier(
         if (a.beat_id > b.beat_id) return 1
         return 0
     })
+    const beats = sortScheduledBeatsDeterministically([
+        ...(((cfg as { scheduled_beats?: ScheduledBeat[] }).scheduled_beats ??
+            []) as ScheduledBeat[]),
+    ])
+    const ruleDetail = (b: ScheduledBeat): string => {
+        const rule = normalizeBeatRecurrenceRule(b) as RecurrenceRule
+        if (rule.frequency === 'WEEKLY_MASK')
+            return (rule.weekdayMask ?? []).join(',')
+        if (rule.frequency === 'INTERVAL_DAYS')
+            return `every_${rule.intervalDays}d`
+        if (rule.frequency === 'LUNAR_PHASE')
+            return String(rule.lunarPhase ?? '-')
+        if (rule.frequency === 'SOLAR_SOLSTICE_EQUINOX')
+            return (rule.solarMarkers ?? []).join(',')
+        return '-'
+    }
+    const ruleFrequency = (b: ScheduledBeat): string =>
+        String((normalizeBeatRecurrenceRule(b) as RecurrenceRule).frequency)
+    const ruleShift = (b: ScheduledBeat): string =>
+        String(
+            (normalizeBeatRecurrenceRule(b) as RecurrenceRule)
+                .blackoutShiftPolicy ?? 'SKIP',
+        )
+    let previewLines: string[] = []
+    try {
+        const preview = expandRecurrenceOccurrencesInHorizon(cfg as never, 14)
+        previewLines = preview.map(
+            (o) =>
+                `| ${o.isoDate} | ${o.weekday} | ${o.startTimeHm} | T+${o.targetTick} | ${o.lunarPhase} | ${o.beat_id} |`,
+        )
+    } catch {
+        previewLines = []
+    }
     const lines: string[] = [
         '---',
         'id: world_chrono_agenda',
@@ -392,6 +439,7 @@ export function buildChronoAgendaDossier(
         `start_time: ${cfg.start_time}`,
         `tick_seconds: ${cfg.tick_seconds}`,
         `count: ${offsets.length}`,
+        `series_blackout_dates: [${seriesBlackouts.map((d) => `"${d}"`).join(', ')}]`,
         'status: active',
         '---',
         '',
@@ -399,30 +447,58 @@ export function buildChronoAgendaDossier(
         '',
         `Series ${slug} opens at ${cfg.start_date} ${cfg.start_time} with ${offsets.length} scheduled story appointments.`,
         '',
+        `Series blackout dates: ${seriesBlackouts.length === 0 ? 'none' : seriesBlackouts.join(', ')}.`,
+        '',
     ]
     if (offsets.length === 0) {
         lines.push('No scheduled story appointments configured.')
         lines.push('')
     } else {
         lines.push(
-            '| # | beat_id | date | time | category | T+tick | reserve window |',
+            '| # | beat_id | date | time | category | T+tick | reserve window | frequency | detail | blackouts | shift |',
         )
         lines.push(
-            '|---|---------|------|------|----------|--------|----------------|',
+            '|---|---------|------|------|----------|--------|----------------|-----------|--------|-----------|-------|',
         )
+        const byId = new Map(beats.map((b) => [b.beat_id, b]))
         offsets.forEach((o, i) => {
             const cat = String(o.beatCategory).replace(/[^\x00-\x7F]/g, '')
             const bid = String(o.beat_id).replace(/[^\x00-\x7F]/g, '')
+            const src = byId.get(o.beat_id)
+            const freq = src ? ruleFrequency(src) : 'ONCE'
+            const detail = src ? ruleDetail(src) : '-'
+            const shift = src ? ruleShift(src) : 'SKIP'
+            const blackouts = src
+                ? String(
+                      (
+                          (normalizeBeatRecurrenceRule(src) as RecurrenceRule)
+                              .blackoutDates ?? []
+                      ).length,
+                  )
+                : '0'
             lines.push(
-                `| ${i + 1} | ${bid} | ${o.isoDate} | ${o.startTimeHm} | ${cat} | T+${o.targetTick} | RES:${o.reserveStartTick}..${o.targetTick} |`,
+                `| ${i + 1} | ${bid} | ${o.isoDate} | ${o.startTimeHm} | ${cat} | T+${o.targetTick} | RES:${o.reserveStartTick}..${o.targetTick} | ${freq} | ${detail} | ${blackouts} | ${shift} |`,
             )
         })
+        lines.push('')
+    }
+    lines.push('## 14-Day Recurring Occurrence Preview')
+    lines.push('')
+    if (previewLines.length === 0) {
+        lines.push('No recurring occurrences in 14-day horizon.')
+        lines.push('')
+    } else {
+        lines.push('| date | weekday | time | T+tick | lunar | beat_id |')
+        lines.push('|------|---------|------|--------|-------|---------|')
+        for (const pl of previewLines) lines.push(pl)
         lines.push('')
     }
     const raw = lines.join('\n')
     const ascii = raw.replace(/[^\x00-\x7F]/g, '')
     return ascii.replace(/\r\n/g, '\n').replace(/\r/g, '')
 }
+
+export const generateChronoAgendaDossierMarkdown = buildChronoAgendaDossier
 
 export function seedChronoAgendaDossier(
     seriesDir: string,

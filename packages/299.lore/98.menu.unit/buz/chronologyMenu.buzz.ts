@@ -8,12 +8,16 @@ import {
     resolveChronologyConfig,
     DEFAULT_CHRONOLOGY_CONFIG,
     ScheduledBeatSchema,
+    RecurrenceRuleSchema,
+    isValidGregorianIsoDate,
     sortScheduledBeatsDeterministically,
     type ScheduledBeat,
+    type ChronologyConfig,
 } from '../../38.types.unit/fce/chronology.interface.js'
 import {
     parseCalendarStart,
     advanceGregorianClock,
+    expandRecurrenceOccurrencesInHorizon,
     validateChronoAgendaRegistry,
 } from '../../05.clock.unit/buz/clock.buzz.js'
 import {
@@ -78,6 +82,7 @@ export const AGENDA_SUBMENU_CHOICES: readonly string[] = Object.freeze([
     '[2] ADD SCHEDULED STORY BEAT',
     '[3] REMOVE SCHEDULED BEAT BY ID',
     '[4] PREVIEW RESERVE COUNTDOWN TIMELINE',
+    '[5] CONFIGURE RECURRENCE & BLACKOUTS',
     '[<] BACK TO CHRONOLOGY MENU',
 ])
 
@@ -261,6 +266,405 @@ export function removeScheduledAgendaBeat(
     return nextBeats
 }
 
+export function configureBeatRecurrenceRule(
+    seriesDir: string,
+    beatId: string,
+    recurrenceRule: unknown,
+): ScheduledBeat[] {
+    const parsedRule = RecurrenceRuleSchema.parse(recurrenceRule)
+    const id = String(beatId || '').trim()
+    if (id.length === 0) {
+        throw new Error('[AGENDA_BEAT_NOT_FOUND] beatId cannot be empty.')
+    }
+    const existing = readSeriesConfig(seriesDir)
+    const baseChronology = (
+        typeof (existing as { chronology?: unknown }).chronology === 'object' &&
+        (existing as { chronology?: unknown }).chronology !== null
+            ? (existing as { chronology?: Record<string, unknown> }).chronology
+            : {}
+    ) as Record<string, unknown>
+    const currentBeats = Array.isArray(
+        (baseChronology as { scheduled_beats?: unknown }).scheduled_beats,
+    )
+        ? [
+              ...((baseChronology as { scheduled_beats?: ScheduledBeat[] })
+                  .scheduled_beats as ScheduledBeat[]),
+          ]
+        : []
+    const target = currentBeats.find(
+        (b) => (b as ScheduledBeat)?.beat_id === id,
+    )
+    if (!target) {
+        throw new Error(
+            `[AGENDA_BEAT_NOT_FOUND] No scheduled beat with beat_id: ${id}`,
+        )
+    }
+    const merged = ScheduledBeatSchema.parse({
+        ...(target as Record<string, unknown>),
+        recurrenceRule: parsedRule,
+    })
+    const nextBeats = sortScheduledBeatsDeterministically([
+        ...currentBeats.filter((b) => (b as ScheduledBeat)?.beat_id !== id),
+        merged,
+    ])
+    const candidate = resolveChronologyConfig({
+        ...(baseChronology as Record<string, unknown>),
+        scheduled_beats: nextBeats,
+    })
+    const validation = validateChronoAgendaRegistry(candidate)
+    if (!validation.valid) {
+        throw new Error(`[AGENDA_IN_THE_PAST] ${validation.errors.join('; ')}`)
+    }
+    ;(existing as Record<string, unknown>).chronology = candidate
+    if (!(existing as Record<string, unknown>).series_slug) {
+        ;(existing as Record<string, unknown>).series_slug =
+            path.basename(seriesDir)
+    }
+    writeSeriesConfig(seriesDir, existing)
+    refreshAgendaDossier(
+        seriesDir,
+        String(
+            (existing as Record<string, unknown>).series_slug ||
+                path.basename(seriesDir),
+        ),
+        candidate as unknown as Record<string, unknown>,
+        validation.resolvedBeats,
+    )
+    return nextBeats
+}
+
+export function manageSeriesBlackoutDates(
+    seriesDir: string,
+    op: 'ADD' | 'REMOVE',
+    isoDate: string,
+): string[] {
+    const date = String(isoDate || '').trim()
+    if (!isValidGregorianIsoDate(date)) {
+        throw new Error(
+            `[INVALID_BLACKOUT_DATE] Invalid blackout date: ${date}`,
+        )
+    }
+    const existing = readSeriesConfig(seriesDir)
+    const baseChronology = (
+        typeof (existing as { chronology?: unknown }).chronology === 'object' &&
+        (existing as { chronology?: unknown }).chronology !== null
+            ? (existing as { chronology?: Record<string, unknown> }).chronology
+            : {}
+    ) as Record<string, unknown>
+    const current: string[] = Array.isArray(
+        (baseChronology as { series_blackout_dates?: unknown })
+            .series_blackout_dates,
+    )
+        ? [
+              ...((baseChronology as { series_blackout_dates?: string[] })
+                  .series_blackout_dates as string[]),
+          ]
+        : []
+    let next: string[]
+    if (op === 'ADD') {
+        next = [...new Set([...current, date])].sort()
+    } else {
+        next = current.filter((d) => d !== date).sort()
+    }
+    const candidate = resolveChronologyConfig({
+        ...(baseChronology as Record<string, unknown>),
+        series_blackout_dates: next,
+    })
+    const beats = sortScheduledBeatsDeterministically([
+        ...(((candidate as { scheduled_beats?: ScheduledBeat[] })
+            .scheduled_beats ?? []) as ScheduledBeat[]),
+    ])
+    const validation = validateChronoAgendaRegistry({
+        ...(candidate as Record<string, unknown>),
+        scheduled_beats: beats,
+    } as unknown as ChronologyConfig)
+    if (!validation.valid) {
+        throw new Error(`[AGENDA_IN_THE_PAST] ${validation.errors.join('; ')}`)
+    }
+    ;(existing as Record<string, unknown>).chronology = {
+        ...(candidate as Record<string, unknown>),
+        scheduled_beats: beats,
+    }
+    if (!(existing as Record<string, unknown>).series_slug) {
+        ;(existing as Record<string, unknown>).series_slug =
+            path.basename(seriesDir)
+    }
+    writeSeriesConfig(seriesDir, existing)
+    refreshAgendaDossier(
+        seriesDir,
+        String(
+            (existing as Record<string, unknown>).series_slug ||
+                path.basename(seriesDir),
+        ),
+        candidate as unknown as Record<string, unknown>,
+        validation.resolvedBeats,
+    )
+    return next
+}
+
+export function previewRecurrenceCalendarHorizon(
+    chronology: unknown,
+    horizonDays = 14,
+    ste?: State,
+): string[] {
+    const cfg = resolveChronologyConfig(
+        ((chronology as Record<string, unknown>) ?? {}) as never,
+    )
+    const horizon = Math.trunc(Number(horizonDays)) || 14
+    const occurrences = expandRecurrenceOccurrencesInHorizon(cfg, horizon)
+    const lines: string[] = []
+    if (occurrences.length === 0) {
+        const empty =
+            '>> [RECURRENCE:PREVIEW] No recurring occurrences in horizon'
+        lines.push(empty)
+        emitConsole(ste, empty)
+        return lines
+    }
+    for (const o of occurrences) {
+        const shifted = o.shifted ? ` | SHIFTED_FROM:${o.shiftedFrom}` : ''
+        const line = sanitizeAgendaAscii(
+            `>> [RECURRENCE:PREVIEW] ${o.isoDate} (${o.weekday}) ${o.startTimeHm} | T+${o.targetTick} | ${o.lunarPhase} | ${o.beat_id}${shifted}`,
+        )
+        lines.push(line)
+        emitConsole(ste, line)
+    }
+    return lines
+}
+
+export const RECURRENCE_SUBMENU_CHOICES: readonly string[] = Object.freeze([
+    '[1] ASSIGN BEAT RECURRENCE RULE (WEEKDAY / INTERVAL / LUNAR / SOLAR)',
+    '[2] ADD SERIES HOLIDAY BLACKOUT DATE',
+    '[3] REMOVE SERIES HOLIDAY BLACKOUT DATE',
+    '[4] PREVIEW 14-DAY RECURRENCE & LUNAR CALENDAR',
+    '[<] BACK TO CHRONOLOGY MENU',
+])
+
+export const RECURRENCE_MENU_CHOICE = '[7] CALENDAR RECURRENCE & BLACKOUT RULES'
+
+export async function runRecurrenceGrammarSubmenu(
+    seriesDir: string,
+    chronology: unknown,
+    lib: unknown,
+    net: unknown,
+    ste?: State,
+): Promise<void> {
+    const typedLib = lib as {
+        hunt: (
+            action: string,
+            payload: Record<string, unknown>,
+        ) => Promise<unknown>
+    }
+    let activeChrono = chronology
+    while (true) {
+        try {
+            const current = readSeriesConfig(seriesDir)
+            if (
+                current &&
+                typeof current === 'object' &&
+                (current as { chronology?: unknown }).chronology
+            ) {
+                activeChrono = (current as { chronology?: unknown }).chronology
+            }
+        } catch {
+            // keep in-memory chronology on read faults
+        }
+        previewRecurrenceCalendarHorizon(activeChrono, 14, ste)
+        const resolvedNet =
+            (net as { grdBit?: { dat?: unknown } })?.grdBit?.dat ?? net
+        let choiceRes: unknown = null
+        try {
+            choiceRes = await typedLib.hunt('[Open action] Open Choice', {
+                dat: { clr0: 0, clr1: 3 },
+                src: 'VERTICAL',
+                lst: [...RECURRENCE_SUBMENU_CHOICES],
+                net: resolvedNet,
+            })
+        } catch (err: unknown) {
+            emitConsole(
+                ste,
+                `:: [RECURRENCE:ERR] ${(err as Error)?.message || String(err)}`,
+            )
+            return
+        }
+        void activeChrono
+        const picked = String(
+            (choiceRes as { chcBit?: { src?: unknown } })?.chcBit?.src || '',
+        )
+        if (!picked || picked === RECURRENCE_SUBMENU_CHOICES[4]) {
+            return
+        }
+        try {
+            if (picked === RECURRENCE_SUBMENU_CHOICES[0]) {
+                const beatId = await promptAgendaInput(
+                    typedLib,
+                    net,
+                    'BEAT_ID:',
+                    '',
+                )
+                if (beatId === null) {
+                    emitConsole(ste, ':: [RECURRENCE:CANCEL] Assign cancelled.')
+                    continue
+                }
+                const freqRes = (await typedLib.hunt(
+                    '[Open action] Open Choice',
+                    {
+                        dat: { clr0: 0, clr1: 3 },
+                        src: 'VERTICAL',
+                        lst: [
+                            'ONCE',
+                            'DAILY',
+                            'WEEKLY_MASK',
+                            'INTERVAL_DAYS',
+                            'LUNAR_PHASE',
+                            'SOLAR_SOLSTICE_EQUINOX',
+                        ],
+                        net: resolvedNet,
+                    },
+                )) as { chcBit?: { src?: unknown } }
+                const frequency = String(freqRes?.chcBit?.src || 'DAILY')
+                const rule: Record<string, unknown> = { frequency }
+                if (frequency === 'WEEKLY_MASK') {
+                    const maskRaw = await promptAgendaInput(
+                        typedLib,
+                        net,
+                        'WEEKDAY MASK (comma MON..SUN):',
+                        'FRI',
+                    )
+                    if (maskRaw === null) continue
+                    rule['weekdayMask'] = String(maskRaw)
+                        .split(',')
+                        .map((s) => s.trim().toUpperCase())
+                        .filter(Boolean)
+                }
+                if (frequency === 'INTERVAL_DAYS') {
+                    const raw = await promptAgendaInput(
+                        typedLib,
+                        net,
+                        'INTERVAL DAYS (1-365):',
+                        '7',
+                    )
+                    if (raw === null) continue
+                    rule['intervalDays'] = Number(raw)
+                }
+                if (frequency === 'LUNAR_PHASE') {
+                    const lunarRes = (await typedLib.hunt(
+                        '[Open action] Open Choice',
+                        {
+                            dat: { clr0: 0, clr1: 3 },
+                            src: 'VERTICAL',
+                            lst: [
+                                'NEW_MOON',
+                                'FIRST_QUARTER',
+                                'FULL_MOON',
+                                'LAST_QUARTER',
+                            ],
+                            net: resolvedNet,
+                        },
+                    )) as { chcBit?: { src?: unknown } }
+                    rule['lunarPhase'] = String(
+                        lunarRes?.chcBit?.src || 'FULL_MOON',
+                    )
+                }
+                if (frequency === 'SOLAR_SOLSTICE_EQUINOX') {
+                    const solarRes = (await typedLib.hunt(
+                        '[Open action] Open Choice',
+                        {
+                            dat: { clr0: 0, clr1: 3 },
+                            src: 'VERTICAL',
+                            lst: [
+                                'VERNAL_EQUINOX',
+                                'SUMMER_SOLSTICE',
+                                'AUTUMN_EQUINOX',
+                                'WINTER_SOLSTICE',
+                            ],
+                            net: resolvedNet,
+                        },
+                    )) as { chcBit?: { src?: unknown } }
+                    rule['solarMarkers'] = [
+                        String(solarRes?.chcBit?.src || 'WINTER_SOLSTICE'),
+                    ]
+                }
+                const policyRes = (await typedLib.hunt(
+                    '[Open action] Open Choice',
+                    {
+                        dat: { clr0: 0, clr1: 3 },
+                        src: 'VERTICAL',
+                        lst: ['SKIP', 'DEFER_NEXT_VALID_DAY'],
+                        net: resolvedNet,
+                    },
+                )) as { chcBit?: { src?: unknown } }
+                rule['blackoutShiftPolicy'] = String(
+                    policyRes?.chcBit?.src || 'SKIP',
+                )
+                const saved = configureBeatRecurrenceRule(
+                    seriesDir,
+                    beatId,
+                    rule,
+                )
+                emitConsole(
+                    ste,
+                    sanitizeAgendaAscii(
+                        `>> [RECURRENCE:SAVED] ${beatId} ${frequency} count=${saved.length}`,
+                    ),
+                )
+            } else if (picked === RECURRENCE_SUBMENU_CHOICES[1]) {
+                const isoDate = await promptAgendaInput(
+                    typedLib,
+                    net,
+                    'BLACKOUT ISO DATE (YYYY-MM-DD):',
+                    '2026-12-25',
+                )
+                if (isoDate === null) continue
+                const next = manageSeriesBlackoutDates(
+                    seriesDir,
+                    'ADD',
+                    isoDate,
+                )
+                emitConsole(
+                    ste,
+                    sanitizeAgendaAscii(
+                        `>> [RECURRENCE:BLACKOUT_ADDED] ${isoDate} total=${next.length}`,
+                    ),
+                )
+            } else if (picked === RECURRENCE_SUBMENU_CHOICES[2]) {
+                const isoDate = await promptAgendaInput(
+                    typedLib,
+                    net,
+                    'BLACKOUT ISO DATE TO REMOVE:',
+                    '',
+                )
+                if (isoDate === null) continue
+                const next = manageSeriesBlackoutDates(
+                    seriesDir,
+                    'REMOVE',
+                    isoDate,
+                )
+                emitConsole(
+                    ste,
+                    sanitizeAgendaAscii(
+                        `>> [RECURRENCE:BLACKOUT_REMOVED] ${isoDate} total=${next.length}`,
+                    ),
+                )
+            } else if (picked === RECURRENCE_SUBMENU_CHOICES[3]) {
+                const current = readSeriesConfig(seriesDir)
+                previewRecurrenceCalendarHorizon(
+                    (current as { chronology?: unknown }).chronology ??
+                        activeChrono,
+                    14,
+                    ste,
+                )
+            }
+        } catch (err: unknown) {
+            emitConsole(
+                ste,
+                sanitizeAgendaAscii(
+                    `:: [RECURRENCE:ERR] ${(err as Error)?.message || String(err)}`,
+                ),
+            )
+        }
+    }
+}
+
 export function previewChronoAgendaTimeline(
     chronology: unknown,
     ste?: State,
@@ -367,7 +771,7 @@ export async function runChronoAgendaSubmenu(
             return
         }
         const picked = String(choiceRes?.chcBit?.src || '')
-        if (!picked || picked === AGENDA_SUBMENU_CHOICES[4]) {
+        if (!picked || picked === AGENDA_SUBMENU_CHOICES[5]) {
             return
         }
         try {
@@ -476,6 +880,16 @@ export async function runChronoAgendaSubmenu(
                 previewChronoAgendaTimeline(
                     (current as { chronology?: unknown }).chronology ??
                         activeChrono,
+                    ste,
+                )
+            } else if (picked === AGENDA_SUBMENU_CHOICES[4]) {
+                const current = readSeriesConfig(seriesDir)
+                await runRecurrenceGrammarSubmenu(
+                    seriesDir,
+                    (current as { chronology?: unknown }).chronology ??
+                        activeChrono,
+                    lib,
+                    net,
                     ste,
                 )
             }
@@ -705,6 +1119,7 @@ export const runChronologyMenu = async (
         '[4] SET TICK CADENCE (SECONDS)',
         '[5] PREVIEW +5 TICK HORIZON',
         AGENDA_MENU_CHOICE,
+        RECURRENCE_MENU_CHOICE,
         '[<] RETURN TO LORE MENU',
     ]
 
@@ -724,6 +1139,22 @@ export const runChronologyMenu = async (
             const pickedAgenda = String((choiceRes as any)?.chcBit?.src || '')
             if (pickedAgenda === AGENDA_MENU_CHOICE) {
                 await runChronoAgendaSubmenu(
+                    seriesDir,
+                    chronology,
+                    lib,
+                    net,
+                    ste,
+                )
+                try {
+                    const refreshed = JSON.parse(
+                        fs.readFileSync(configPath, 'utf8'),
+                    )
+                    chronology = resolveChronologyConfig(refreshed?.chronology)
+                } catch {
+                    // keep in-memory chronology on refresh failure
+                }
+            } else if (pickedAgenda === RECURRENCE_MENU_CHOICE) {
+                await runRecurrenceGrammarSubmenu(
                     seriesDir,
                     chronology,
                     lib,

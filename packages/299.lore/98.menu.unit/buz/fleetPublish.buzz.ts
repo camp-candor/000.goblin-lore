@@ -11,6 +11,218 @@ import {
     resolvePacingBudgetConfig,
     type PacingBudgetConfig,
 } from '../../38.types.unit/fce/autoScriptRule.interface.js'
+import { expandRecurrenceOccurrencesInHorizon } from '../../05.clock.unit/buz/clock.buzz.js'
+import { normalizeBeatRecurrenceRule } from '../../38.types.unit/fce/chronology.interface.js'
+
+export interface RecurrencePublishParity {
+    readonly ok: boolean
+    readonly rules: number
+    readonly blackouts: number
+    readonly next7dOccurrences: number
+}
+
+const WEEKDAY_ORDER_PUBLISH: readonly string[] = Object.freeze([
+    'MON',
+    'TUE',
+    'WED',
+    'THU',
+    'FRI',
+    'SAT',
+    'SUN',
+])
+
+const SOLAR_ORDER_PUBLISH: readonly string[] = Object.freeze([
+    'VERNAL_EQUINOX',
+    'SUMMER_SOLSTICE',
+    'AUTUMN_EQUINOX',
+    'WINTER_SOLSTICE',
+])
+
+function canonicalRulePublish(
+    rule: Record<string, unknown>,
+): Record<string, unknown> {
+    const out: Record<string, unknown> = { ...(rule ?? {}) }
+    const wRank = (w: string): number => {
+        const i = WEEKDAY_ORDER_PUBLISH.indexOf(w)
+        return i === -1 ? 99 : i
+    }
+    const sRank = (s: string): number => {
+        const i = SOLAR_ORDER_PUBLISH.indexOf(s)
+        return i === -1 ? 99 : i
+    }
+    if (Array.isArray((rule as { weekdayMask?: unknown }).weekdayMask)) {
+        out['weekdayMask'] = [
+            ...new Set((rule as { weekdayMask: string[] }).weekdayMask),
+        ].sort((a, b) => wRank(a) - wRank(b))
+    }
+    if (Array.isArray((rule as { solarMarkers?: unknown }).solarMarkers)) {
+        out['solarMarkers'] = [
+            ...new Set((rule as { solarMarkers: string[] }).solarMarkers),
+        ].sort((a, b) => sRank(a) - sRank(b))
+    }
+    if (Array.isArray((rule as { blackoutDates?: unknown }).blackoutDates)) {
+        out['blackoutDates'] = [
+            ...new Set((rule as { blackoutDates: string[] }).blackoutDates),
+        ].sort()
+    }
+    if (
+        Array.isArray((rule as { blackoutWeekdays?: unknown }).blackoutWeekdays)
+    ) {
+        out['blackoutWeekdays'] = [
+            ...new Set(
+                (rule as { blackoutWeekdays: string[] }).blackoutWeekdays,
+            ),
+        ].sort((a, b) => wRank(a) - wRank(b))
+    }
+    return out
+}
+
+function canonicalBeatsPublish(
+    beats: Array<Record<string, unknown>>,
+): Array<Record<string, unknown>> {
+    return [...beats]
+        .sort((a, b) =>
+            String(a['beat_id']) < String(b['beat_id'])
+                ? -1
+                : String(a['beat_id']) > String(b['beat_id'])
+                  ? 1
+                  : 0,
+        )
+        .map((b) => {
+            const rule = (b['recurrenceRule'] ??
+                normalizeBeatRecurrenceRule(b as never)) as unknown as Record<
+                string,
+                unknown
+            >
+            return {
+                beat_id: String(b['beat_id']),
+                isoDate: String(b['isoDate']),
+                startTimeHm: String(b['startTimeHm']),
+                recurrenceRule: canonicalRulePublish(rule),
+            }
+        })
+}
+
+export function inspectPublishRecurrenceGrammarParity(
+    seriesDir: string,
+    ste?: State,
+): RecurrencePublishParity {
+    const configPath = path.join(seriesDir, 'series.config.json')
+    let biblePath = path.join(seriesDir, 'bible-state.json')
+    if (!fs.existsSync(biblePath)) {
+        const alt = path.join(seriesDir, 'compiled', 'bible-state.json')
+        if (fs.existsSync(alt)) biblePath = alt
+    }
+    if (!fs.existsSync(configPath)) {
+        throw new Error(
+            '[PUBLISH_RECURRENCE_DRIFT] series.config.json not found',
+        )
+    }
+    if (!fs.existsSync(biblePath)) {
+        const slug = path.basename(seriesDir)
+        try {
+            const root = resolveRepoRoot()
+            const compiled = path.join(
+                root,
+                'compiled',
+                slug,
+                'bible-state.json',
+            )
+            if (fs.existsSync(compiled)) biblePath = compiled
+        } catch {
+            // ignore
+        }
+    }
+    if (!fs.existsSync(biblePath)) {
+        throw new Error(
+            '[PUBLISH_RECURRENCE_DRIFT] bible-state.json not found for recurrence parity',
+        )
+    }
+    const configRaw = JSON.parse(fs.readFileSync(configPath, 'utf8'))
+    const bibleRaw = JSON.parse(fs.readFileSync(biblePath, 'utf8'))
+    const configChrono =
+        (configRaw?.chronology as Record<string, unknown>) ?? {}
+    const bibleChrono = (bibleRaw?.chronology as Record<string, unknown>) ?? {}
+    const configBlackouts: string[] = Array.isArray(
+        (configChrono as { series_blackout_dates?: unknown })
+            .series_blackout_dates,
+    )
+        ? ([
+              ...((configChrono as { series_blackout_dates?: string[] })
+                  .series_blackout_dates as string[]),
+          ].sort() as string[])
+        : []
+    const bibleBlackouts: string[] = Array.isArray(
+        (bibleChrono as { series_blackout_dates?: unknown })
+            .series_blackout_dates,
+    )
+        ? ([
+              ...((bibleChrono as { series_blackout_dates?: string[] })
+                  .series_blackout_dates as string[]),
+          ].sort() as string[])
+        : []
+    const configBeats = canonicalBeatsPublish(
+        (Array.isArray(
+            (configChrono as { scheduled_beats?: unknown }).scheduled_beats,
+        )
+            ? (
+                  configChrono as {
+                      scheduled_beats: Array<Record<string, unknown>>
+                  }
+              ).scheduled_beats
+            : []) as Array<Record<string, unknown>>,
+    )
+    const bibleBeats = canonicalBeatsPublish(
+        (Array.isArray(
+            (bibleChrono as { scheduled_beats?: unknown }).scheduled_beats,
+        )
+            ? (
+                  bibleChrono as {
+                      scheduled_beats: Array<Record<string, unknown>>
+                  }
+              ).scheduled_beats
+            : []) as Array<Record<string, unknown>>,
+    )
+    if (
+        JSON.stringify(configBeats) !== JSON.stringify(bibleBeats) ||
+        JSON.stringify(configBlackouts) !== JSON.stringify(bibleBlackouts)
+    ) {
+        emitConsole(
+            ste,
+            ':: [PUBLISH_RECURRENCE_DRIFT] Uncompiled recurrence edits detected; recompile before publish',
+        )
+        throw new Error(
+            '[PUBLISH_RECURRENCE_DRIFT] series.config.json recurrence grammar drifted from bible-state.json',
+        )
+    }
+    const rules = configBeats.length
+    const blackouts = configBlackouts.length
+    let next7dOccurrences = 0
+    try {
+        const occ = expandRecurrenceOccurrencesInHorizon(
+            {
+                ...(configChrono as Record<string, unknown>),
+                scheduled_beats:
+                    (configChrono as { scheduled_beats?: unknown[] })
+                        .scheduled_beats ?? [],
+            } as never,
+            7,
+        )
+        next7dOccurrences = occ.length
+    } catch {
+        next7dOccurrences = 0
+    }
+    emitConsole(
+        ste,
+        `>> [PUBLISH:RECURRENCE] rules=${rules} blackouts=${blackouts} next7dOccurrences=${next7dOccurrences}`,
+    )
+    return Object.freeze({
+        ok: true,
+        rules,
+        blackouts,
+        next7dOccurrences,
+    })
+}
 
 export interface PublishAutoScriptReadiness {
     ready: boolean
@@ -320,6 +532,161 @@ export const publishSealedCanonToFleet = async (
         inspectPublishChronoAgendaParity(parsedBibleState, ste)
     } catch {
         // ignore agenda telemetry faults
+    }
+
+    try {
+        const seriesDirCandidates = [
+            dat.seriesDir,
+            path.join(repoRoot, 'lore', 'series', seriesSlug),
+            path.join(repoRoot, 'series', seriesSlug),
+        ].filter(Boolean) as string[]
+        for (const candidateDir of seriesDirCandidates) {
+            const cfgPath = path.join(candidateDir, 'series.config.json')
+            if (fs.existsSync(cfgPath)) {
+                try {
+                    const liveRaw = JSON.parse(fs.readFileSync(cfgPath, 'utf8'))
+                    const liveChrono =
+                        (liveRaw?.chronology as Record<string, unknown>) ?? {}
+                    const sealedChrono =
+                        (parsedBibleState?.chronology as Record<
+                            string,
+                            unknown
+                        >) ?? {}
+                    const liveBlackouts: string[] = Array.isArray(
+                        (
+                            liveChrono as {
+                                series_blackout_dates?: unknown
+                            }
+                        ).series_blackout_dates,
+                    )
+                        ? ([
+                              ...(
+                                  liveChrono as {
+                                      series_blackout_dates: string[]
+                                  }
+                              ).series_blackout_dates,
+                          ].sort() as string[])
+                        : []
+                    const sealedBlackouts: string[] = Array.isArray(
+                        (
+                            sealedChrono as {
+                                series_blackout_dates?: unknown
+                            }
+                        ).series_blackout_dates,
+                    )
+                        ? ([
+                              ...(
+                                  sealedChrono as {
+                                      series_blackout_dates: string[]
+                                  }
+                              ).series_blackout_dates,
+                          ].sort() as string[])
+                        : []
+                    const liveBeats = canonicalBeatsPublish(
+                        (Array.isArray(
+                            (
+                                liveChrono as {
+                                    scheduled_beats?: unknown
+                                }
+                            ).scheduled_beats,
+                        )
+                            ? (
+                                  liveChrono as {
+                                      scheduled_beats: Array<
+                                          Record<string, unknown>
+                                      >
+                                  }
+                              ).scheduled_beats
+                            : []) as Array<Record<string, unknown>>,
+                    )
+                    const sealedBeats = canonicalBeatsPublish(
+                        (Array.isArray(
+                            (
+                                sealedChrono as {
+                                    scheduled_beats?: unknown
+                                }
+                            ).scheduled_beats,
+                        )
+                            ? (
+                                  sealedChrono as {
+                                      scheduled_beats: Array<
+                                          Record<string, unknown>
+                                      >
+                                  }
+                              ).scheduled_beats
+                            : []) as Array<Record<string, unknown>>,
+                    )
+                    if (
+                        JSON.stringify(liveBeats) !==
+                            JSON.stringify(sealedBeats) ||
+                        JSON.stringify(liveBlackouts) !==
+                            JSON.stringify(sealedBlackouts)
+                    ) {
+                        const msg =
+                            '[PUBLISH_RECURRENCE_DRIFT] series.config.json recurrence grammar drifted from bible-state.json'
+                        emitConsole(
+                            ste,
+                            ':: [PUBLISH_RECURRENCE_DRIFT] Uncompiled recurrence edits detected; recompile before publish',
+                        )
+                        if (cpy && typeof cpy === 'object') {
+                            cpy.statusMessage = 'FLEET_CANON_PUBLISH_FAILED'
+                            cpy.lastError = msg
+                        }
+                        if (bal?.slv) {
+                            bal.slv({
+                                pubBit: {
+                                    idx: 'publish-fleet-fail',
+                                    val: -1,
+                                    dat: { error: msg },
+                                },
+                            })
+                        }
+                        return cpy
+                    }
+                    let next7d = 0
+                    try {
+                        next7d = expandRecurrenceOccurrencesInHorizon(
+                            liveChrono as never,
+                            7,
+                        ).length
+                    } catch {
+                        next7d = 0
+                    }
+                    emitConsole(
+                        ste,
+                        `>> [PUBLISH:RECURRENCE] rules=${liveBeats.length} blackouts=${liveBlackouts.length} next7dOccurrences=${next7d}`,
+                    )
+                } catch (driftErr: unknown) {
+                    const msg =
+                        driftErr instanceof Error
+                            ? driftErr.message
+                            : String(driftErr)
+                    if (
+                        msg.includes('PUBLISH_RECURRENCE_DRIFT') &&
+                        cpy?.statusMessage !== 'FLEET_CANON_PUBLISH_FAILED'
+                    ) {
+                        emitConsole(ste, `:: ${msg}`)
+                        if (cpy && typeof cpy === 'object') {
+                            cpy.statusMessage = 'FLEET_CANON_PUBLISH_FAILED'
+                            cpy.lastError = msg
+                        }
+                        if (bal?.slv) {
+                            bal.slv({
+                                pubBit: {
+                                    idx: 'publish-fleet-fail',
+                                    val: -1,
+                                    dat: { error: msg },
+                                },
+                            })
+                        }
+                        return cpy
+                    }
+                }
+                break
+            }
+        }
+    } catch {
+        // ignore recurrence parity probe faults when seriesDir absent
     }
 
     const readiness = inspectPublishAutoScriptReadiness(parsedBibleState)

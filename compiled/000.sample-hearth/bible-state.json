@@ -325,6 +325,7 @@
     "era_label": "CANON_PRESENT",
     "frames_per_second": 24,
     "scheduled_beats": [],
+    "series_blackout_dates": [],
     "start_date": "2026-10-31",
     "start_snapshot": {
       "centisecond": 0,
@@ -351,8 +352,8 @@
     "tick_seconds": 60,
     "timezone_label": "UTC+00:00"
   },
-  "compiled_at": "2026-11-14T18:05:26.573Z",
-  "compiler_duration_ms": 7,
+  "compiled_at": "2026-11-14T19:08:02.637Z",
+  "compiler_duration_ms": 9,
   "entities": {
     "char_gristle": {
       "available_arms": 2,
@@ -459,7 +460,7 @@
     "loc_cellar": "1804ce594aeebfe09957756edb3fc7d05b8879cb768d6e1147d3386abb0b9adb",
     "loc_hearth": "2630dfd0ce39bcdfabc2b6ddf2066351136da6e0507370ae2324c5b0915a04e3"
   },
-  "root_merkle_hash": "534690a4f2ce71451f838c5d2ef3c6342d1e0e6c7af9d98e3859be2ff84dacdd",
+  "root_merkle_hash": "89ceea812f8c3ab6aecd70957b744aa37a5e461956aaa9cc244c0fd52ecf3d02",
   "schema_version": "1.0.0",
   "series_slug": "000.sample-hearth"
 }

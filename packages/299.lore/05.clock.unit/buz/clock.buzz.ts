@@ -2,6 +2,8 @@ import { ClockModel } from '../clock.model.js'
 import type ClockBit from '../fce/clock.bit.js'
 import type State from '../../99.core/state.js'
 import {
+    isValidGregorianIsoDate,
+    normalizeBeatRecurrenceRule,
     resolveChronologyConfig,
     sortScheduledBeatsDeterministically,
     type ChronologyConfig,
@@ -11,9 +13,24 @@ import {
     type AgendaBeatTickOffset,
     type AgendaReserveOverlap,
     type ChronoAgendaValidation,
+    type LunarPhaseToken,
+    type RecurrenceRule,
+    type SolarMarkerToken,
+    type WeekdayToken,
     normalizeClockTimeHms,
     DEFAULT_CHRONOLOGY_CONFIG,
 } from '../../38.types.unit/fce/chronology.interface.js'
+import type {
+    ExpandedBeatOccurrence,
+    LunarPhaseSnapshot,
+    RecurrenceHorizonProjection,
+} from '../fce/clock.interface.js'
+
+export type {
+    ExpandedBeatOccurrence,
+    LunarPhaseSnapshot,
+    RecurrenceHorizonProjection,
+} from '../fce/clock.interface.js'
 
 export {
     resolveChronologyConfig,
@@ -319,6 +336,334 @@ export const validateChronoAgendaRegistry = (
         errors: Object.freeze([...errors]) as string[],
         resolvedBeats: Object.freeze([...resolved]) as AgendaBeatTickOffset[],
         overlaps: Object.freeze([...overlaps]) as AgendaReserveOverlap[],
+    })
+}
+
+export const SAKAMOTO_TABLE: readonly number[] = Object.freeze([
+    0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4,
+])
+
+export const SYNODIC_MONTH_SECONDS = 2551443
+export const REF_NEW_MOON_EPOCH_SEC = 947182440
+
+const WEEKDAY_ORDER: readonly WeekdayToken[] = Object.freeze([
+    'MON',
+    'TUE',
+    'WED',
+    'THU',
+    'FRI',
+    'SAT',
+    'SUN',
+])
+
+export const resolveGregorianWeekday = (isoDate: string): WeekdayToken => {
+    if (!isValidGregorianIsoDate(isoDate)) {
+        throw new Error(
+            `[INVALID_AGENDA_DATE] Invalid calendar date: ${isoDate}`,
+        )
+    }
+    const parts = String(isoDate).split('-').map(Number)
+    let y = parts[0]
+    const m = parts[1]
+    const d = parts[2]
+    if (m < 3) y -= 1
+    const dow =
+        (y +
+            Math.floor(y / 4) -
+            Math.floor(y / 100) +
+            Math.floor(y / 400) +
+            SAKAMOTO_TABLE[m - 1] +
+            d) %
+        7
+    const map: readonly WeekdayToken[] = [
+        'SUN',
+        'MON',
+        'TUE',
+        'WED',
+        'THU',
+        'FRI',
+        'SAT',
+    ]
+    return map[((dow % 7) + 7) % 7]
+}
+
+export const computeSynodicLunarPhase = (
+    isoDate: string,
+    startTimeHm = '00:00',
+): LunarPhaseSnapshot => {
+    if (!isValidGregorianIsoDate(isoDate)) {
+        throw new Error(
+            `[INVALID_AGENDA_DATE] Invalid calendar date: ${isoDate}`,
+        )
+    }
+    const epochSec = computeGregorianEpochSeconds(
+        isoDate,
+        normalizeClockTimeHms(startTimeHm),
+    )
+    const diff = epochSec - REF_NEW_MOON_EPOCH_SEC
+    const ageSeconds =
+        ((diff % SYNODIC_MONTH_SECONDS) + SYNODIC_MONTH_SECONDS) %
+        SYNODIC_MONTH_SECONDS
+    const cycleProgressBps = Math.floor(
+        (ageSeconds * 10000) / SYNODIC_MONTH_SECONDS,
+    )
+    let phase: LunarPhaseToken
+    if (cycleProgressBps <= 1249 || cycleProgressBps >= 8750) {
+        phase = 'NEW_MOON'
+    } else if (cycleProgressBps <= 3749) {
+        phase = 'FIRST_QUARTER'
+    } else if (cycleProgressBps <= 6249) {
+        phase = 'FULL_MOON'
+    } else {
+        phase = 'LAST_QUARTER'
+    }
+    let illuminationBps: number
+    if (cycleProgressBps <= 5000) {
+        illuminationBps = cycleProgressBps * 2
+    } else {
+        illuminationBps = (10000 - cycleProgressBps) * 2
+    }
+    if (illuminationBps < 0) illuminationBps = 0
+    if (illuminationBps > 10000) illuminationBps = 10000
+    return Object.freeze({
+        phase,
+        illuminationBps,
+        ageSeconds,
+        cycleProgressBps,
+    })
+}
+
+export const resolveSolarSeasonMarker = (
+    isoDate: string,
+): SolarMarkerToken | null => {
+    if (!isValidGregorianIsoDate(isoDate)) {
+        throw new Error(
+            `[INVALID_AGENDA_DATE] Invalid calendar date: ${isoDate}`,
+        )
+    }
+    const mmdd = String(isoDate).slice(5)
+    if (mmdd === '03-20') return 'VERNAL_EQUINOX'
+    if (mmdd === '06-21') return 'SUMMER_SOLSTICE'
+    if (mmdd === '09-22') return 'AUTUMN_EQUINOX'
+    if (mmdd === '12-21') return 'WINTER_SOLSTICE'
+    return null
+}
+
+function pad2Local(n: number): string {
+    return String(n).padStart(2, '0')
+}
+
+function addDaysIso(isoDate: string, offset: number): string {
+    const parts = String(isoDate).split('-').map(Number)
+    const base =
+        daysFromCivil(parts[0], parts[1], parts[2]) + Math.trunc(offset)
+    const c = civilFromDays(base)
+    return `${String(c.y).padStart(4, '0')}-${pad2Local(c.m)}-${pad2Local(c.d)}`
+}
+
+function diffDaysIso(fromIso: string, toIso: string): number {
+    const a = String(fromIso).split('-').map(Number)
+    const b = String(toIso).split('-').map(Number)
+    return daysFromCivil(b[0], b[1], b[2]) - daysFromCivil(a[0], a[1], a[2])
+}
+
+export const matchesRecurrenceRuleOnDate = (
+    beat: ScheduledBeat,
+    isoDate: string,
+): boolean => {
+    const rule = normalizeBeatRecurrenceRule(beat) as RecurrenceRule
+    if (isoDate < beat.isoDate) return false
+    if (rule.untilIsoDate !== undefined && isoDate > rule.untilIsoDate)
+        return false
+    switch (rule.frequency) {
+        case 'ONCE':
+            return isoDate === beat.isoDate
+        case 'DAILY':
+            return true
+        case 'WEEKLY_MASK': {
+            const wd = resolveGregorianWeekday(isoDate)
+            return (rule.weekdayMask ?? []).includes(wd)
+        }
+        case 'INTERVAL_DAYS': {
+            const step = Math.trunc(rule.intervalDays ?? 1)
+            if (step < 1) return false
+            const diff = diffDaysIso(beat.isoDate, isoDate)
+            return diff % step === 0
+        }
+        case 'LUNAR_PHASE': {
+            const snap = computeSynodicLunarPhase(isoDate, beat.startTimeHm)
+            return snap.phase === rule.lunarPhase
+        }
+        case 'SOLAR_SOLSTICE_EQUINOX': {
+            const marker = resolveSolarSeasonMarker(isoDate)
+            if (marker === null) return false
+            return (rule.solarMarkers ?? []).includes(marker)
+        }
+        default:
+            return false
+    }
+}
+
+function isBlackedOutOn(
+    rule: RecurrenceRule,
+    seriesBlackouts: ReadonlySet<string>,
+    isoDate: string,
+): boolean {
+    if ((rule.blackoutDates ?? []).includes(isoDate)) return true
+    if (seriesBlackouts.has(isoDate)) return true
+    if ((rule.blackoutWeekdays ?? []).length > 0) {
+        const wd = resolveGregorianWeekday(isoDate)
+        if ((rule.blackoutWeekdays ?? []).includes(wd)) return true
+    }
+    return false
+}
+
+export const expandRecurrenceOccurrencesInHorizon = (
+    chronology: ChronologyConfig,
+    horizonDays = 14,
+): readonly ExpandedBeatOccurrence[] => {
+    const horizon = Math.trunc(Number(horizonDays))
+    if (!Number.isInteger(horizon) || horizon < 1 || horizon > 365) {
+        throw new Error(`[INVALID_HORIZON] horizonDays must be 1..365`)
+    }
+    const cfg = resolveChronologyConfig(
+        (chronology ?? {}) as Partial<ChronologyConfig>,
+    )
+    const seriesBlackouts = new Set<string>(
+        ((cfg as { series_blackout_dates?: string[] }).series_blackout_dates ??
+            []) as string[],
+    )
+    const beats = sortScheduledBeatsDeterministically([
+        ...(((cfg as { scheduled_beats?: ScheduledBeat[] }).scheduled_beats ??
+            []) as ScheduledBeat[]),
+    ])
+    const out: ExpandedBeatOccurrence[] = []
+    const perBeatCount = new Map<string, number>()
+    for (let d = 0; d <= horizon; d++) {
+        const candidate = addDaysIso(cfg.start_date, d)
+        for (const beat of beats) {
+            const rule = normalizeBeatRecurrenceRule(beat) as RecurrenceRule
+            if (!matchesRecurrenceRuleOnDate(beat, candidate)) continue
+            const emitted = perBeatCount.get(beat.beat_id) ?? 0
+            if (
+                rule.maxOccurrences !== undefined &&
+                emitted >= Math.trunc(rule.maxOccurrences)
+            ) {
+                continue
+            }
+            const policy = rule.blackoutShiftPolicy ?? 'SKIP'
+            if (!isBlackedOutOn(rule, seriesBlackouts, candidate)) {
+                const off = computeAgendaBeatTickOffset(cfg, {
+                    ...beat,
+                    isoDate: candidate,
+                } as ScheduledBeat)
+                const wd = resolveGregorianWeekday(candidate)
+                const lunar = computeSynodicLunarPhase(
+                    candidate,
+                    beat.startTimeHm,
+                )
+                out.push(
+                    Object.freeze({
+                        beat_id: beat.beat_id,
+                        isoDate: candidate,
+                        occurrenceIsoDate: candidate,
+                        startTimeHm: beat.startTimeHm,
+                        beatCategory: String(beat.beatCategory),
+                        targetTick: off.targetTick,
+                        reserveStartTick: off.reserveStartTick,
+                        reserveCooldownTicks: Math.trunc(
+                            beat.reserveCooldownTicks,
+                        ),
+                        weekday: wd,
+                        lunarPhase: lunar.phase,
+                        solarMarker: resolveSolarSeasonMarker(candidate),
+                        shifted: false,
+                        valid: true as const,
+                    }),
+                )
+                perBeatCount.set(beat.beat_id, emitted + 1)
+            } else if (policy === 'SKIP') {
+                continue
+            } else {
+                let shiftedDate: string | null = null
+                for (let s = 1; s <= 366; s++) {
+                    const shiftedCandidate = addDaysIso(candidate, s)
+                    if (
+                        rule.untilIsoDate !== undefined &&
+                        shiftedCandidate > rule.untilIsoDate
+                    ) {
+                        break
+                    }
+                    if (
+                        !isBlackedOutOn(rule, seriesBlackouts, shiftedCandidate)
+                    ) {
+                        shiftedDate = shiftedCandidate
+                        break
+                    }
+                }
+                if (shiftedDate === null) continue
+                const off = computeAgendaBeatTickOffset(cfg, {
+                    ...beat,
+                    isoDate: shiftedDate,
+                } as ScheduledBeat)
+                const wd = resolveGregorianWeekday(shiftedDate)
+                const lunar = computeSynodicLunarPhase(
+                    shiftedDate,
+                    beat.startTimeHm,
+                )
+                const alreadyShifted = out.some(
+                    (o) =>
+                        o.beat_id === beat.beat_id &&
+                        o.occurrenceIsoDate === shiftedDate,
+                )
+                if (alreadyShifted) continue
+                out.push(
+                    Object.freeze({
+                        beat_id: beat.beat_id,
+                        isoDate: shiftedDate,
+                        occurrenceIsoDate: shiftedDate,
+                        startTimeHm: beat.startTimeHm,
+                        beatCategory: String(beat.beatCategory),
+                        targetTick: off.targetTick,
+                        reserveStartTick: off.reserveStartTick,
+                        reserveCooldownTicks: Math.trunc(
+                            beat.reserveCooldownTicks,
+                        ),
+                        weekday: wd,
+                        lunarPhase: lunar.phase,
+                        solarMarker: resolveSolarSeasonMarker(shiftedDate),
+                        shifted: true,
+                        shiftedFrom: candidate,
+                        valid: true as const,
+                    }),
+                )
+                perBeatCount.set(beat.beat_id, emitted + 1)
+            }
+        }
+    }
+    out.sort((a, b) => {
+        if (a.targetTick !== b.targetTick) return a.targetTick - b.targetTick
+        if (a.isoDate < b.isoDate) return -1
+        if (a.isoDate > b.isoDate) return 1
+        if (a.beat_id < b.beat_id) return -1
+        if (a.beat_id > b.beat_id) return 1
+        return 0
+    })
+    return Object.freeze([...out]) as readonly ExpandedBeatOccurrence[]
+}
+
+export const projectRecurrenceHorizon = (
+    chronology: ChronologyConfig,
+    horizonDays = 14,
+): RecurrenceHorizonProjection => {
+    const cfg = resolveChronologyConfig(
+        (chronology ?? {}) as Partial<ChronologyConfig>,
+    )
+    const occurrences = expandRecurrenceOccurrencesInHorizon(cfg, horizonDays)
+    return Object.freeze({
+        startDate: cfg.start_date,
+        horizonDays: Math.trunc(horizonDays),
+        occurrences,
     })
 }
 

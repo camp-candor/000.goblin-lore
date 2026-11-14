@@ -19,11 +19,24 @@ export {
     ChronoAgendaRegistrySchema,
     sortScheduledBeatsDeterministically,
     isValidGregorianIsoDate,
+    WeekdayTokenSchema,
+    LunarPhaseTokenSchema,
+    SolarMarkerTokenSchema,
+    BlackoutShiftPolicySchema,
+    RecurrenceFrequencySchema,
+    RecurrenceRuleSchema,
+    normalizeBeatRecurrenceRule,
 } from '../../38.types.unit/fce/chronology.interface.js'
 export type {
     ScheduledBeat,
     ChronoAgendaRegistry,
     ChronologyConfig,
+    WeekdayToken,
+    LunarPhaseToken,
+    SolarMarkerToken,
+    BlackoutShiftPolicy,
+    RecurrenceFrequency,
+    RecurrenceRule,
 } from '../../38.types.unit/fce/chronology.interface.js'
 export { resolveAutoScriptConfig } from '../../38.types.unit/fce/autoScriptRule.interface.js'
 export {
