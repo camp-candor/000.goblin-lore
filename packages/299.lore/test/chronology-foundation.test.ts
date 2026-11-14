@@ -8,6 +8,11 @@ import {
     advanceGregorianClock,
     resolveChronologyConfig,
 } from '../05.clock.unit/buz/clock.buzz'
+import {
+    ChronologyConfigSchema,
+    DEFAULT_CHRONOLOGY_CONFIG,
+} from '../38.types.unit/fce/chronology.interface'
+import LORE from '../hunt'
 import { SeriesConfigSchema } from '../29.series.unit/fce/series.schema'
 import {
     configureTickCadence,
@@ -95,5 +100,103 @@ describe('chronology foundation', () => {
         const next = advanceGregorianClock(snap, 3600)
         expect(typeof next.isoDate).toBe('string')
         expect(next.totalElapsedSeconds).toBe(3600)
+    })
+
+    it('rejects invalid schema inputs and non-leap century dates', () => {
+        expect(
+            ChronologyConfigSchema.safeParse({ start_date: '2026/10/31' })
+                .success,
+        ).toBe(false)
+        expect(
+            ChronologyConfigSchema.safeParse({ start_time: '25:99' }).success,
+        ).toBe(false)
+        expect(
+            ChronologyConfigSchema.safeParse({
+                start_date: '2026-10-31',
+                extra_field: 1,
+            }).success,
+        ).toBe(false)
+        expect(() =>
+            parseCalendarStart({
+                ...DEFAULT_CHRONOLOGY_CONFIG,
+                start_date: '2024-02-29',
+            }),
+        ).not.toThrow()
+        expect(() =>
+            parseCalendarStart({
+                ...DEFAULT_CHRONOLOGY_CONFIG,
+                start_date: '2000-02-29',
+            }),
+        ).not.toThrow()
+        expect(() =>
+            parseCalendarStart({
+                ...DEFAULT_CHRONOLOGY_CONFIG,
+                start_date: '2100-02-29',
+            }),
+        ).toThrow(/INVALID_CALENDAR_DATE:2100-02-29/)
+    })
+
+    it('rolls over leap-day and year-end boundaries deterministically', () => {
+        const s1 = parseCalendarStart({
+            ...DEFAULT_CHRONOLOGY_CONFIG,
+            start_date: '2024-02-28',
+            start_time: '23:59:30',
+        })
+        const r1 = advanceGregorianClock(s1, 30)
+        expect(`${r1.isoDate} ${r1.clockTimeHms}`).toBe('2024-02-29 00:00:00')
+
+        const s2 = parseCalendarStart({
+            ...DEFAULT_CHRONOLOGY_CONFIG,
+            start_date: '2024-02-29',
+            start_time: '23:59:30',
+        })
+        const r2 = advanceGregorianClock(s2, 30)
+        expect(`${r2.isoDate} ${r2.clockTimeHms}`).toBe('2024-03-01 00:00:00')
+
+        const s3 = parseCalendarStart({
+            ...DEFAULT_CHRONOLOGY_CONFIG,
+            start_date: '2026-12-31',
+            start_time: '23:59:00',
+        })
+        const r3 = advanceGregorianClock(s3, 60)
+        expect(`${r3.isoDate} ${r3.clockTimeHms}`).toBe('2027-01-01 00:00:00')
+        expect(deriveDaypart(2)).toBe('NIGHT')
+    })
+
+    it('dispatches clock and tick actions via LORE.hunt', async () => {
+        const derived: any = await LORE.hunt(
+            '[Clock action] Derive Chronology',
+            {
+                idx: 'test-derive',
+                dat: {
+                    chronology: {
+                        start_date: '2026-10-31',
+                        start_time: '21:00:00',
+                        tick_seconds: 60,
+                        frames_per_second: 24,
+                    },
+                },
+            },
+        )
+        expect(derived?.clkBit?.val).toBe(1)
+        expect(derived?.clkBit?.dat?.snapshot?.daypart).toBe('NIGHT')
+
+        const advanced: any = await LORE.hunt('[Clock action] Advance Clock', {
+            idx: 'test-advance',
+            dat: { deltaSeconds: 60 },
+        })
+        expect(advanced?.clkBit?.val).toBe(1)
+        expect(advanced?.clkBit?.dat?.snapshot?.clockTimeHm).toBe('21:01')
+
+        const ticked: any = await LORE.hunt(
+            '[Tick action] Configure Tick Cadence',
+            {
+                idx: 'test-tick',
+                dat: {
+                    chronology: { tick_seconds: 30, frames_per_second: 24 },
+                },
+            },
+        )
+        expect(ticked?.tckBit?.val).toBe(1)
     })
 })

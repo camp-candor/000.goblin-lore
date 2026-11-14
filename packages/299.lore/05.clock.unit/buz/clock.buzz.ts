@@ -63,7 +63,7 @@ function civilFromDays(z: number): { y: number; m: number; d: number } {
             Math.floor(doe / 1460) +
             Math.floor(doe / 36524) -
             Math.floor(doe / 146096)) /
-            365.2425,
+            365,
     )
     const y = yoe + era * 400
     const doy = doe - (365 * yoe + Math.floor(yoe / 4) - Math.floor(yoe / 100))
@@ -123,11 +123,7 @@ export const parseCalendarStart = (
         framesPerSecond: fps,
         totalElapsedSeconds: 0,
         totalFrames: 0,
-        isoDate:
-            `${pad2(year).padStart(4, '0')}-${pad2(month)}-${pad2(day)}`.replace(
-                /^(\d{2})-/,
-                (m) => m,
-            ),
+        isoDate: `${String(year).padStart(4, '0')}-${pad2(month)}-${pad2(day)}`,
         clockTimeHm: `${pad2(hour)}:${pad2(minute)}`,
         clockTimeHms: `${pad2(hour)}:${pad2(minute)}:${pad2(second)}`,
         timecodeSmpte: formatSmpteTimecode(
@@ -139,8 +135,6 @@ export const parseCalendarStart = (
         timezoneLabel: cfg.timezone_label,
         eraLabel: cfg.era_label,
     }
-    // fix isoDate year padding
-    snap.isoDate = `${String(year).padStart(4, '0')}-${pad2(month)}-${pad2(day)}`
     return snap
 }
 

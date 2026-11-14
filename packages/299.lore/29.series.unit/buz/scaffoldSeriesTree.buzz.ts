@@ -6,6 +6,10 @@ import type { SeriesModel } from '../series.model.js'
 import type SeriesBit from '../fce/series.bit.js'
 import { SeriesConfigSchema } from '../fce/series.schema.js'
 import type { ScaffoldSeriesTreeReceipt } from '../fce/series.bit.js'
+import {
+    parseCalendarStart,
+    resolveChronologyConfig,
+} from '../../05.clock.unit/buz/clock.buzz.js'
 
 /**
  * Traverses upward from process.cwd() to locate monorepo root.
@@ -92,6 +96,11 @@ export const scaffoldSeriesTree = async (
     let validatedConfig: any
     try {
         validatedConfig = SeriesConfigSchema.parse(rawConfig)
+        if (validatedConfig.chronology) {
+            parseCalendarStart(
+                resolveChronologyConfig(validatedConfig.chronology),
+            )
+        }
     } catch (err: any) {
         const parseError = `SCHEMA_VALIDATION_FAILED: ${err.message}`
         emitConsole(ste, `>> [FAIL] scaffoldSeriesTree: ${parseError}`)

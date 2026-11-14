@@ -60,8 +60,8 @@ export function previewChronologyHorizon(cfg: any, ticks: number = 5): any[] {
     const out: any[] = []
     let current = snap
     for (let i = 0; i < ticks; i++) {
-        current = advanceGregorianClock(current, resolved.tick_seconds)
         out.push(current)
+        current = advanceGregorianClock(current, resolved.tick_seconds)
     }
     return out
 }

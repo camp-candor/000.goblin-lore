@@ -45,8 +45,8 @@
         "tick_seconds": 60,
         "timezone_label": "UTC+00:00"
     },
-    "compiled_at": "2026-11-13T23:06:46.360Z",
-    "compiler_duration_ms": 5,
+    "compiled_at": "2026-11-14T14:56:40.290Z",
+    "compiler_duration_ms": 22,
     "entities": {
         "char_gristle": {
             "available_arms": 2,

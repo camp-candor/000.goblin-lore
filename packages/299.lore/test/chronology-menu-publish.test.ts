@@ -6,6 +6,7 @@ import {
     applySeriesChronologyUpdate,
     previewChronologyHorizon,
 } from '../98.menu.unit/buz/chronologyMenu.buzz.js'
+import { publishSealedCanonToFleet } from '../98.menu.unit/buz/fleetPublish.buzz.js'
 import { verifyByteZeroBuffer } from '../27.seed.unit/buz/seedWorldDefinitions.buzz.js'
 
 describe('chronology menu publish', () => {
@@ -84,11 +85,68 @@ describe('chronology menu publish', () => {
         ).toThrow()
     })
 
-    it('preview horizon length', () => {
+    it('preview horizon length and midnight rollover', () => {
         const h = previewChronologyHorizon(
-            { start_date: '2026-10-31', start_time: '21:00:00' },
+            {
+                start_date: '2026-10-31',
+                start_time: '23:58:00',
+                tick_seconds: 60,
+            },
             5,
         )
         expect(h.length).toBe(5)
+        expect(`${h[0].isoDate} ${h[0].clockTimeHms}`).toBe(
+            '2026-10-31 23:58:00',
+        )
+        expect(h[0].daypart).toBe('NIGHT')
+        expect(`${h[2].isoDate} ${h[2].clockTimeHms}`).toBe(
+            '2026-11-01 00:00:00',
+        )
+        expect(h[2].daypart).toBe('NIGHT')
+        expect(`${h[4].isoDate} ${h[4].clockTimeHms}`).toBe(
+            '2026-11-01 00:02:00',
+        )
+        expect(h[4].daypart).toBe('NIGHT')
+    })
+
+    it('preserves chronology block during publishSealedCanonToFleet', async () => {
+        const tmpEngine = fs.mkdtempSync(path.join(os.tmpdir(), 'chrono-pub-'))
+        try {
+            let pubRes: any
+            await publishSealedCanonToFleet(
+                {},
+                {
+                    idx: 'test-chrono-pub',
+                    src: '000.sample-hearth',
+                    dat: {
+                        seriesSlug: '000.sample-hearth',
+                        targetEngineRoot: tmpEngine,
+                        targetSpatialRoot: path.join(tmpEngine, 'no-spatial'),
+                    },
+                    slv: (res: any) => {
+                        pubRes = res
+                    },
+                } as any,
+                { hunt: async () => ({}) } as any,
+            )
+            expect(pubRes?.pubBit?.val).toBe(1)
+            const emitted = JSON.parse(
+                fs.readFileSync(
+                    path.join(
+                        tmpEngine,
+                        'compiled',
+                        '000.sample-hearth',
+                        'bible-state.json',
+                    ),
+                    'utf8',
+                ),
+            )
+            expect(emitted.chronology?.start_date).toBeDefined()
+            expect(emitted.chronology?.start_time).toBeDefined()
+            expect(emitted.chronology?.tick_seconds).toBeDefined()
+            expect(emitted.chronology?.start_snapshot).toBeDefined()
+        } finally {
+            fs.rmSync(tmpEngine, { recursive: true, force: true })
+        }
     })
 })
