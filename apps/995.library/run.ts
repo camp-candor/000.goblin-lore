@@ -11,7 +11,11 @@ const require = createRequire(import.meta.url)
 const exec = promisify(execCb)
 
 // 1. Setup CLI
-program.option('--first').option('-t, --separator <char>')
+program
+    .option('--first')
+    .option('-t, --separator <char>')
+    .option('--boot-switchboard')
+    .option('--headless')
 program.parse(process.argv)
 const options = program.opts()
 
@@ -79,14 +83,6 @@ export const getExistingPackages = (): PackageTerminalMetadata[] => {
         }
     }
 
-    results.sort((a, b) =>
-        a.name === '299.lore'
-            ? -1
-            : b.name === '299.lore'
-              ? 1
-              : a.name.localeCompare(b.name),
-    )
-
     return results
 }
 
@@ -134,6 +130,22 @@ const init = async () => {
     try {
         const LIBRARY = require(path.join(libPath, 'hunt'))
         global.LIBRARY = LIBRARY
+        ;(globalThis as any).LIBRARY = LIBRARY
+
+        // Task 5.2: Thin delegation to 00.library.unit BOOT_SWITCHBOARD when requested
+        // Keeps apps/995.library/995.library/** untouched while allowing unified boot.
+        try {
+            const BOOT_ACTION = '[Library action] Boot Switchboard'
+            if (process.argv.includes('--boot-switchboard') || process.argv.includes('--headless')) {
+                await LIBRARY.hunt(BOOT_ACTION, {
+                    startDir: process.cwd(),
+                    headless: process.argv.includes('--headless'),
+                })
+                if (process.argv.includes('--headless')) return
+            }
+        } catch {
+            // Fall through to legacy schema-driven runner on boot harness absence
+        }
 
         const LIBRARY_ACTION = require(
             path.join(libPath, '00.library.unit/library.action'),
@@ -145,34 +157,6 @@ const init = async () => {
             src: null,
             idx: idx,
         })
-
-        // Intercept root menu choices to hoist Genesis Wizard and Compile Gauntlet above LIBRARY MENU
-        const CHOICE_ACTION = '[Open action] Open Choice'
-        const origHunt = LIBRARY.hunt
-        const wrappedHunt = function (typ: string, obj: any) {
-            if (
-                typ === CHOICE_ACTION &&
-                Array.isArray(obj?.lst) &&
-                obj.lst.includes('LIBRARY MENU')
-            ) {
-                const topItems = [
-                    '[G] UNIVERSAL SERIES GENESIS WIZARD',
-                    '[C] COMPILE CANON & GATE 0 GAUNTLET',
-                ]
-                const remaining = obj.lst.filter(
-                    (item: string) => !topItems.includes(item),
-                )
-                const presentTop = topItems.filter((item: string) =>
-                    obj.lst.includes(item),
-                )
-                obj.lst = [...presentTop, ...remaining]
-            }
-            return origHunt.call(LIBRARY, typ, obj)
-        }
-        LIBRARY.hunt = wrappedHunt
-        if ((LIBRARY as any).state) {
-            ;(LIBRARY as any).state.hunt = wrappedHunt
-        }
 
         const identity = getRootIdentity()
         const CONSOLE_ACTION_LIBRARY = require(
@@ -210,75 +194,6 @@ const init = async () => {
             idx: 'cns00',
             src: '>> [OK] Master Bus Initialized',
         })
-
-        // 2b. Teardown watchdog & clean Escape/q exit handler:
-        // CLOSE_TERMINAL restores the TTY; arm on live screen and bind 'q'/'C-c'
-        // so pressing Escape twice then q exits cleanly with code 0.
-        const TERMINAL_ACTION_LIBRARY = require(
-            path.join(libPath, '80.terminal.unit/terminal.action'),
-        )
-        const initialScreen =
-            (LIBRARY as any)?.state?.value?.terminal?.screen ?? null
-        if (initialScreen && typeof initialScreen.key === 'function') {
-            let escapeCount = 0
-            let escapeResetTimer: ReturnType<typeof setTimeout> | null = null
-
-            const performCleanShutdown = async () => {
-                try {
-                    await LIBRARY.hunt(
-                        TERMINAL_ACTION_LIBRARY.CLEAR_TERMINAL,
-                        {},
-                    )
-                    await LIBRARY.hunt(
-                        TERMINAL_ACTION_LIBRARY.CLOSE_TERMINAL,
-                        {},
-                    )
-                } catch {}
-                process.exit(0)
-            }
-
-            initialScreen.key(['C-c'], performCleanShutdown)
-            initialScreen.key(['q'], () => {
-                const focused = initialScreen.focused
-                if (
-                    focused &&
-                    (focused.type === 'textbox' ||
-                        focused.type === 'textarea' ||
-                        focused.name === 'input-body')
-                ) {
-                    return
-                }
-                performCleanShutdown()
-            })
-            initialScreen.key(['escape'], () => {
-                escapeCount += 1
-                if (escapeResetTimer) clearTimeout(escapeResetTimer)
-                escapeResetTimer = setTimeout(() => {
-                    escapeCount = 0
-                }, 2500)
-                if (escapeCount >= 2) {
-                    setTimeout(performCleanShutdown, 150)
-                }
-            })
-        }
-
-        let terminalArmed = false
-        const teardownWatch = setInterval(() => {
-            try {
-                const screen =
-                    (LIBRARY as any)?.state?.value?.terminal?.screen ?? null
-                if (screen != null) {
-                    terminalArmed = true
-                    return
-                }
-                if (terminalArmed) {
-                    clearInterval(teardownWatch)
-                    process.exit(0)
-                }
-            } catch {
-                // State shape in flux during boot; keep watching.
-            }
-        }, 100)
 
         // 3. Dynamic Package Injection & Bus Wiring
         const packagesDist = path.resolve(
@@ -354,6 +269,9 @@ const init = async () => {
                                 },
                             )
                         })
+                        await LIBRARY.hunt(MENU_ACTION_LIBRARY.OPEN_MENU, {
+                            src: '',
+                        })
                     },
                 })
 
@@ -369,55 +287,19 @@ const init = async () => {
             }
         }
 
-        // Mount top-level quick-action routes at the top of the root switchboard stack
-        const LORE_PIVOT = (global as any).LORE
-        if (LORE_PIVOT) {
-            await LIBRARY.hunt(MENU_ACTION_LIBRARY.ROUTE_MENU, {
-                idx: '[G] UNIVERSAL SERIES GENESIS WIZARD',
-                src: 'Launch the Universal Series Genesis Wizard\nto scaffold directories, config, and seed files.',
-                fnc: async () => {
-                    await new Promise<void>((resolve) => {
-                        const targetLore = (global as any).LORE
-                        if (
-                            targetLore &&
-                            typeof targetLore.hunt === 'function'
-                        ) {
-                            targetLore.hunt('[Menu action] Open Genesis Menu', {
-                                src: 'ROOT_ROUTE',
-                                slv: resolve,
-                            })
-                        } else {
-                            resolve()
-                        }
-                    })
-                },
-            })
-
-            await LIBRARY.hunt(MENU_ACTION_LIBRARY.ROUTE_MENU, {
-                idx: '[C] COMPILE CANON & GATE 0 GAUNTLET',
-                src: 'Open 3-pass compiler flight deck,\nMerkle emission, and Gate 0 verification.',
-                fnc: async () => {
-                    await new Promise<void>((resolve) => {
-                        const targetLore = (global as any).LORE
-                        if (
-                            targetLore &&
-                            typeof targetLore.hunt === 'function'
-                        ) {
-                            targetLore.hunt('[Menu action] Open Compile Menu', {
-                                src: 'ROOT_ROUTE',
-                                slv: resolve,
-                            })
-                        } else {
-                            resolve()
-                        }
-                    })
-                },
-            })
-
-            await LIBRARY.hunt(CONSOLE_ACTION_LIBRARY.UPDATE_CONSOLE, {
-                idx: 'cns00',
-                src: '>> [OK] Mounted top-level actions: [G] GENESIS & [C] COMPILE',
-            })
+        // Discover & mount sibling fleet pivots across $FLEET_ROOT only when running in sovereign 995.library
+        const activeRepoName = path.basename(
+            path.resolve(import.meta.dirname, '../..'),
+        )
+        if (activeRepoName === '995.library') {
+            try {
+                await LIBRARY.hunt('[Library action] Discover Fleet Pivots', {
+                    startDir: import.meta.dirname,
+                    registerMenus: true,
+                })
+            } catch {
+                // Fail-closed: continue with local pivots if fleet discovery encounters an error
+            }
         }
 
         await LIBRARY.hunt(CONSOLE_ACTION_LIBRARY.UPDATE_CONSOLE, {
@@ -476,44 +358,6 @@ const init = async () => {
                             },
                         },
                     )
-                    return
-                }
-            }
-
-            if (
-                idx.toLowerCase() === 'genesis' ||
-                idx.toLowerCase() === 'wizard'
-            ) {
-                const targetLore = (global as any).LORE
-                if (targetLore && typeof targetLore.hunt === 'function') {
-                    await targetLore.hunt('[Menu action] Open Genesis Menu', {
-                        src: 'ROOT_ROUTE',
-                        slv: async () => {
-                            await LIBRARY.hunt(
-                                MENU_ACTION_LIBRARY.OPEN_MENU,
-                                { src: '' },
-                            )
-                        },
-                    })
-                    return
-                }
-            }
-
-            if (
-                idx.toLowerCase() === 'compile' ||
-                idx.toLowerCase() === 'gauntlet'
-            ) {
-                const targetLore = (global as any).LORE
-                if (targetLore && typeof targetLore.hunt === 'function') {
-                    await targetLore.hunt('[Menu action] Open Compile Menu', {
-                        src: 'ROOT_ROUTE',
-                        slv: async () => {
-                            await LIBRARY.hunt(
-                                MENU_ACTION_LIBRARY.OPEN_MENU,
-                                { src: '' },
-                            )
-                        },
-                    })
                     return
                 }
             }
