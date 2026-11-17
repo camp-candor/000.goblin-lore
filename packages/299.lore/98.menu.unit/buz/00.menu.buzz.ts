@@ -361,6 +361,8 @@ export const updateMenu = async (
     const lib = library
 
     const lst = [
+        LIFECYCLE_MENU_OPTIONS[0],
+        '[C] COMPILE CANON & GATE 0 GAUNTLET',
         '1. VALIDATE SCHEMA INVARIANTS',
         SCHEMA_SOLVER_MENU_LABEL,
         '[LAWS MENU]',
@@ -387,9 +389,8 @@ export const updateMenu = async (
         '[S] STYLOMETRIC & VOICE-BLEED LINTER',
         '[H] HERMETIC OFFLINE DELETION PARITY',
         '[HYGIENE]',
-        '[C] COMPILE CANON & GATE 0 GAUNTLET',
         PUBLISH_CANON_LABEL,
-        ...LIFECYCLE_MENU_OPTIONS,
+        ...LIFECYCLE_MENU_OPTIONS.slice(1),
         'ROOT MENU',
     ]
 
